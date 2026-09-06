@@ -80,6 +80,9 @@ class AuthLoginIntegrationTest {
             redisTemplate.delete(SESSION_KEY_PREFIX + id);
         }
         createdUserIds.clear();
+        // 失败计数键 TTL 900s 跨运行残留，显式清理
+        redisTemplate.delete("auth:fail:no_such_user_p2");
+        redisTemplate.keys("auth:fail:" + PREFIX + "*").forEach(k -> redisTemplate.delete(k));
         userMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User>()
                 .likeRight(User::getUsername, PREFIX));
     }

@@ -256,6 +256,8 @@
 > **进度：P2-09 + P2-10 ✅ DONE（2026-09-06，批次提交）**——POST /api/v1/auth/logout（需认证；userId 取自 SecurityContext 不接受客户端传入；deleteSession 幂等；登出后原 token 因会话缺失立即 401）+ GET /api/v1/auth/me（userId 取自 SecurityContext；**数据来自数据库** UserService.getById，邮箱/昵称修改后立即生效；用户被删除 → 404 非 200+null；UserVO 复用无敏感字段）；新增集成测试 10 个（真实 MySQL+Redis），mvn test 106/106；真实 curl E2E：me 返回最新用户→logout 200→会话删除→旧 token /me 401→重复 logout 401→无 token logout 401 全部实证。**未实现**：失败限制(P2-13)/前端认证页面(P2-16+)。
 >
 > **进度：P2-11 + P2-12 ✅ DONE（2026-09-06，批次提交）**——UserController 5 端点（GET /users 分页 / GET /users/{id} / POST 201 / PUT /users/{id} / PATCH /users/{id}/status），`@PreAuthorize("hasRole('ADMIN')")` + `@EnableMethodSecurity` 后端强制 ADMIN；禁用即踢线（DISABLED 同事务删 Redis 会话，旧 JWT 立即 401；ACTIVE 恢复不自动建会话）；自操作守卫（operatorId==target → 400）；修复真实 bug：AuthorizationDeniedException 被全局兜底吞成 500 → 重抛交回 Security 403；补 HttpMessageNotReadable → 422。业务规则用户已确认：禁止自禁用/允许互禁/最后管理员保护暂不实现（ADR-009）。新增测试 22 个，mvn test 128/128；真实 curl E2E：admin 管理 API→201 创建→MEMBER 403→禁用踢线→旧 token 401→启用→重新登录→新 token 200→自禁用 400 全部实证。**未实现**：失败限制(P2-13)/前端页面(P2-16+)。
+>
+> **进度：P2-13 + P2-14 ✅ DONE（2026-09-06，批次提交）**——LoginAttemptService（auth:fail:{username}，INCR 原子计数+EXPIRE 窗口，5 次/15 分钟，第 5 次 TTL 重置锁定，成功登录 DEL；**统一计数语义**含不存在 username 防枚举，ADR-010）+ AuthService 集成（锁定检查最前：不查库/不验密码/不签发/不建会话；Redis 故障 fail-closed）；OpenAPI Bearer SecurityScheme（http/bearer/JWT + 根级 SecurityRequirement + health 空覆盖）；新增测试 13 个（锁定 7 + fail-closed 1 + OpenAPI 5），mvn test 140/140；真实 curl E2E：4×401→第5次 429→锁定期正确密码 429→Redis 计数5/TTL 899→窗口结束恢复 200；Swagger/ui 与 api-docs scheme 实证。**未实现**：P2-15 后端测试扩展/P2-16 前端页面。
 
 ---
 

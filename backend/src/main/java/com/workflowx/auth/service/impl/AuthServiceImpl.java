@@ -5,6 +5,7 @@ import com.workflowx.auth.dto.LoginRequest;
 import com.workflowx.auth.dto.LoginResponse;
 import com.workflowx.auth.mapper.AuthRoleQueryMapper;
 import com.workflowx.auth.service.AuthService;
+import com.workflowx.auth.service.LoginAttemptService;
 import com.workflowx.common.exception.AuthenticationException;
 import com.workflowx.common.exception.BusinessException;
 import com.workflowx.common.security.AuthSessionService;
@@ -45,16 +46,27 @@ public class AuthServiceImpl implements AuthService {
     private final AuthRoleQueryMapper authRoleQueryMapper;
     private final JwtProperties jwtProperties;
     private final UserService userService;
+    private final LoginAttemptService loginAttemptService;
 
     @Override
     @Transactional
     public LoginResponse login(LoginRequest request) {
+        // P2-13: 锁定检查最前——锁定期间不查库、不验密码、不签发 token、不建会话
+        if (loginAttemptService.isLocked(request.username())) {
+            throw new BusinessException(429, "登录尝试次数过多，请稍后再试");
+        }
         User user = userMapper.selectOne(
                 new LambdaQueryWrapper<User>().eq(User::getUsername, request.username()));
         if (user == null || !passwordService.matches(request.password(), user.getPasswordHash())) {
+            // 统一计数（含不存在的 username）: 防止 429 仅出现在真实用户名上造成账号枚举泄漏（ADR-010）
+            long failures = loginAttemptService.recordFailure(request.username());
+            if (failures >= loginAttemptService.MAX_ATTEMPTS) {
+                throw new BusinessException(429, "登录尝试次数过多，请稍后再试");
+            }
             // 统一错误信息: 不区分"用户不存在"与"密码错误"
             throw new AuthenticationException("用户名或密码错误");
         }
+        loginAttemptService.clearFailures(request.username());
         if (user.getStatus() == UserStatus.DISABLED) {
             throw new BusinessException(403, "账号已被禁用，请联系管理员");
         }
