@@ -242,6 +242,8 @@
 | P2-25 | Phase 2 最终验收 | DoD 逐项核验 + 验收报告 + AI_CONTEXT/AI_TASKS 收口 | 全部证据可追溯 | P2-24 |
 
 > 任务结构与用户 P2-01~P2-25 建议一致；两处说明：① P2-01 明确为「映射既有 V1 表 + dev 种子迁移」，Phase 1 已定稿的表结构不做变更；② P2-04/02/03 按依赖顺序串行实施，BCrypt 先于 Security 配置落地。
+>
+> **进度：P2-01 ✅ DONE（2026-09-06）**——User 实体/枚举/VO + dev 种子迁移（db/seed/dev location 隔离）+ 16 个测试；mvn test 20/20（含 P1 回归 4）；pytest/npm 回归全绿；MySQL 实查 users=2/roles=2/user_roles=2；BCrypt 经 Python + Spring BCryptPasswordEncoder 6.5.2 双重验证。决策 D1–D5 已按用户确认执行。
 
 ---
 

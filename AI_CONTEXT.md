@@ -29,9 +29,9 @@
 
 **Phase 2 — Authentication & User：进行中（2026-09-06）**
 
-- 2.0 现状检查与任务拆解已完成（P2-01 ~ P2-25，见 `AI_TASKS.md` 第 4 节）；**编码未启动**，等用户指令
-- 认证方案基线已定：Spring Security 6 + jjwt + Redis 白名单单会话；无 Refresh Token；BCrypt(10)；失败限制走 Redis 计数；种子账号仅 dev location
-- 待用户决策项：表命名 users vs sys_user、单会话/有效期参数确认（见 AI_TASKS Phase 2 节）
+- 决策 D1–D5 用户已确认：保持 users 表命名 / 无 Refresh Token / JWT 2h + Redis 单会话 / 失败 5 次锁 15 分钟 / 种子仅 dev
+- **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
+- 下一步：P2-02（用户 Mapper 与分页），**等用户指令后执行**
 - Phase 1 — Project Foundation 已于 2026-09-06 完成并通过验收（DoD 8/8）
 
 ---
@@ -114,6 +114,8 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-06 | P2-01 完成：User 实体/UserStatus/UserVO + V2 dev 种子（admin/user1 + ADMIN/MEMBER，BCrypt 双重验证）+ 16 测试，mvn 20/20 全绿 | Phase 2 |
+| 2026-09-06 | Phase 2.0 规划：现状核查 + P2-01~P2-25 任务拆解 + 认证方案基线 | Phase 2 |
 | 2026-09-06 | 任务 1-8 完成：README.md + getting-started.md（按实测过程编写）；Phase 1 全部 8 任务 DONE，输出最终验收报告 | Phase 1 |
 | 2026-09-06 | 任务 1-7 完成：三层测试能力（mvn 4/4 · npm 2/2 · pytest 2/2） | Phase 1 |
 | 2026-09-06 | 任务 1-6 完成：前端基础工程（lint/test/build/代理链路实测通过） | Phase 1 |

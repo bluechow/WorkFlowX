@@ -76,11 +76,23 @@ npm run dev                  # 端口 5173，/api 代理到 8080
 
 验证：打开 http://localhost:5173 ，首页显示"后端服务正常"（Loading → Success 三态链路即通）。
 
-## 6. 运行测试
+## 6. 测试账号（仅 DEV 环境）
+
+> ⚠️ 以下凭据由 dev 种子迁移（`db/seed/dev/V2__seed_dev.sql`）创建，**仅用于本地开发与测试**；
+> 生产环境不配置该 Flyway location，不存在默认凭据，正式环境必须使用独立强密码。
+
+| 账号 | 密码 | 角色 | 说明 |
+|---|---|---|---|
+| admin | Admin@123456 | ADMIN | 系统管理员（Phase 3 起用于权限验证） |
+| user1 | Member@123456 | MEMBER | 普通用户（用于越权/权限反例测试） |
+
+登录接口在 Phase 2 后续任务（P2-08）实现后可用。
+
+## 7. 运行测试
 
 见 [docs/testing/how-to-run-tests.md](../testing/how-to-run-tests.md)。
 
-## 7. 常见问题
+## 8. 常见问题
 
 | 现象 | 处理 |
 |---|---|

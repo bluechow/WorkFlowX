@@ -194,3 +194,10 @@
 | bug severity | S1 / S2 / S3 / S4 |
 | issue status | OPEN / IN_PROGRESS / RESOLVED / TESTING / CLOSED / REOPENED |
 | user status | ACTIVE / DISABLED / LOCKED |
+
+## dev 种子数据说明（V2__seed_dev.sql，仅 dev location）
+
+- 内容：roles 种子（ADMIN=系统管理员 / MEMBER=普通成员）；测试账号 admin（ADMIN 角色）、user1（MEMBER 角色），status 均为 ACTIVE
+- 密码存储：仅 BCrypt(strength 10) 哈希；哈希已用 Spring Security 6.5.2 BCryptPasswordEncoder 与 Python bcrypt 双重验证
+- 明文凭据与使用范围见 `docs/development/getting-started.md`——**仅 DEV/测试环境有效，生产环境禁止使用**
+- 幂等性：全部 INSERT 带 NOT EXISTS 守卫；Flyway 版本化保证单次执行
