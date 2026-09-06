@@ -1,15 +1,11 @@
 package com.workflowx.system.controller;
 
-import com.workflowx.common.security.JwtServiceImpl;
-import com.workflowx.common.security.RestAccessDeniedHandler;
-import com.workflowx.common.security.RestAuthenticationEntryPoint;
-import com.workflowx.common.security.SecurityConfig;
 import com.workflowx.common.trace.TraceIdFilter;
 import com.workflowx.system.controller.HealthController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -18,12 +14,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * 健康检查接口测试（任务 1-7.1）。
+ * 健康检查接口测试（任务 1-7.1，P2-07 升级为完整真实上下文）。
  * 验证统一响应结构（ADR-005）与 traceId 复用/回写机制，而不只是 HTTP 200（Master Prompt §18）。
- * P2-05 起导入真实 SecurityFilterChain——health 为公开端点，在真实安全链路下必须仍然可达。
+ * P2-05 起项目存在 SecurityFilterChain——health 为公开端点，在完整真实上下文（含 Redis 会话基础设施）下必须仍然可达。
  */
-@WebMvcTest(HealthController.class)
-@Import({SecurityConfig.class, JwtServiceImpl.class, RestAuthenticationEntryPoint.class, RestAccessDeniedHandler.class})
+@SpringBootTest
+@AutoConfigureMockMvc
 class HealthControllerTest {
 
     @Autowired

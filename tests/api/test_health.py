@@ -21,11 +21,13 @@ def test_health_returns_unified_structure(api_client: httpx.Client):
     assert resp.headers["X-Trace-Id"] == body["traceId"]
 
 
-def test_unknown_api_returns_404_unified_structure(api_client: httpx.Client):
+def test_unknown_api_returns_401_unified_structure(api_client: httpx.Client):
+    """P2-05 起 anyRequest().authenticated()：未认证访问未知路径先被安全链拦截为 401（认证先于 404 判定，
+    不向未认证者暴露资源存在性），这是安全架构的正确行为。"""
     resp = api_client.get("/api/v1/nonexistent")
-    assert resp.status_code == 404
+    assert resp.status_code == 401
 
     body = resp.json()
-    assert body["code"] == 404
-    assert body["message"] == "resource not found"
+    assert body["code"] == 401
+    assert body["message"] == "authentication required"
     assert body["traceId"]

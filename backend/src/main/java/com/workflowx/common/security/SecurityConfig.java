@@ -25,16 +25,18 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    /** 公开端点（健康检查 / 文档）；登录接口 P2-08 实现时加入 */
+    /** 公开端点（健康检查 / 文档 / 登录） */
     public static final String[] PUBLIC_ENDPOINTS = {
             "/api/v1/health",
             "/actuator/health",
+            "/api/v1/auth/login",
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
     };
 
     private final JwtService jwtService;
+    private final AuthSessionService authSessionService;
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final RestAccessDeniedHandler accessDeniedHandler;
 
@@ -49,7 +51,7 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService),
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService, authSessionService),
                         UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

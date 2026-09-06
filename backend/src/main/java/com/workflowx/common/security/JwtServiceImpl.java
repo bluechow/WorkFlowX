@@ -48,11 +48,28 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateToken(Long userId, String username, Collection<String> roles) {
-        Instant now = Instant.now();
-        return generateToken(userId, username, roles, now, now.plusSeconds(properties.getExpireHours() * 3600L));
+        return issueToken(userId, username, roles).accessToken();
     }
 
-    /** 供测试与特殊场景使用的完整时间控制重载（生产代码使用上方委托） */
+    @Override
+    public TokenIssuance issueToken(Long userId, String username, Collection<String> roles) {
+        Instant now = Instant.now();
+        Instant expiresAt = now.plusSeconds(properties.getExpireHours() * 3600L);
+        String jti = UUID.randomUUID().toString();
+        String token = Jwts.builder()
+                .id(jti)
+                .subject(String.valueOf(userId))
+                .claim("username", username)
+                .claim("roles", roles == null ? List.of() : List.copyOf(roles))
+                .issuer(properties.getIssuer())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiresAt))
+                .signWith(key(), Jwts.SIG.HS256)
+                .compact();
+        return new TokenIssuance(token, jti, now, expiresAt);
+    }
+
+    /** 供测试与特殊场景使用的完整时间控制重载（生产代码使用 issueToken） */
     public String generateToken(Long userId, String username, Collection<String> roles, Instant issuedAt, Instant expiresAt) {
         return Jwts.builder()
                 .id(UUID.randomUUID().toString())

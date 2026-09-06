@@ -29,6 +29,9 @@ class SecurityConfigTest {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private AuthSessionService authSessionService;
+
     @Test
     void healthEndpointShouldBePublic() throws Exception {
         mockMvc.perform(get("/api/v1/health"))
@@ -55,9 +58,11 @@ class SecurityConfigTest {
 
     @Test
     void validBearerTokenShouldPassSecurityChain() throws Exception {
-        String token = jwtService.generateToken(42L, "alice", List.of("ADMIN"));
+        // P2-07 起 token 需同时具备有效 Redis 会话：签发 + 创建会话后再访问
+        TokenIssuance issuance = jwtService.issueToken(42L, "alice", List.of("ADMIN"));
+        authSessionService.createSession(42L, issuance.jti());
         // /api/v1/users 尚无 Controller：404 即证明已通过认证（未认证时是 401）
-        mockMvc.perform(get("/api/v1/users").header("Authorization", "Bearer " + token))
+        mockMvc.perform(get("/api/v1/users").header("Authorization", "Bearer " + issuance.accessToken()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.message").value("resource not found"));

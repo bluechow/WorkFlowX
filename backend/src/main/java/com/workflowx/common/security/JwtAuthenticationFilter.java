@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,12 +16,13 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * JWT 认证过滤器（P2-06）。
- * 职责仅限: 提取 Bearer Token → JwtService 验证 → 构建 Authentication（principal=JwtPayload，
- * authorities=ROLE_{role}，与后续 RBAC 的 hasRole 对齐）→ 写入 SecurityContext。
- * 验证失败时不抛出/不泄漏原因，仅不建立认证，由 EntryPoint 统一返回 401。
- * 不做数据库查询 / Redis 会话 / 登录计数 / 用户状态变更（分属 P2-07 与后续任务）。
+ * JWT 认证过滤器（P2-06 建立，P2-07 增加会话校验）。
+ * 链路: Bearer Token → JWT 密码学验证 → 取 userId+jti → Redis 会话比对 → 一致才建立 Authentication。
+ * 单会话模型: 后登录覆盖先登录后，旧 token 的 jti 不再匹配，即使签名有效也被拒绝。
+ * fail-closed: Redis 不可用/会话不存在/任何验证失败 → 不建立认证（401），服务端记日志但不向客户端泄漏原因，
+ * 也不打印完整 token/secret。
  */
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -27,6 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static final String ROLE_PREFIX = "ROLE_";
 
     private final JwtService jwtService;
+    private final AuthSessionService authSessionService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -36,14 +40,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (header != null && header.startsWith(BEARER_PREFIX)) {
                 String token = header.substring(BEARER_PREFIX.length());
                 JwtPayload payload = jwtService.parseToken(token);
-                List<SimpleGrantedAuthority> authorities = payload.roles().stream()
-                        .map(role -> new SimpleGrantedAuthority(ROLE_PREFIX + role))
-                        .toList();
-                var authentication = new UsernamePasswordAuthenticationToken(payload, null, authorities);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (authSessionService.isCurrentSession(payload.userId(), payload.jti())) {
+                    List<SimpleGrantedAuthority> authorities = payload.roles().stream()
+                            .map(role -> new SimpleGrantedAuthority(ROLE_PREFIX + role))
+                            .toList();
+                    var authentication = new UsernamePasswordAuthenticationToken(payload, null, authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
         } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
-            // 无效 token（篡改/过期/格式错误/缺失 claim）：清除上下文即可，不向客户端泄漏细节
+            // token 无效（篡改/过期/格式错误/缺失 claim）：不建立认证，不泄漏细节
+            SecurityContextHolder.clearContext();
+        } catch (DataAccessException e) {
+            // Redis 不可用: fail-closed——认证无法确认会话即拒绝访问，服务端仅记录摘要信息
+            log.warn("auth session check failed (fail-closed): {}", e.getClass().getSimpleName());
             SecurityContextHolder.clearContext();
         }
         try {

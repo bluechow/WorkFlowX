@@ -10,7 +10,7 @@ import java.util.Collection;
 public interface JwtService {
 
     /**
-     * 生成 Access Token。
+     * 生成 Access Token（jti 自动生成）。
      *
      * @param userId   稳定用户 ID（写入 sub）
      * @param username 用户名（非敏感）
@@ -18,6 +18,12 @@ public interface JwtService {
      * @return 签名后的 JWT（含 jti/iat/exp，exp = now + expireHours）
      */
     String generateToken(Long userId, String username, Collection<String> roles);
+
+    /**
+     * 签发 Token 并返回完整结果（P2-07）：登录流程需要 jti 写入 Redis 会话、
+     * expiresAt 计算响应 expiresIn，因此使用本方法而非 generateToken。
+     */
+    TokenIssuance issueToken(Long userId, String username, Collection<String> roles);
 
     /**
      * 解析并验证 Token（签名、过期、签发方、必要 claims 全部校验）。
