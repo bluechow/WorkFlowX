@@ -25,3 +25,9 @@ springdoc:
     enabled: ${SPRINGDOC_ENABLED:false}
   swagger-ui:
     enabled: ${SPRINGDOC_ENABLED:false}
+
+# JWT：secret 必须显式提供，缺失/为空则启动失败（禁止默认值）
+jwt:
+  secret: ${JWT_SECRET:?JWT_SECRET is required}
+  expire-hours: ${JWT_EXPIRE_HOURS:2}
+  issuer: workflowx

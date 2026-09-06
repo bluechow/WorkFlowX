@@ -248,6 +248,8 @@
 > **进度：P2-02 ✅ DONE（2026-09-06）**——UserMapper（BaseMapper，无冗余方法）+ MybatisPlusConfig 分页插件（PaginationInnerInterceptor/MySQL；MP 3.5.9+ 需补 mybatis-plus-jsqlparser 依赖）；UserMapperTest 11 用例真实 MySQL 验证（分页/模糊/状态/组合/越界/稳定排序/边界），SQL 日志实证 ORDER BY created_at DESC,id DESC + LIMIT 单次生成 + count 正确；测试数据 p2_mapper_test_ 前缀用后清理（users 回到 2 行）；mvn test 31/31，pytest/npm 回归全绿。
 >
 > **进度：P2-03 + P2-04 ✅ DONE（2026-09-06，批次提交）**——UserService（getById/page/create/update/updateStatus）+ PasswordService（BCrypt 10，全局唯一 PasswordEncoder Bean）；DTO Bean Validation（username 3-32 字符集/email≤100 含 local≤64 约束/password≥8 位字母+数字/分页参数上限 100）；唯一性预检+DB 约束双防线，DuplicateKeyException 精准转 409；新增测试 30 个（密码 6/DTO 校验 6/集成 18），mvn test 61/61；发现的坑：Hibernate @Email 隐含 local part≤64（RFC 5321），边界用例据此修正；pytest/npm 回归全绿，DB 零污染。
+>
+> **进度：P2-05 + P2-06 ✅ DONE（2026-09-06，批次提交）**——Spring Security 6（STATELESS/CSRF off/无 formLogin·httpBasic/公开端点白名单/其余全部 authenticated，401/403 统一 JSON）+ JWT 基础设施（jjwt 0.12.6，HS256 服务端固定，claims=sub/username/roles/jti/iat/exp，secret 环境变量化，prod 强制提供；JwtAuthenticationFilter 建立 Authentication，无 DB/Redis 依赖）；ADR-008 记录技术基线；新增测试 21 个（JWT 12 + Security 9），HealthControllerTest 升级为真实安全链路验证；mvn test 82/82，pytest/npm 回归全绿。**未实现**：Redis 会话/登录/登出/me/失败限制（属 P2-07+）。
 
 ---
 

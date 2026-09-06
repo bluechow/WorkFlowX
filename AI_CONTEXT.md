@@ -33,7 +33,8 @@
 - **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
 - **P2-02 ✅ DONE**：UserMapper（BaseMapper 极简）+ MybatisPlusConfig 分页插件（MySQL；MP 3.5.9+ 已补 mybatis-plus-jsqlparser 依赖）+ UserMapperTest 11 用例（真实 MySQL，SQL 实证 ORDER BY/LIMIT/count 正确）；mvn test 31/31 全绿
 - **P2-03 + P2-04 ✅ DONE**：UserService（查询/分页/创建/更新/状态，唯一性 409、404/409 异常体系复用）+ PasswordService（BCrypt 10 统一入口，PasswordEncoderConfig 全局唯一 Bean）+ DTO Bean Validation + PageVO 统一分页结构；新增测试 30 个，mvn test 61/61
-- 下一步：P2-05（Spring Security 基础认证配置），**等用户指令后执行**
+- **P2-05 + P2-06 ✅ DONE**：Spring Security 6 基础配置（STATELESS/CSRF off/公开端点白名单/统一 401·403 JSON，无 formLogin·httpBasic）+ JWT 基础设施（jjwt 0.12.6，HS256 服务端固定，JwtService 签发/解析/验证，JwtAuthenticationFilter 建立 Authentication；ADR-008 技术基线）；mvn test 82/82
+- 下一步：P2-07（Redis 登录状态/会话白名单），**等用户指令后执行**
 - Phase 1 — Project Foundation 已于 2026-09-06 完成并通过验收（DoD 8/8）
 
 ---

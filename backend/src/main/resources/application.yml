@@ -35,3 +35,9 @@ springdoc:
   swagger-ui:
     path: /swagger-ui
     enabled: ${SPRINGDOC_ENABLED:true}
+
+jwt:
+  # dev-only 默认密钥（HS256 要求 ≥32 字节）；生产环境必须通过 JWT_SECRET 环境变量显式提供
+  secret: ${JWT_SECRET:dev-only-jwt-secret-key-for-workflowx-local-0123456789}
+  expire-hours: ${JWT_EXPIRE_HOURS:2}
+  issuer: workflowx

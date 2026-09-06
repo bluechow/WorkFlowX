@@ -98,3 +98,13 @@
 - 理由: 与 Master Prompt §24 及 Phase 16 部署形态一致；环境一致性与可重建性优先；规避 Windows 原生 Redis 无官方支持的质量风险。
 - 备选方案: Phase 1 暂用本机原生服务（用户否决）；直连原生 MySQL80（放弃：与"统一 compose 管理"冲突）。
 - 影响: Phase 1 任务 1-2 按 compose 路径验收；compose MySQL 主机端口默认 3307（本机 3306 被原生服务占用）；后续所有 Phase 的数据层均以 compose 实例为基准。
+
+### ADR-008: JWT 签发与验证技术基线
+
+- 日期: 2026-09-06
+- 状态: Accepted
+- 背景: Phase 2 认证体系需要确定 Token 技术细节（决策项 D2/D3 用户已确认：无 Refresh Token、2 小时 + 单会话）。
+- 决策: JWT 实现统一采用 jjwt 0.12.x（全项目唯一 JWT 实现）；算法服务端固定 HS256（signWith/verifyWith 同一密钥，客户端算法声明不参与验证，alg=none/算法混淆天然拒绝）；Claims = sub(userId)/username/roles/jti/iat/exp，禁止写入密码、email 等敏感字段；TTL 2 小时；secret 通过环境变量 JWT_SECRET 注入，dev 默认值仅为本地开发（.env.example 标注），prod 缺失即启动失败；角色写入 roles claim，Filter 中映射为 `ROLE_{code}` authorities 与后续 hasRole 对齐；P2-06 阶段 Token 验证仅为密码学验证，会话级校验（Redis 白名单）由 P2-07 增加。
+- 理由: 满足 Master Prompt §6 与安全基线；jjwt 0.12 是 Spring 生态主流轻量选择；服务端固定算法消除算法混淆攻击面。
+- 备选方案: nimbus-jose-jwt / spring-security-oauth2-jose（放弃：重且与既有选型重复）；引入 Refresh Token（放弃：见 D2 决策）。
+- 影响: JwtService 为全项目唯一签发/解析入口；P2-07 的 Redis 会话将以 payload 的 userId/jti 为键；后续认证测试使用独立测试密钥。
