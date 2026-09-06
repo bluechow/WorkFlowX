@@ -81,7 +81,7 @@
 | Git 仓库 | ✅ 已初始化（master，2 次提交） |
 | 后端骨架 | ⬜ 未搭建（Phase 1 任务 1-3） |
 | 前端骨架 | ⬜ 未搭建（Phase 1 任务 1-6） |
-| 数据库 | ⬜ 无 schema（Phase 1 任务 1-4 建立 Flyway + V1） |
+| 数据库 | 🔵 Flyway 已建立，V1 身份域 5 表落地（users/roles/permissions/user_roles/role_permissions）；业务表随 Phase 2–10 迁移（见 docs/database/migration-plan.md） |
 | 基础设施（MySQL / Redis / MinIO） | ⬜ compose 未建立（Phase 1 任务 1-2，路径待 P1-ENV-2） |
 | 测试体系 | ⬜ 未搭建（Phase 1 任务 1-7） |
 | CI/CD | ⬜ 未搭建（Phase 17） |

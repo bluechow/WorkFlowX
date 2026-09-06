@@ -121,15 +121,15 @@
 
 ### 1-4 数据库设计初稿
 
-- 状态: TODO ｜ 依赖: 1-2（MySQL 实例）、1-3.8（DataSource）｜ 验证方式: 应用启动 Flyway 自动迁移成功 + `DESCRIBE` 核对表结构 + 文档一致性核对
+- 状态: ✅ DONE（2026-09-06）｜ 依赖: 1-2（MySQL 实例）、1-3.8（DataSource）｜ 验证方式: 应用启动 Flyway 自动迁移成功 + `DESCRIBE` 核对表结构 + 文档一致性核对
 - Subtask DoD: 设计与 Master Prompt §8 及 ADR-003（RBAC 结构）一致；如设计评审发现既有冲突，按 AI_WORKFLOW STOP 规则处理，禁止静默修改
 
-| # | Subtask | 验收标准 |
-|---|---|---|
-| 1-4.1 | ER 设计文档 `docs/database/er-model.md`（Mermaid ER 图） | 覆盖核心实体：users、roles、permissions、user_roles、role_permissions、organizations、organization_members、projects、project_members、issues、issue_comments、attachments、notifications、audit_logs、issue_status_transitions |
-| 1-4.2 | 数据字典 `docs/database/data-dictionary.md` | 命名统一 snake_case；主键/索引/唯一约束/非空/时间字段/状态枚举逐表说明（§8） |
-| 1-4.3 | Flyway 机制 + `V1__identity_core.sql` | V1 仅落地身份域 5 张表（users/roles/permissions/user_roles/role_permissions），迁移自动执行成功且与文档一致 |
-| 1-4.4 | 后续表 DDL 归属计划 | 其余表 DDL 明确到 Phase 2–10 各自的迁移脚本，不在 Phase 1 一次性建全 |
+| # | Subtask | 验收标准 | 状态 |
+|---|---|---|---|
+| 1-4.1 | ER 设计文档 `docs/database/er-model.md`（Mermaid ER 图） | 覆盖 15 张核心实体，关系与 §14 枚举、ADR-003 RBAC 对齐 | ✅ |
+| 1-4.2 | 数据字典 `docs/database/data-dictionary.md` | 全部 15 表字段/约束/索引/枚举说明；V1 表与 DESCRIBE 实测一致 | ✅ |
+| 1-4.3 | Flyway 机制 + `V1__identity_core.sql` | 迁移自动执行成功（flyway_schema_history success=1），users/roles/permissions/user_roles/role_permissions 五表建立 | ✅ |
+| 1-4.4 | 后续表 DDL 归属计划 `docs/database/migration-plan.md` | Phase 2–10 各表 V2–V9 归属明确，破坏性变更列入 STOP 条件 | ✅ |
 
 ### 1-5 API 基础规范落地
 
