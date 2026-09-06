@@ -254,6 +254,8 @@
 > **进度：P2-07 + P2-08 ✅ DONE（2026-09-06，批次提交）**——AuthSessionService（auth:session:{userId}→jti，TTL 与 JWT 同源 2h，原子 SET+TTL，单会话后登录覆盖先登录，deleteSession 供 P2-09 复用）+ JwtAuthenticationFilter 会话校验（fail-closed：Redis 故障拒绝不放行）+ POST /api/v1/auth/login（白名单、Bean Validation、密码先验证后查状态防枚举、DISABLED/LOCKED 403、签发→写会话→last_login_at、LoginResponse 无密码字段）；JwtService 扩展 issueToken 返回 jti；新增测试 14 个（登录集成，真实 MySQL+Redis），mvn test 96/96；pytest 的未知路径用例按新安全行为修正（未认证 401 先于 404）；真实 curl E2E：登录→访问→二次登录覆盖→旧 token 401→统一错误全部实证；Redis TTL/jti/last_login_at 实查通过。**未实现**：logout(P2-09)/me(P2-10)/失败限制(P2-13)/前端登录(P2-16+)。
 >
 > **进度：P2-09 + P2-10 ✅ DONE（2026-09-06，批次提交）**——POST /api/v1/auth/logout（需认证；userId 取自 SecurityContext 不接受客户端传入；deleteSession 幂等；登出后原 token 因会话缺失立即 401）+ GET /api/v1/auth/me（userId 取自 SecurityContext；**数据来自数据库** UserService.getById，邮箱/昵称修改后立即生效；用户被删除 → 404 非 200+null；UserVO 复用无敏感字段）；新增集成测试 10 个（真实 MySQL+Redis），mvn test 106/106；真实 curl E2E：me 返回最新用户→logout 200→会话删除→旧 token /me 401→重复 logout 401→无 token logout 401 全部实证。**未实现**：失败限制(P2-13)/前端认证页面(P2-16+)。
+>
+> **进度：P2-11 + P2-12 ✅ DONE（2026-09-06，批次提交）**——UserController 5 端点（GET /users 分页 / GET /users/{id} / POST 201 / PUT /users/{id} / PATCH /users/{id}/status），`@PreAuthorize("hasRole('ADMIN')")` + `@EnableMethodSecurity` 后端强制 ADMIN；禁用即踢线（DISABLED 同事务删 Redis 会话，旧 JWT 立即 401；ACTIVE 恢复不自动建会话）；自操作守卫（operatorId==target → 400）；修复真实 bug：AuthorizationDeniedException 被全局兜底吞成 500 → 重抛交回 Security 403；补 HttpMessageNotReadable → 422。业务规则用户已确认：禁止自禁用/允许互禁/最后管理员保护暂不实现（ADR-009）。新增测试 22 个，mvn test 128/128；真实 curl E2E：admin 管理 API→201 创建→MEMBER 403→禁用踢线→旧 token 401→启用→重新登录→新 token 200→自禁用 400 全部实证。**未实现**：失败限制(P2-13)/前端页面(P2-16+)。
 
 ---
 

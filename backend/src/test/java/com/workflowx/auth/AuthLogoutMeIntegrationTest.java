@@ -87,7 +87,7 @@ class AuthLogoutMeIntegrationTest {
                 PREFIX + suffix, PREFIX + suffix + "@test.local", PASSWORD, "auth-" + suffix));
         createdUserIds.add(created.id());
         if (status != UserStatus.ACTIVE) {
-            userService.updateStatus(created.id(), status);
+            userService.updateStatus(-1L, created.id(), status);
         }
         return userMapper.selectById(created.id());
     }

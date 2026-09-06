@@ -96,9 +96,9 @@ class AuthLoginIntegrationTest {
                     WHERE u.username = ?
                     """, PREFIX + suffix);
         }
-        if (status != UserStatus.ACTIVE) {
-            userService.updateStatus(created.id(), status);
-        }
+            if (status != UserStatus.ACTIVE) {
+                userService.updateStatus(-1L, created.id(), status);
+            }
         return userMapper.selectById(created.id());
     }
 
@@ -189,12 +189,11 @@ class AuthLoginIntegrationTest {
         String sessionKey = SESSION_KEY_PREFIX + user.getId();
         assertEquals(jti2, redisTemplate.opsForValue().get(sessionKey), "后登录必须覆盖 Redis 会话");
 
-        // 第一次 token：签名有效但会话已被覆盖 → 401
+        // 第一次 token：会话已被覆盖 → 401；第二次 token：会话有效但无 ADMIN 角色 → 403（认证成功）
         mockMvc.perform(get("/api/v1/users").header("Authorization", "Bearer " + token1))
                 .andExpect(status().isUnauthorized());
-        // 第二次 token：有效 → 通过认证（无 Controller → 404）
         mockMvc.perform(get("/api/v1/users").header("Authorization", "Bearer " + token2))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
     }
 
     @Test

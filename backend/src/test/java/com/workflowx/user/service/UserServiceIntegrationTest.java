@@ -57,7 +57,8 @@ class UserServiceIntegrationTest {
                 "Password@123",
                 "svc-" + suffix));
         if (status != UserStatus.ACTIVE) {
-            return userService.updateStatus(created.id(), status);
+            // -1L: 测试工厂的系统操作者占位（规避"不能修改自己"守卫，非真实操作者）
+            return userService.updateStatus(-1L, created.id(), status);
         }
         return created;
     }
@@ -228,15 +229,23 @@ class UserServiceIntegrationTest {
     @Test
     void updateStatusShouldPersistAllThreeStates() {
         UserVO created = createTestUser("stcyc", UserStatus.ACTIVE);
-        assertEquals(UserStatus.DISABLED, userService.updateStatus(created.id(), UserStatus.DISABLED).status());
-        assertEquals(UserStatus.LOCKED, userService.updateStatus(created.id(), UserStatus.LOCKED).status());
-        assertEquals(UserStatus.ACTIVE, userService.updateStatus(created.id(), UserStatus.ACTIVE).status());
+        assertEquals(UserStatus.DISABLED, userService.updateStatus(-1L, created.id(), UserStatus.DISABLED).status());
+        assertEquals(UserStatus.LOCKED, userService.updateStatus(-1L, created.id(), UserStatus.LOCKED).status());
+        assertEquals(UserStatus.ACTIVE, userService.updateStatus(-1L, created.id(), UserStatus.ACTIVE).status());
         assertEquals(UserStatus.ACTIVE, userMapper.selectById(created.id()).getStatus());
     }
 
     @Test
     void updateStatusMissingUserShouldThrow404() {
         assertThrows(ResourceNotFoundException.class,
-                () -> userService.updateStatus(999999999L, UserStatus.DISABLED));
+                () -> userService.updateStatus(-1L, 999999999L, UserStatus.DISABLED));
+    }
+
+    @Test
+    void updateStatusOnSelfShouldThrow400() {
+        UserVO created = createTestUser("selfop", UserStatus.ACTIVE);
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> userService.updateStatus(created.id(), created.id(), UserStatus.DISABLED));
+        assertEquals(400, ex.getStatus());
     }
 }

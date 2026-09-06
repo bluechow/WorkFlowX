@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -53,6 +55,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Result<Void>> handleNoResourceFound(NoResourceFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.of(404, "resource not found", null));
+    }
+
+    /** 请求体不可读（JSON 格式错误 / 非法枚举值如 status:"FOO"）→ 422，不泄漏反序列化细节 */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Result<Void>> handleUnreadableBody(HttpMessageNotReadableException ex) {
+        log.warn("unreadable request body: {}", ex.getClass().getSimpleName());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(Result.of(422, "request body is invalid", null));
+    }
+
+    /**
+     * @PreAuthorize 拒绝（方法级授权）：必须重抛给 Security 的 ExceptionTranslationFilter，
+     * 由 RestAccessDeniedHandler 输出 403；若被本兜底拦截会错误地变成 500。
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public void handleAccessDenied(AccessDeniedException ex) {
+        throw ex;
     }
 
     /** 兜底：完整堆栈只进日志，对外隐藏一切内部细节 */

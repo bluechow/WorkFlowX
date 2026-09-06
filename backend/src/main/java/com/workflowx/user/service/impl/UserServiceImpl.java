@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workflowx.common.exception.BusinessException;
 import com.workflowx.common.exception.ResourceNotFoundException;
+import com.workflowx.common.security.AuthSessionService;
 import com.workflowx.common.web.PageVO;
 import com.workflowx.user.dto.CreateUserRequest;
 import com.workflowx.user.dto.UpdateUserRequest;
@@ -32,6 +33,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final PasswordService passwordService;
+    private final AuthSessionService authSessionService;
 
     @Override
     public UserVO getById(Long id) {
@@ -100,11 +102,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserVO updateStatus(Long id, UserStatus status) {
-        User user = requireUser(id);
+    public UserVO updateStatus(Long operatorId, Long targetUserId, UserStatus status) {
+        // 防误操作规则（AI_TASKS P2-12 已记录）: 不能修改自己的状态
+        if (operatorId != null && operatorId.equals(targetUserId)) {
+            throw new BusinessException(400, "不能修改自己的状态");
+        }
+        User user = requireUser(targetUserId);
         user.setStatus(status);
         userMapper.updateById(user);
-        return UserVO.from(requireUser(id));
+        // 禁用即踢线: 状态转为 DISABLED 时删除目标用户 Redis 会话，其现有 JWT 立即失效（P2-12 核心）
+        if (status == UserStatus.DISABLED) {
+            authSessionService.deleteSession(targetUserId);
+        }
+        // 恢复 ACTIVE 不自动创建会话，用户须重新登录
+        return UserVO.from(requireUser(targetUserId));
     }
 
     private User requireUser(Long id) {

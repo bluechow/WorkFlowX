@@ -108,3 +108,18 @@
 - 理由: 满足 Master Prompt §6 与安全基线；jjwt 0.12 是 Spring 生态主流轻量选择；服务端固定算法消除算法混淆攻击面。
 - 备选方案: nimbus-jose-jwt / spring-security-oauth2-jose（放弃：重且与既有选型重复）；引入 Refresh Token（放弃：见 D2 决策）。
 - 影响: JwtService 为全项目唯一签发/解析入口；P2-07 的 Redis 会话将以 payload 的 userId/jti 为键；后续认证测试使用独立测试密钥。
+
+### ADR-009: 用户管理 API 权限模型与禁用即踢线
+
+- 日期: 2026-09-06
+- 状态: Accepted
+- 背景: P2-11/P2-12 将用户管理暴露为 REST API，需要确定权限执行位置、状态变更联动与会话行为（业务规则 D1 自禁用禁止/允许互禁/最后管理员保护暂不实现，均经用户确认）。
+- 决策:
+  1. 权限模型: 用户管理 5 端点（GET /users、GET /users/{id}、POST /users、PUT /users/{id}、PATCH /users/{id}/status）统一 `@PreAuthorize("hasRole('ADMIN')")`（SecurityConfig `@EnableMethodSecurity`），角色来自 JWT roles claim → Filter 映射的 `ROLE_*` authorities，后端强制执行；未认证 401、非 ADMIN 403。
+  2. 参数校验与授权的顺序: Spring 标准行为为请求体校验（@Valid，422）先于方法级授权（403）——非法请求体无论角色返回 422，属可接受语义（不泄漏数据存在性）。
+  3. 禁用即踢线: PATCH status 将目标置为 DISABLED 的同一事务内删除 `auth:session:{targetUserId}`，目标现有 JWT 因会话校验失败立即 401；恢复 ACTIVE 不自动创建会话，须重新登录。
+  4. 自操作守卫: operatorId（取自 SecurityContext）等于目标 userId 时拒绝（400"不能修改自己的状态"）。
+  5. 已确认不实现: "最后一个可用 ADMIN 保护"（当前单 ADMIN 且禁止自禁用，规则暂无触发场景，记录为未决规则）；SUPER_ADMIN 层级（系统无此角色）。
+- 理由: 后端强制授权满足 Master Prompt §7（禁止仅前端隐藏）；踢线保证禁用立即生效，不留"库中禁用、会话存活"的窗口。
+- 备选方案: 最后管理员保护（用户决策暂缓）；URL/请求参数传递角色（放弃：不可信信息源）。
+- 影响: 新增 Controller 层角色守卫依赖 ADR-008 的 roles claim；Phase 3 RBAC 将以同机制扩展细粒度权限；AuthorizationDeniedException 必须重抛给 Security（不可被全局异常兜底拦截，否则 403 变 500——已修真实 bug）。

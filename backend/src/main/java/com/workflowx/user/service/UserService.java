@@ -27,6 +27,11 @@ public interface UserService {
     /** 更新基本信息（仅 email/nickname；email 唯一性排除自身）；不允许改动 username/password */
     UserVO update(Long id, UpdateUserRequest request);
 
-    /** 更新状态（ACTIVE/DISABLED/LOCKED）；仅改库内状态，不含登录联动逻辑（后续任务） */
-    UserVO updateStatus(Long id, UserStatus status);
+    /**
+     * 更新状态（ACTIVE/DISABLED/LOCKED）。
+     * 业务规则（P2-12，用户已确认）: 操作者不能修改自己的状态（operatorId == targetUserId → 400）；
+     * 目标转为 DISABLED 时删除其 Redis 会话（禁用即踢线）；恢复 ACTIVE 不自动创建会话，需重新登录。
+     * 允许 ADMIN 互禁；"最后一个可用 ADMIN 保护"暂不实现（记录为未决规则）。
+     */
+    UserVO updateStatus(Long operatorId, Long targetUserId, UserStatus status);
 }

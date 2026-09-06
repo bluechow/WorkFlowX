@@ -36,7 +36,8 @@
 - **P2-05 + P2-06 ✅ DONE**：Spring Security 6 基础配置（STATELESS/CSRF off/公开端点白名单/统一 401·403 JSON，无 formLogin·httpBasic）+ JWT 基础设施（jjwt 0.12.6，HS256 服务端固定，JwtService 签发/解析/验证，JwtAuthenticationFilter 建立 Authentication；ADR-008 技术基线）；mvn test 82/82
 - **P2-07 + P2-08 ✅ DONE**：Redis 登录会话（auth:session:{userId}→jti，TTL 2h 同源，单会话后登录覆盖，Filter 会话校验 fail-closed）+ 登录接口 POST /api/v1/auth/login（统一错误防枚举，状态检查在密码验证后，last_login_at 更新，LoginResponse 含 token/expiresIn/userId/username/roles）；**登录链路已真实打通**（真实 curl + 集成测试 14 个）；mvn test 96/96
 - **P2-09 + P2-10 ✅ DONE**：POST /api/v1/auth/logout（认证必需，仅删当前用户会话，幂等，登出后原 token 立即 401）+ GET /api/v1/auth/me（SecurityContext 取 userId → UserService 读库返回最新 UserVO，无敏感字段，用户删除后 404）；新增集成测试 10 个，mvn test 106/106
-- 下一步：P2-11（用户 CRUD API）+ P2-12（启用/禁用），**等用户指令后执行**
+- **P2-11 + P2-12 ✅ DONE**：用户管理 API 5 端点（ADMIN 后端强制 @PreAuthorize）+ 禁用即踢线（DISABLED 删会话旧 JWT 立即失效，ACTIVE 恢复需重登）+ 自操作守卫 400 + AuthorizationDeniedException 重抛修复（403 不再变 500）；ADR-009 权限模型；新增测试 22 个，mvn test 128/128
+- 下一步：P2-13（登录失败限制）+ P2-14（Swagger Security），**等用户指令后执行**
 - Phase 1 — Project Foundation 已于 2026-09-06 完成并通过验收（DoD 8/8）
 
 ---
