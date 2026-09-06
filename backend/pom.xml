@@ -89,11 +89,10 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- 仅测试作用域：P2-01 种子哈希匹配验证；P2-04 将引入正式 PasswordEncoder bean -->
+        <!-- 密码编码（P2-04 PasswordService 统一入口；P2-05 Security 复用） -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

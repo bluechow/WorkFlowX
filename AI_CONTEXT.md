@@ -32,7 +32,8 @@
 - 决策 D1–D5 用户已确认：保持 users 表命名 / 无 Refresh Token / JWT 2h + Redis 单会话 / 失败 5 次锁 15 分钟 / 种子仅 dev
 - **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
 - **P2-02 ✅ DONE**：UserMapper（BaseMapper 极简）+ MybatisPlusConfig 分页插件（MySQL；MP 3.5.9+ 已补 mybatis-plus-jsqlparser 依赖）+ UserMapperTest 11 用例（真实 MySQL，SQL 实证 ORDER BY/LIMIT/count 正确）；mvn test 31/31 全绿
-- 下一步：P2-03（用户 Service），**等用户指令后执行**
+- **P2-03 + P2-04 ✅ DONE**：UserService（查询/分页/创建/更新/状态，唯一性 409、404/409 异常体系复用）+ PasswordService（BCrypt 10 统一入口，PasswordEncoderConfig 全局唯一 Bean）+ DTO Bean Validation + PageVO 统一分页结构；新增测试 30 个，mvn test 61/61
+- 下一步：P2-05（Spring Security 基础认证配置），**等用户指令后执行**
 - Phase 1 — Project Foundation 已于 2026-09-06 完成并通过验收（DoD 8/8）
 
 ---
@@ -115,6 +116,8 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-06 | P2-03+P2-04 完成：UserService/PasswordService/DTO 校验/PageVO，新增 30 测试（mvn 61/61），修复 @Email local≤64 边界认知 | Phase 2 |
+| 2026-09-06 | P2-02 完成：UserMapper + 分页插件（MP 3.5.9+ jsqlparser 拆分修正），mvn 31/31 | Phase 2 |
 | 2026-09-06 | P2-01 完成：User 实体/UserStatus/UserVO + V2 dev 种子（admin/user1 + ADMIN/MEMBER，BCrypt 双重验证）+ 16 测试，mvn 20/20 全绿 | Phase 2 |
 | 2026-09-06 | Phase 2.0 规划：现状核查 + P2-01~P2-25 任务拆解 + 认证方案基线 | Phase 2 |
 | 2026-09-06 | 任务 1-8 完成：README.md + getting-started.md（按实测过程编写）；Phase 1 全部 8 任务 DONE，输出最终验收报告 | Phase 1 |

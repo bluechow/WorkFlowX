@@ -1,5 +1,6 @@
 package com.workflowx.user.vo;
 
+import com.workflowx.user.entity.User;
 import com.workflowx.user.entity.UserStatus;
 
 import java.time.LocalDateTime;
@@ -17,4 +18,16 @@ public record UserVO(
         LocalDateTime lastLoginAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {
+
+    public static UserVO from(User user) {
+        return new UserVO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getNickname(),
+                user.getStatus(),
+                user.getLastLoginAt(),
+                user.getCreatedAt(),
+                user.getUpdatedAt());
+    }
 }
