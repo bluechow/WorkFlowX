@@ -8,9 +8,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
@@ -63,6 +65,25 @@ public class GlobalExceptionHandler {
         log.warn("unreadable request body: {}", ex.getClass().getSimpleName());
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(Result.of(422, "request body is invalid", null));
+    }
+
+    /** 查询/绑定参数校验失败（如 page=0、size=101）→ 422（@ModelAttribute @Valid） */
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<Result<Void>> handleBindException(BindException ex) {
+        String detail = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        log.warn("parameter binding failed: {}", detail);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(Result.of(422, "invalid request parameters: " + detail, null));
+    }
+
+    /** 路径/查询参数类型错误（如 /users/{id} 传入非数字）→ 400 请求格式错误 */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Result<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        log.warn("argument type mismatch: name={}", ex.getName());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Result.of(400, "invalid request parameter", null));
     }
 
     /**

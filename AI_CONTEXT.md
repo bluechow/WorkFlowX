@@ -39,7 +39,8 @@
 - **P2-11 + P2-12 ✅ DONE**：用户管理 API 5 端点（ADMIN 后端强制 @PreAuthorize）+ 禁用即踢线（DISABLED 删会话旧 JWT 立即失效，ACTIVE 恢复需重登）+ 自操作守卫 400 + AuthorizationDeniedException 重抛修复（403 不再变 500）；ADR-009 权限模型；新增测试 22 个，mvn test 128/128
 - **P2-13 + P2-14 ✅ DONE**：登录失败限制（auth:fail:{username}，5 次/15 分钟，统一计数防枚举，成功清除，fail-closed，ADR-010）+ OpenAPI Bearer SecurityScheme（根级 requirement + health 公开覆盖）；新增测试 13 个，mvn test 140/140
 - **P2-14 修复 ✅ DONE**：login 空 @SecurityRequirements（公开）+ logout/me/users 显式 bearerAuth，文档声明与运行时鉴权一一对应；mvn test 140/140
-- 下一步：P2-15（后端测试体系扩展）+ P2-16~P2-19（前端认证闭环），**等用户指令后执行**
+- **P2-15 + P2-20 ✅ DONE**：Java 测试补 4 缺口（分页校验/路径类型/大小写语义/弱密钥 fail-fast）+ 2 异常处理器（BindException 422/TypeMismatch 400），mvn test 144/144；Python API 自动化体系建立（28 用例真实 HTTP 黑盒：auth/user/lockout + fixtures[单会话感知的 token/用户工厂/清理]），pytest 28/28，DB/Redis 清理零残留
+- 下一步：P2-21（前端测试）+ P2-22（测试数据文档化），**等用户指令后执行**
 - Phase 1 — Project Foundation 已于 2026-09-06 完成并通过验收（DoD 8/8）
 
 ---

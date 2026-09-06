@@ -260,6 +260,8 @@
 > **进度：P2-13 + P2-14 ✅ DONE（2026-09-06，批次提交）**——LoginAttemptService（auth:fail:{username}，INCR 原子计数+EXPIRE 窗口，5 次/15 分钟，第 5 次 TTL 重置锁定，成功登录 DEL；**统一计数语义**含不存在 username 防枚举，ADR-010）+ AuthService 集成（锁定检查最前：不查库/不验密码/不签发/不建会话；Redis 故障 fail-closed）；OpenAPI Bearer SecurityScheme（http/bearer/JWT + 根级 SecurityRequirement + health 空覆盖）；新增测试 13 个（锁定 7 + fail-closed 1 + OpenAPI 5），mvn test 140/140；真实 curl E2E：4×401→第5次 429→锁定期正确密码 429→Redis 计数5/TTL 899→窗口结束恢复 200；Swagger/ui 与 api-docs scheme 实证。**未实现**：P2-15 后端测试扩展/P2-16 前端页面。
 >
 > **进度：P2-14 修复 ✅ DONE（2026-09-06，fix(api) 提交）**——用户验收指出 login 在 OpenAPI 中错误继承根级 Bearer。修复：AuthController.login 空 @SecurityRequirements（公开标记）；logout/me 逐方法与 UserController 类级显式 @SecurityRequirement(bearerAuth)；文档声明与运行时鉴权一一对应。mvn test 140/140（OpenAPI 断言更新为逐端点），pytest/npm 回归全绿，运行时 JSON 实测（login=[]、logout/me/users=[{bearerAuth}]、health=[]、根级保留）。**未实现**：P2-15 后端测试扩展/P2-16 前端页面。
+>
+> **进度：P2-15 + P2-20 ✅ DONE（2026-09-06，批次提交）**——P2-15 补 4 个真实缺口测试（分页参数校验 422、路径变量类型错误 400、username 大小写唯一性语义、弱密钥 fail-fast）+ 2 个异常处理器（BindException→422、MethodArgumentTypeMismatch→400），mvn test 144/144；P2-20 建立 Python API 自动化体系（tests/api/：conftest fixtures[api_client/admin_token/member_token/用户工厂+清理] + test_auth_api 6 + test_user_api 13 + test_lockout_api 3 = 28 用例真实 HTTP 黑盒），依赖新增 pymysql+redis 仅用于清理 fixture；发现并修正测试设计问题：admin 多次登录被单会话语义顶掉（fixture 改为单次登录+工厂用户验证登录载荷）、unique_suffix 改函数级；pytest 28/28，清理零残留（users=2、api_test_/fail 键 0）。**未实现**：P2-21 前端测试/P2-22 文档化。
 
 ---
 

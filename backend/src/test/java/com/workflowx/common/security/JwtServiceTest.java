@@ -160,6 +160,15 @@ class JwtServiceTest {
     }
 
     @Test
+    void weakSecretShouldFailFastOnTokenGeneration() {
+        // 16 字节密钥 < HS256 要求的 32 字节: 生成 token 时必须立即失败（fail-fast，禁止弱密钥上线）
+        JwtServiceImpl weak = serviceOf("too-short-secret", 2);
+        org.junit.jupiter.api.Assertions.assertThrows(
+                io.jsonwebtoken.security.WeakKeyException.class,
+                () -> weak.generateToken(1L, "alice", List.of("MEMBER")));
+    }
+
+    @Test
     void sameUserDifferentTokensShouldHaveDifferentJti() {
         String t1 = service.generateToken(1L, "alice", List.of("MEMBER"));
         String t2 = service.generateToken(1L, "alice", List.of("MEMBER"));

@@ -153,6 +153,26 @@ class UserControllerIntegrationTest {
     }
 
     @Test
+    void adminListUsersWithInvalidPageShouldReturn422() throws Exception {
+        // @ModelAttribute @Valid: page 最小 1 / size 上限 100（BindException → 422）
+        mockMvc.perform(get("/api/v1/users").param("page", "0")
+                        .header("Authorization", "Bearer " + admin()))
+                .andExpect(status().isUnprocessableEntity());
+        mockMvc.perform(get("/api/v1/users").param("size", "101")
+                        .header("Authorization", "Bearer " + admin()))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void adminGetUserWithNonNumericIdShouldReturn400() throws Exception {
+        // 路径变量类型错误 → 400 请求格式错误（MethodArgumentTypeMismatchException → 400）
+        mockMvc.perform(get("/api/v1/users/{id}", "not-a-number")
+                        .header("Authorization", "Bearer " + admin()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+    }
+
+    @Test
     void adminGetMissingUserShouldReturn404() throws Exception {
         mockMvc.perform(get("/api/v1/users/{id}", 999999999L).header("Authorization", "Bearer " + admin()))
                 .andExpect(status().isNotFound())

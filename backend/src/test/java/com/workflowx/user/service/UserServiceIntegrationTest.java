@@ -152,6 +152,16 @@ class UserServiceIntegrationTest {
     }
 
     @Test
+    void createDuplicateUsernameWithDifferentCaseShouldReturn409() {
+        // 行为记录: username 列为 utf8mb4_0900_ai_ci（大小写不敏感），大小写变体视为冲突（文档化语义）
+        // 第二次创建使用不同 email，确保 409 确证来自 username 冲突
+        createTestUser("CaseUser", UserStatus.ACTIVE);
+        BusinessException ex = assertThrows(BusinessException.class, () -> userService.create(
+                new CreateUserRequest(PREFIX + "caseuser", PREFIX + "case-alt@test.local", "Password@123", "n")));
+        assertEquals(409, ex.getStatus());
+    }
+
+    @Test
     void createDuplicateUsernameShouldThrow409() {
         createTestUser("dupu", UserStatus.ACTIVE);
         BusinessException ex = assertThrows(BusinessException.class, () -> userService.create(
