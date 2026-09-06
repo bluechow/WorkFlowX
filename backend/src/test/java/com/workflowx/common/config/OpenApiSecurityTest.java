@@ -33,15 +33,25 @@ class OpenApiSecurityTest {
     }
 
     @Test
-    void securityRequirementSemanticsShouldBeCorrect() throws Exception {
-        // 根级 security requirement 对所有未覆盖操作生效（受保护 API 继承）；
-        // health 端点以空 @SecurityRequirements 覆盖，标记为公开
+    void securityRequirementSemanticsShouldMatchRuntimeAuth() throws Exception {
+        // P2-14 修正: 文档安全声明必须与运行时鉴权一一对应——
+        // 公开端点(login/health)显式空 security；受保护端点(logout/me/users)显式 bearerAuth
         mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                // 根级 requirement 保留
                 .andExpect(jsonPath("$.security[0].bearerAuth").exists())
+                // 公开: login / health 为空 security
+                .andExpect(jsonPath("$.paths['/api/v1/auth/login'].post.security").isArray())
+                .andExpect(jsonPath("$.paths['/api/v1/auth/login'].post.security").isEmpty())
                 .andExpect(jsonPath("$.paths['/api/v1/health'].get.security").isArray())
                 .andExpect(jsonPath("$.paths['/api/v1/health'].get.security").isEmpty())
-                .andExpect(jsonPath("$.paths['/api/v1/users'].get.security").doesNotExist())
-                .andExpect(jsonPath("$.paths['/api/v1/auth/me'].get.security").doesNotExist());
+                // 受保护: logout / me / users 显式 bearerAuth
+                .andExpect(jsonPath("$.paths['/api/v1/auth/logout'].post.security[0].bearerAuth").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/auth/me'].get.security[0].bearerAuth").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/users'].get.security[0].bearerAuth").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/users'].post.security[0].bearerAuth").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/users/{id}'].put.security[0].bearerAuth").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/users/{id}/status'].patch.security[0].bearerAuth").exists());
     }
 
     @Test

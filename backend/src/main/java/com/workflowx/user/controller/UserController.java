@@ -2,6 +2,7 @@ package com.workflowx.user.controller;
 
 import com.workflowx.common.security.JwtPayload;
 import com.workflowx.common.web.Result;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.workflowx.user.dto.CreateUserRequest;
 import com.workflowx.user.dto.UpdateUserRequest;
 import com.workflowx.user.dto.UserPageQuery;
@@ -27,10 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
  * 权限模型: 全部端点要求认证 + ADMIN 角色（@PreAuthorize 后端强制，Master Prompt §7）；
  * 未认证 → 401；已认证非 ADMIN → 403。
  * Controller 仅做参数/DTO/状态码，业务在 UserService，踢线在禁用转换内完成。
+ * 文档注解（P2-14 修正）: 类级 bearerAuth 显式声明，OpenAPI 中与运行时 ADMIN 鉴权对应。
  */
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     private final UserService userService;
