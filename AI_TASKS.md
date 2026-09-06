@@ -158,15 +158,15 @@
 
 ### 1-7 基础测试运行能力
 
-- 状态: TODO ｜ 依赖: 1-3、1-6 ｜ 验证方式: 三层测试命令分别执行并记录结果
+- 状态: ✅ DONE（2026-09-06）｜ 依赖: 1-3、1-6 ｜ 验证方式: 三层测试命令分别执行并记录结果
 - Subtask DoD: 测试体系骨架符合 §19，且每层至少 1 个可运行用例
 
-| # | Subtask | 验收标准 |
-|---|---|---|
-| 1-7.1 | 后端：context 加载测试 + health 接口 MockMvc 测试（断言统一响应结构） | `mvn test` 绿 |
-| 1-7.2 | 前端：Vitest 冒烟测试 | `npm run test` 绿 |
-| 1-7.3 | Python 骨架：pytest + conftest（BASE_URL 可配置）+ `tests/api/test_health.py` | 后端运行时 `pytest tests/api/test_health.py` 绿 |
-| 1-7.4 | `docs/testing/how-to-run-tests.md` | 三层测试运行说明与实际一致 |
+| # | Subtask | 验收标准 | 状态 |
+|---|---|---|---|
+| 1-7.1 | 后端：HealthControllerTest（@WebMvcTest，断言统一结构 + traceId 复用/回写）+ ResultTest | `mvn test` 4/4 绿 | ✅ |
+| 1-7.2 | 前端：Vitest 冒烟测试（HealthView 成功/错误两态，jsdom + Element Plus） | `npm run test` 2/2 绿 | ✅ |
+| 1-7.3 | Python 骨架：pytest + conftest（WORKFLOWX_BASE_URL 可配置）+ tests/api/test_health.py | 后端运行时 `pytest` 2/2 绿（实测 0.30s） | ✅ |
+| 1-7.4 | `docs/testing/how-to-run-tests.md` | 三层测试运行说明与实际一致 | ✅ |
 
 ### 1-8 README 与开发环境说明
 
