@@ -41,7 +41,8 @@
 - **P2-14 修复 ✅ DONE**：login 空 @SecurityRequirements（公开）+ logout/me/users 显式 bearerAuth，文档声明与运行时鉴权一一对应；mvn test 140/140
 - **P2-15 + P2-20 ✅ DONE**：Java 测试补 4 缺口（分页校验/路径类型/大小写语义/弱密钥 fail-fast）+ 2 异常处理器（BindException 422/TypeMismatch 400），mvn test 144/144；Python API 自动化体系建立（28 用例真实 HTTP 黑盒：auth/user/lockout + fixtures[单会话感知的 token/用户工厂/清理]），pytest 28/28，DB/Redis 清理零残留
 - **P2-16 ~ P2-19 ✅ DONE**：前端认证闭环——登录页（真实 API/手动校验/loading/防重复）、Dashboard（/me 资料+登出）、路由守卫（fetchMe 确认认证有效性）、Axios（Bearer 注入/401 回登录防循环/403 不误登出）、Pinia auth store（localStorage token 持久化，ADR-011）；修复真实 P0（el-form validate 永久 pending）；真实浏览器 E2E 14 步全过
-- 下一步：P2-21（前端测试）+ P2-22（测试数据文档化），**等用户指令后执行**
+- **P2-21 + P2-22 ✅ DONE**：前端测试体系分层（Unit/Component/Integration，新增 36 测试至 45/45：token util/axios 拦截器真实链/路由守卫 8 场景/auth store 全场景/LoginView 交互/Dashboard）；docs/testing/test-data.md 建立测试数据全生命周期文档
+- 下一步：P2-23（全链路验证）+ P2-24（文档收口）+ P2-25（Phase 2 最终验收），**等用户指令后执行**
 - Phase 1 — Project Foundation 已于 2026-09-06 完成并通过验收（DoD 8/8）
 
 ---

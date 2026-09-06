@@ -94,4 +94,44 @@ describe('auth store', () => {
     expect(store.isAuthenticated).toBe(true)
     expect(store.currentUser).toBeNull() // 有效性等待 /me 确认
   })
+
+  it('login 失败不改变认证状态、不持久化 token', async () => {
+    mockedLogin.mockRejectedValue({ code: 401, message: '用户名或密码错误' })
+    const store = useAuthStore()
+    await expect(store.login({ username: 'x', password: 'y' })).rejects.toBeDefined()
+    expect(store.accessToken).toBeNull()
+    expect(store.isAuthenticated).toBe(false)
+    expect(localStorage.getItem('workflowx_access_token')).toBeNull()
+  })
+
+  it('currentUser 最终来源为 /me（login 响应不得覆盖）', async () => {
+    mockedLogin.mockResolvedValue({ ...LOGIN_RESPONSE, username: 'alice-login', roles: ['ADMIN'] })
+    mockedFetchMe.mockResolvedValue({ ...ME_RESPONSE, username: 'alice-db', nickname: 'DB Alice' })
+    const store = useAuthStore()
+    await store.login({ username: 'x', password: 'y' })
+    expect(store.currentUser?.username).toBe('alice-db')
+    expect(store.currentUser?.nickname).toBe('DB Alice')
+  })
+
+  it('store 不保存密码任何形态', async () => {
+    mockedLogin.mockResolvedValue(LOGIN_RESPONSE)
+    mockedFetchMe.mockResolvedValue(ME_RESPONSE)
+    const store = useAuthStore()
+    await store.login({ username: 'alice', password: 'Secret@123' })
+    const keys = Object.keys(store.$state)
+    expect(keys.some((k) => k.toLowerCase().includes('password'))).toBe(false)
+    expect(JSON.stringify(store.$state)).not.toContain('Secret@123')
+  })
+
+  it('clearAuth 直接调用生效', async () => {
+    mockedLogin.mockResolvedValue(LOGIN_RESPONSE)
+    mockedFetchMe.mockResolvedValue(ME_RESPONSE)
+    const store = useAuthStore()
+    await store.login({ username: 'alice', password: 'Secret@123' })
+    store.clearAuth()
+    expect(store.accessToken).toBeNull()
+    expect(store.currentUser).toBeNull()
+    expect(store.isAuthenticated).toBe(false)
+    expect(localStorage.getItem('workflowx_access_token')).toBeNull()
+  })
 })

@@ -264,6 +264,8 @@
 > **进度：P2-15 + P2-20 ✅ DONE（2026-09-06，批次提交）**——P2-15 补 4 个真实缺口测试（分页参数校验 422、路径变量类型错误 400、username 大小写唯一性语义、弱密钥 fail-fast）+ 2 个异常处理器（BindException→422、MethodArgumentTypeMismatch→400），mvn test 144/144；P2-20 建立 Python API 自动化体系（tests/api/：conftest fixtures[api_client/admin_token/member_token/用户工厂+清理] + test_auth_api 6 + test_user_api 13 + test_lockout_api 3 = 28 用例真实 HTTP 黑盒），依赖新增 pymysql+redis 仅用于清理 fixture；发现并修正测试设计问题：admin 多次登录被单会话语义顶掉（fixture 改为单次登录+工厂用户验证登录载荷）、unique_suffix 改函数级；pytest 28/28，清理零残留（users=2、api_test_/fail 键 0）。**未实现**：P2-21 前端测试/P2-22 文档化。
 >
 > **进度：P2-16 ~ P2-19 ✅ DONE（2026-09-06，批次提交）**——登录页（真实 API/手动校验/loading/防重复提交/统一错误展示）+ Dashboard（/me 用户资料+退出按钮）+ 路由守卫（公开白名单/无 token 重定向/有 token 强制 fetchMe 校验）+ Axios（Bearer 自动注入/401 清理回登录页防循环/403 不误登出/2xx 解包容 201）+ Pinia auth store（token 持久化 localStorage `workflowx_access_token`，currentUser 唯一来源 /me，ADR-011）；**修复真实 P0**：el-form validate() 在真实 Chrome 永久 pending 导致登录不可用 → 改同步手动校验。前端测试 9 个（auth store 4/LoginView 3/HealthView 2）；真实浏览器 E2E 14 步全部实证（空提交校验/错误密码 401/admin 登录 dashboard/刷新恢复/会话覆盖自动登出/伪造 token 自动回登录/member 闭环/403 不误登出）。**未实现**：P2-21 完整前端测试/P2-22 文档化/业务页面。
+>
+> **进度：P2-21 + P2-22 ✅ DONE（2026-09-06，批次提交）**——前端测试体系分层建成（Unit: token util；Component: LoginView 9/Dashboard 4；Integration: 真实 axios 实例+受控 adapter 验证拦截器链 8、真实 router 导航验证守卫 8、auth store 8），新增 36 个测试至 **45/45 全绿**（lint/build 同步全绿）；P2-22 建立 docs/testing/test-data.md（seed 账号/Python api_test_ 前缀与清理/Java p2_*_test_ 前缀与 @AfterEach 清理/前端 mock 数据/Redis 键与 TTL/锁定影响/人工清理命令/生产安全边界）。回归：mvn 144/144、pytest 28/28 全绿。**未实现**：P2-23 全链路验证/P2-24 文档收口/P2-25 最终验收。
 
 ---
 
