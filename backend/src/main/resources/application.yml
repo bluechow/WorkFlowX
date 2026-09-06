@@ -27,3 +27,11 @@ management:
     health:
       show-details: never
       show-components: never
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: ${SPRINGDOC_ENABLED:true}
+  swagger-ui:
+    path: /swagger-ui
+    enabled: ${SPRINGDOC_ENABLED:true}

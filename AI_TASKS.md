@@ -133,13 +133,13 @@
 
 ### 1-5 API 基础规范落地
 
-- 状态: TODO ｜ 依赖: 1-3 ｜ 验证方式: swagger-ui 访问 + health 接口规范核对
+- 状态: ✅ DONE（2026-09-06）｜ 依赖: 1-3 ｜ 验证方式: swagger-ui 访问 + health 接口规范核对
 - Subtask DoD: API 契约与 ADR-005 完全一致，并有可查阅的约定文档
 
-| # | Subtask | 验收标准 |
-|---|---|---|
-| 1-5.1 | SpringDoc OpenAPI（swagger-ui）集成 | `/swagger-ui` 可访问，health 接口已登记 |
-| 1-5.2 | `docs/api/api-conventions.md` | 路径/方法/状态码/分页/排序/统一响应/错误码约定，与 §9、ADR-005 一致 |
+| # | Subtask | 验收标准 | 状态 |
+|---|---|---|---|
+| 1-5.1 | SpringDoc OpenAPI（swagger-ui）集成（dev 启用 / prod 默认关闭） | `/swagger-ui` 200；`/v3/api-docs` 输出 OpenAPI 3.1 | ✅ |
+| 1-5.2 | `docs/api/api-conventions.md` | 方法语义/状态码/统一响应/分页排序过滤/错误映射/安全约定，与 §9、ADR-005 一致 | ✅ |
 
 ### 1-6 前端基础工程（Vue 3 + TypeScript + Vite）
 
