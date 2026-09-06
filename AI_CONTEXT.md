@@ -27,13 +27,12 @@
 
 ## 2. 当前阶段
 
-**Phase 1 — Project Foundation：已完成 ✅（2026-09-06），待用户验收**
+**Phase 2 — Authentication & User：进行中（2026-09-06）**
 
-- 8 个任务（1-1 ~ 1-8）全部 DONE，Phase 级 DoD 8/8 满足，证据见 `AI_TASKS.md` 各任务验收记录
-- 最终验收报告已提交给用户；**停止中，未进入 Phase 2**（遵守 AI_WORKFLOW Phase 门禁）
-- 下一阶段：Phase 2 — Authentication & User（登录 / 登出 / JWT / 用户管理），**等用户指令后启动**
-
-历史：Phase 0 — Project Governance 于 2026-09-06 完成。
+- 2.0 现状检查与任务拆解已完成（P2-01 ~ P2-25，见 `AI_TASKS.md` 第 4 节）；**编码未启动**，等用户指令
+- 认证方案基线已定：Spring Security 6 + jjwt + Redis 白名单单会话；无 Refresh Token；BCrypt(10)；失败限制走 Redis 计数；种子账号仅 dev location
+- 待用户决策项：表命名 users vs sys_user、单会话/有效期参数确认（见 AI_TASKS Phase 2 节）
+- Phase 1 — Project Foundation 已于 2026-09-06 完成并通过验收（DoD 8/8）
 
 ---
 

@@ -196,7 +196,56 @@
 
 ---
 
-## 4. Phase 2–19 里程碑概览
+## 4. Phase 2 — Authentication & User（进行中：2.0 规划完成，编码未启动）
+
+- **目标**：建立完整的「用户 + 认证」基础能力：Spring Security + JWT + Redis 登录状态 + 用户 CRUD + 前端登录闭环 + 三层测试
+- **输入**：Phase 1 全部产物；Master Prompt §6（认证）/§7（授权）/§9（API）/§29（禁止事项）；ADR-003/005/007
+- **认证方案基线**（2.0 已定，详见验收报告/规划记录）：Spring Security 6 + jjwt 0.12 + Redis 白名单单会话（key `auth:session:{userId}` → jti，TTL=JWT 有效期）；无 Refresh Token（理由：单会话白名单已覆盖登出/过期/重复登录/踢人，避免不必要的复杂度）；BCrypt(10)；登录失败 Redis 计数（15 分钟窗口 5 次 → 锁 15 分钟，429）；种子账号仅注入 dev Flyway location（prod 无默认凭据）
+- **Phase 级 DoD**：
+  1. 登录→me→用户 CRUD→登出→401 全链路实测通过（curl + pytest）
+  2. 无 Token/非法 Token/过期 Token → 401 统一 JSON；越权 → 403；失败 5 次 → 429
+  3. 密码 BCrypt 存储；JWT_SECRET 环境变量注入（prod 强制）；日志无密码
+  4. 禁用用户立即无法登录且已有会话被踢
+  5. 前端登录/登出/路由守卫/Token 注入可用
+  6. 三层测试全绿且覆盖正/反/边界/权限用例
+  7. 文档同步（api-conventions 认证章节、架构安全文档、getting-started 测试账号）
+  8. 不删除/不破坏 Phase 1 任何能力（Phase 1 测试仍全绿）
+
+### Phase 2 任务清单（P2-01 ~ P2-25）
+
+| # | 任务 | 核心内容（文件/DB/API） | 验证方式 | 依赖 |
+|---|---|---|---|---|
+| P2-01 | 用户领域模型与数据库（V2 种子） | User 实体+VO/DTO 映射既有 V1 表（不改表结构）；V2 dev 种子（roles ADMIN/MEMBER + admin/user1 账号，放 db/seed/dev，prod 不执行）；更新 data-dictionary/migration-plan | 启动迁移成功；SELECT 种子数据 | - |
+| P2-02 | 用户 Mapper 与分页 | UserMapper（MP BaseMapper）+ MybatisPlusInterceptor 分页插件 | mvn 编译 + 分页单测 | P2-01 |
+| P2-03 | 用户 Service | UserService（create/update/get/page/updateStatus）+ Bean Validation DTO + 唯一性校验（409） | 单测 + 后续接口联调 | P2-02 |
+| P2-04 | BCrypt 密码体系 | PasswordEncoder bean（strength 10）+ 集成到创建/登录 | 单测 encode/matches | P2-03 |
+| P2-05 | Spring Security 基础配置 | SecurityFilterChain（无状态/CSRF off/路径规则）+ EntryPoint/DeniedHandler 输出统一 JSON | 未认证 401 JSON 实测 | P2-04 |
+| P2-06 | JWT | JwtProperties（secret/expire 环境变量）+ JwtTokenService（生成/解析/校验，jjwt 0.12） | 单测：生成/过期/篡改 | P2-05 |
+| P2-07 | Redis 登录状态 | SessionService：auth:session:{userId}→jti，TTL=2h；登录覆盖/登出删除/校验比对 | 单测 + redis-cli 实测 | P2-06 |
+| P2-08 | 登录接口 | POST /api/v1/auth/login；状态检查+失败计数+BCrypt+签发+写会话+更新 last_login_at | curl/pytest 正反用例 | P2-07 |
+| P2-09 | 登出接口 | POST /api/v1/auth/logout（认证后删除会话） | 登出后旧 token 401 | P2-08 |
+| P2-10 | /me | GET /api/v1/auth/me 返回当前用户 VO | pytest | P2-08 |
+| P2-11 | 用户 CRUD | GET/POST /users、GET/PUT /users/{id}（ADMIN 角色，分页/过滤/唯一性 409） | pytest 正反用例 | P2-08 |
+| P2-12 | 启用/禁用 | PATCH /users/{id}/status；禁用同时踢会话；不能操作自己 | pytest + 踢线实测 | P2-11 |
+| P2-13 | 登录失败限制 | Redis 计数 auth:fail:{username}（15min/5 次→锁 15min，429；成功清零） | pytest 计数/锁定/恢复用例 | P2-08 |
+| P2-14 | Swagger Security | OpenAPI bearerAuth scheme + 接口 security 注解 | swagger-ui 显示 Authorize | P2-06 |
+| P2-15 | 后端测试 | AuthService/Controller 测试（@SpringBootTest+MockMvc，连 compose 真实服务，自建数据自清理） | mvn test 全绿 | P2-13 |
+| P2-16 | 前端登录页 | LoginView + 应用壳改造（顶部用户名/退出） | 手动 + 组件测试 | P2-08(API) |
+| P2-17 | 路由鉴权 | router beforeEach + 401 跳转 | 组件/guard 测试 | P2-19 |
+| P2-18 | Axios Token 注入 | 请求拦截 Authorization；401 响应拦截清会话跳登录 | 拦截器测试 | P2-19 |
+| P2-19 | Pinia 登录状态 | stores/auth.ts（token/user 持久化 localStorage，login/logout/fetchMe） | store 测试 | P2-16 |
+| P2-20 | Python API 自动化 | tests/api/test_auth.py + test_users.py + 登录/用户工厂 fixture | pytest 全绿 | P2-12 |
+| P2-21 | 前端测试 | LoginView 组件 + auth store + 路由守卫测试 | npm run test 全绿 | P2-19 |
+| P2-22 | 测试数据与账号 | dev 种子即测试账号；pytest 用户工厂（随机用户名，用后清理）；账号清单入文档 | 文档与 fixture 一致 | P2-01 |
+| P2-23 | 完整认证链路测试 | E2E：登录→me→CRUD→禁用踢线→登出→401；失败锁定 429 | pytest E2E + 手动清单 | P2-20/21 |
+| P2-24 | 文档 | api-conventions 认证章节 + docs/architecture/security.md + getting-started 账号表 + README | 文档与实现一致 | P2-23 |
+| P2-25 | Phase 2 最终验收 | DoD 逐项核验 + 验收报告 + AI_CONTEXT/AI_TASKS 收口 | 全部证据可追溯 | P2-24 |
+
+> 任务结构与用户 P2-01~P2-25 建议一致；两处说明：① P2-01 明确为「映射既有 V1 表 + dev 种子迁移」，Phase 1 已定稿的表结构不做变更；② P2-04/02/03 按依赖顺序串行实施，BCrypt 先于 Security 配置落地。
+
+---
+
+## 5. Phase 2–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |
 |---|---|---|
