@@ -30,8 +30,8 @@
 **Phase 1 — Project Foundation：进行中（2026-09-06）**
 
 - 执行计划已细化：8 个任务（1-1 ~ 1-8）含 Subtask / 验收标准 / 依赖关系 / 验证方式，见 `AI_TASKS.md` 第 3 节
-- **编码未启动**；两项环境决策待用户确认（P1-ENV-1：JDK 21 落定方式；P1-ENV-2：本地基础设施路径），见 `AI_TASKS.md` 3.0
-- Phase 0 — Project Governance 已于 2026-09-06 完成
+- 环境决策已确认并执行：JDK 21 LTS 已安装（JAVA_HOME=D:\develop\Java\jdk-21）；WSL 2.7.13 已安装；Ubuntu 发行版与 Docker 引擎安装进行中
+- 任务进度：1-1 ✅ → 1-2 ~ 1-8 待执行
 
 ---
 
@@ -62,13 +62,14 @@
 
 | 工具 | 版本 / 状态 |
 |---|---|
-| JDK | ❗ JAVA_HOME=jdk17（17.0.11）；另有 jdk-22；**无 Java 21 LTS**（决策项 P1-ENV-1） |
+| JDK | ✅ 21.0.12.1 LTS（Temurin，D:\develop\Java\jdk-21），系统 JAVA_HOME 已切换，Maven 验证通过（P1-ENV-1 方案 A 已执行） |
 | Maven | ✅ 3.9.11 |
 | Node / npm | ✅ v22.22.3 / 10.9.8（另有 pnpm 11.5.1） |
 | Python / pip | ✅ 3.11.4 / 26.1.2 |
-| MySQL | ✅ 8.0.43 本机服务 `MySQL80` 运行中 |
-| Redis | ❌ 未安装（依赖基础设施任务提供） |
-| Docker / WSL | ❌ 均未安装（决策项 P1-ENV-2） |
+| MySQL | ✅ 8.0.43 本机服务 `MySQL80` 运行中（遗留，WorkFlowX 不使用，见 ADR-007） |
+| Redis | ❌ 未安装（由 compose 提供，任务 1-2） |
+| WSL | ✅ 2.7.13.0（内核 6.18.33.2-2，GitHub MSI 经 gh-proxy 代理安装，VirtualMachinePlatform 原生已启用，无需重启） |
+| Docker | ⏳ WSL 内 docker-ce + compose-plugin 安装中（Docker Desktop 官方 CDN 在本网络不可达，采用 WSL 内 docker-ce 替代，功能满足 ADR-007 与 §24，已在验收报告说明） |
 | Git | ✅ 2.50.1 |
 
 ### 项目环境
@@ -95,10 +96,13 @@ WorkFlowX/
 ├── AI_CONTEXT.md           # 本文件：当前状态
 ├── AI_TASKS.md             # 任务清单
 ├── AI_DECISIONS.md         # 技术决策记录（ADR）
-└── .gitignore
+├── .gitignore / .gitattributes
+├── backend/                # Spring Boot 后端（1-3 填充）
+├── frontend/               # Vue 3 前端（1-6 填充）
+├── deploy/                 # 部署配置（Phase 16 填充）
+├── tests/                  # 自动化测试（api/ui/performance/fixtures/data/utils/config）
+└── docs/                   # 文档树（requirements/architecture/database/api/development/testing/deployment）
 ```
-
-Phase 1 执行后将扩展为 backend/ frontend/ tests/ docs/ deploy/（见 AI_TASKS.md 任务 1-1）。
 
 ---
 
@@ -106,5 +110,6 @@ Phase 1 执行后将扩展为 backend/ frontend/ tests/ docs/ deploy/（见 AI_T
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
-| 2026-09-06 | 完成 Phase 1 环境检查（发现 JDK 21 缺失、Docker/WSL 缺失、MySQL 本机可用），细化执行计划：8 任务 / 31 Subtask / 验收标准 / 依赖关系，更新 AI_TASKS.md v1.1 | Phase 1 |
+| 2026-09-06 | 任务 1-1 完成：目录结构与文档树建立并提交（9f502fa） | Phase 1 |
+| 2026-09-06 | 环境安装：JDK 21.0.12.1 LTS（JAVA_HOME 切换验证通过）、WSL 2.7.13（无重启）；Docker 引擎安装进行中 | P1-ENV |
 | 2026-09-06 | 建立 AI 总控体系：5 份总控文件 + AGENTS.md + .gitignore，初始化 Git 仓库 | Phase 0 |

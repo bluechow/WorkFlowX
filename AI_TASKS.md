@@ -77,15 +77,15 @@
 
 ### 1-1 仓库目录结构与文档树
 
-- 状态: TODO ｜ 依赖: 无 ｜ 验证方式: `git ls-files` 与目录树检查
+- 状态: ✅ DONE（2026-09-06）｜ 依赖: 无 ｜ 验证方式: `git ls-files` 与目录树检查
 - Subtask DoD: 目录结构符合 Master Prompt §27；无业务代码混入
 
-| # | Subtask | 验收标准 |
-|---|---|---|
-| 1-1.1 | 顶层目录 `backend/ frontend/ tests/ docs/ deploy/` | 全部建立并纳入 git 跟踪（占位 README） |
-| 1-1.2 | `tests/` 子结构 | 按 §19：api / ui / performance / fixtures / data / utils / config 七目录 |
-| 1-1.3 | `docs/` 七子目录 + 各目录 README | requirements / architecture / database / api / development / testing / deployment，每个 README 说明职责与当前状态 |
-| 1-1.4 | `.gitattributes` | 统一 eol 策略（规避 Windows CRLF 问题） |
+| # | Subtask | 验收标准 | 状态 |
+|---|---|---|---|
+| 1-1.1 | 顶层目录 `backend/ frontend/ tests/ docs/ deploy/` | 全部建立并纳入 git 跟踪（占位 README） | ✅ |
+| 1-1.2 | `tests/` 子结构 | 按 §19：api / ui / performance / fixtures / data / utils / config 七目录 | ✅ |
+| 1-1.3 | `docs/` 七子目录 + 各目录 README | requirements / architecture / database / api / development / testing / deployment，每个 README 说明职责与当前状态 | ✅ |
+| 1-1.4 | `.gitattributes` | 统一 eol 策略（规避 Windows CRLF 问题） | ✅ |
 
 ### 1-2 Docker Compose 本地基础设施（MySQL / Redis / MinIO）
 
