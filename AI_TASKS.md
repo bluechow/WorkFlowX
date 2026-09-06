@@ -105,19 +105,19 @@
 
 ### 1-3 后端基础工程（Java 21 + Spring Boot 3.x）
 
-- 状态: TODO（编译目标取决于 P1-ENV-1）｜ 依赖: 1-1、1-2（联调）｜ 验证方式: `mvn clean package` + 本地启动 + `curl /api/v1/health` + `mvn test`
+- 状态: ✅ DONE（2026-09-06）｜ 依赖: 1-1、1-2（联调）｜ 验证方式: `mvn clean package` + 本地启动 + `curl /api/v1/health` + `mvn test`
 - Subtask DoD: 编译成功、可启动、健康检查符合 ADR-005、无硬编码配置
 
-| # | Subtask | 验收标准 |
-|---|---|---|
-| 1-3.1 | Maven 工程 + pom 依赖（Java 21 / SB 3.x web / validation / MyBatis-Plus（spring-boot3-starter）/ mysql-connector / data-redis / flyway / lombok / test） | `mvn clean package` 成功 |
-| 1-3.2 | 模块分包骨架：common、system 有实现，auth/user/organization/project/issue/notification/audit/dashboard 为占位包（package-info 说明归属 Phase） | 包结构与 Master Prompt §4 一致 |
-| 1-3.3 | 统一响应 `Result<T>`（code/message/data/timestamp/traceId）+ 全局异常处理 + 异常族（Business / Authentication / Authorization / ResourceNotFound / Validation） | 任意异常返回统一结构，不泄漏堆栈与数据库信息（§9/§10） |
-| 1-3.4 | traceId：MDC Filter（生成 + 透传 `X-Trace-Id`） | 每个响应含 traceId，日志可关联（§11） |
-| 1-3.5 | 配置分层 `application.yml` / `-dev` / `-prod` + 环境变量占位 | 无硬编码环境配置（§29-9） |
-| 1-3.6 | 日志配置 logback-spring：四级日志、滚动、敏感信息约束 | 启动日志正常，无密码/JWT 输出（§11） |
-| 1-3.7 | 健康检查：`GET /api/v1/health`（统一结构）+ Actuator health（供基础设施 healthcheck） | 两端点可用；Actuator 不暴露敏感明细 |
-| 1-3.8 | DataSource / MyBatis-Plus / Redis 连接配置（dev 指向 1-2 实例或本机 MySQL） | 启动时连接验证通过 |
+| # | Subtask | 验收标准 | 状态 |
+|---|---|---|---|
+| 1-3.1 | Maven 工程 + pom（Java 21 / SB 3.5.16 / web / validation / MyBatis-Plus 3.5.17（spring-boot3-starter）/ mysql-connector-j / data-redis / flyway + flyway-mysql / lombok / test） | `mvn clean package` 成功（42MB boot jar，一次通过） | ✅ |
+| 1-3.2 | 模块分包骨架：common、system 有实现，auth/user/organization/project/issue/notification/audit/dashboard 为占位包（package-info 标注归属 Phase） | 包结构与 Master Prompt §4 一致 | ✅ |
+| 1-3.3 | 统一响应 `Result<T>`（code/message/data/timestamp/traceId，record 实现）+ 全局异常处理 + 异常族（Base/Business/Authentication/Authorization/ResourceNotFound/Validation） | 任意异常返回统一结构；404 实测无堆栈泄漏 | ✅ |
+| 1-3.4 | traceId：TraceIdFilter（复用上游 X-Trace-Id 或生成 UUID → MDC + 响应头） | 响应头与响应体 traceId 实测一致 | ✅ |
+| 1-3.5 | 配置分层 application.yml / -dev / -prod，dev 默认值指向 compose 基础设施，prod 全环境变量强制注入 | 无硬编码环境配置（§29-9） | ✅ |
+| 1-3.6 | logback-spring：四级日志、SizeAndTimeBased 滚动、traceId 进 pattern、UTF-8 | logs/workflowx-backend.log 正常产出 | ✅ |
+| 1-3.7 | 健康检查：`GET /api/v1/health`（统一结构）+ Actuator health（show-details: never） | 实测 200 + 统一结构；/actuator/health = {"status":"UP"} | ✅ |
+| 1-3.8 | DataSource / MyBatis-Plus / Redis 连接配置（dev 指向 compose 实例） | Actuator UP 隐含 DB+Redis 健康检查通过 | ✅ |
 
 ### 1-4 数据库设计初稿
 
