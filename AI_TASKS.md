@@ -89,16 +89,19 @@
 
 ### 1-2 Docker Compose 本地基础设施（MySQL / Redis / MinIO）
 
-- 状态: TODO（路径取决于 P1-ENV-2）｜ 依赖: 1-1 ｜ 验证方式: `docker compose ps` 三服务 healthy + 连通性命令（mysql 连接 / `redis-cli ping` / MinIO health 端点）
+- 状态: ✅ DONE（2026-09-06）｜ 依赖: 1-1 ｜ 验证方式: `docker compose ps` 三服务 healthy + 连通性命令（mysql 连接 / `redis-cli ping` / MinIO health 端点）
 - Subtask DoD: 一键启动、可健康检查、可看日志、可重启（§24 基础设施部分）
 
-| # | Subtask | 验收标准 |
-|---|---|---|
-| 1-2.1 | 根目录 `compose.yaml`（dev profile） | 从项目根 `docker compose up -d` 即可启动 |
-| 1-2.2 | MySQL 8 服务 | 3306 端口、utf8mb4、时区、数据卷、healthcheck（mysqladmin ping） |
-| 1-2.3 | Redis 7 服务 | 6379 端口、healthcheck（redis-cli ping）、appendonly 持久化 |
-| 1-2.4 | MinIO 服务 | 9000 API / 9001 Console、数据卷、healthcheck、启动自动创建 `workflowx` bucket |
-| 1-2.5 | `.env.example` + 变量化配置 | 无硬编码密码（§29-9）；`.env` 已被 gitignore |
+| # | Subtask | 验收标准 | 状态 |
+|---|---|---|---|
+| 1-2.1 | 根目录 `compose.yaml`（dev profile） | 从项目根 `docker compose up -d` 即可启动 | ✅ |
+| 1-2.2 | MySQL 8 服务 | 3307→3306 端口（本机 3306 被遗留服务占用，ADR-007）、utf8mb4、时区、数据卷、healthcheck（mysqladmin ping） | ✅ |
+| 1-2.3 | Redis 7 服务 | 6379 端口、healthcheck（redis-cli ping）、appendonly 持久化 | ✅ |
+| 1-2.4 | MinIO 服务 | 9000 API / 9001 Console、数据卷、healthcheck（mc ready）、minio-init 自动创建 `workflowx` bucket | ✅ |
+| 1-2.5 | `.env.example` + 变量化配置 | 无硬编码密码（§29-9，compose 中使用 `${VAR:?}` 强制注入）；`.env` 已被 gitignore | ✅ |
+
+验收实测（2026-09-06）：三容器 `healthy`；`redis-cli ping`=PONG；Windows mysql 客户端经 3307 连接成功且 `workflowx` 库存在；MinIO health 200；bucket 创建成功；经守护进程重启后容器自动恢复（restart: unless-stopped 生效）。
+另注：WSL 虚拟机默认空闲 60s 被回收（vmIdleTimeout），已配置 `~/.wslconfig` 延长并在文档中说明。
 
 ### 1-3 后端基础工程（Java 21 + Spring Boot 3.x）
 

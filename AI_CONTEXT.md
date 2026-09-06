@@ -69,7 +69,9 @@
 | MySQL | ✅ 8.0.43 本机服务 `MySQL80` 运行中（遗留，WorkFlowX 不使用，见 ADR-007） |
 | Redis | ❌ 未安装（由 compose 提供，任务 1-2） |
 | WSL | ✅ 2.7.13.0（内核 6.18.33.2-2，GitHub MSI 经 gh-proxy 代理安装，VirtualMachinePlatform 原生已启用，无需重启） |
-| Docker | ⏳ WSL 内 docker-ce + compose-plugin 安装中（Docker Desktop 官方 CDN 在本网络不可达，采用 WSL 内 docker-ce 替代，功能满足 ADR-007 与 §24，已在验收报告说明） |
+| Docker | ✅ Docker CE 29.8.0 + Compose v5.5.1（运行于 WSL Ubuntu 22.04，systemd 管理；Docker Desktop 官方 CDN 在本网络不可达，采用 WSL 内 docker-ce 替代，功能满足 ADR-007 与 §24） |
+| Docker 镜像加速 | ✅ 已配置 /etc/docker/daemon.json（daocloud / 1ms / 1panel 三源） |
+| WSL 闲置回收 | ✅ 已配置 ~/.wslconfig vmIdleTimeout=86400000（默认 60s 回收会导致 VM 反复冷启动） |
 | Git | ✅ 2.50.1 |
 
 ### 项目环境
