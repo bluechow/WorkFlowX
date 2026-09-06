@@ -15,6 +15,8 @@ import com.workflowx.user.entity.User;
 import com.workflowx.user.entity.UserStatus;
 import com.workflowx.user.mapper.UserMapper;
 import com.workflowx.user.service.PasswordService;
+import com.workflowx.user.service.UserService;
+import com.workflowx.user.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthSessionService authSessionService;
     private final AuthRoleQueryMapper authRoleQueryMapper;
     private final JwtProperties jwtProperties;
+    private final UserService userService;
 
     @Override
     @Transactional
@@ -72,5 +75,19 @@ public class AuthServiceImpl implements AuthService {
 
         long expiresIn = jwtProperties.getExpireHours() * 3600L;
         return new LoginResponse(issuance.accessToken(), "Bearer", expiresIn, user.getId(), user.getUsername(), roles);
+    }
+
+    @Override
+    public void logout(Long userId) {
+        // 幂等: 会话不存在时 Redis DEL 为空操作，不抛异常；原 Token 因会话缺失在 Filter 层即 401
+        authSessionService.deleteSession(userId);
+        log.info("user logged out: userId={}", userId);
+    }
+
+    @Override
+    public UserVO getCurrentUser(Long userId) {
+        // 数据来源为数据库而非 JWT claims: email/nickname 等变更后 /me 立即反映最新值；
+        // 会话有效但用户已被删除 → ResourceNotFoundException(404)，绝不返回 200 + null
+        return userService.getById(userId);
     }
 }

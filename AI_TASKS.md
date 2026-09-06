@@ -252,6 +252,8 @@
 > **进度：P2-05 + P2-06 ✅ DONE（2026-09-06，批次提交）**——Spring Security 6（STATELESS/CSRF off/无 formLogin·httpBasic/公开端点白名单/其余全部 authenticated，401/403 统一 JSON）+ JWT 基础设施（jjwt 0.12.6，HS256 服务端固定，claims=sub/username/roles/jti/iat/exp，secret 环境变量化，prod 强制提供；JwtAuthenticationFilter 建立 Authentication，无 DB/Redis 依赖）；ADR-008 记录技术基线；新增测试 21 个（JWT 12 + Security 9），HealthControllerTest 升级为真实安全链路验证；mvn test 82/82，pytest/npm 回归全绿。**未实现**：Redis 会话/登录/登出/me/失败限制（属 P2-07+）。
 >
 > **进度：P2-07 + P2-08 ✅ DONE（2026-09-06，批次提交）**——AuthSessionService（auth:session:{userId}→jti，TTL 与 JWT 同源 2h，原子 SET+TTL，单会话后登录覆盖先登录，deleteSession 供 P2-09 复用）+ JwtAuthenticationFilter 会话校验（fail-closed：Redis 故障拒绝不放行）+ POST /api/v1/auth/login（白名单、Bean Validation、密码先验证后查状态防枚举、DISABLED/LOCKED 403、签发→写会话→last_login_at、LoginResponse 无密码字段）；JwtService 扩展 issueToken 返回 jti；新增测试 14 个（登录集成，真实 MySQL+Redis），mvn test 96/96；pytest 的未知路径用例按新安全行为修正（未认证 401 先于 404）；真实 curl E2E：登录→访问→二次登录覆盖→旧 token 401→统一错误全部实证；Redis TTL/jti/last_login_at 实查通过。**未实现**：logout(P2-09)/me(P2-10)/失败限制(P2-13)/前端登录(P2-16+)。
+>
+> **进度：P2-09 + P2-10 ✅ DONE（2026-09-06，批次提交）**——POST /api/v1/auth/logout（需认证；userId 取自 SecurityContext 不接受客户端传入；deleteSession 幂等；登出后原 token 因会话缺失立即 401）+ GET /api/v1/auth/me（userId 取自 SecurityContext；**数据来自数据库** UserService.getById，邮箱/昵称修改后立即生效；用户被删除 → 404 非 200+null；UserVO 复用无敏感字段）；新增集成测试 10 个（真实 MySQL+Redis），mvn test 106/106；真实 curl E2E：me 返回最新用户→logout 200→会话删除→旧 token /me 401→重复 logout 401→无 token logout 401 全部实证。**未实现**：失败限制(P2-13)/前端认证页面(P2-16+)。
 
 ---
 
