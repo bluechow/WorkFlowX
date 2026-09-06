@@ -88,7 +88,20 @@
 异常映射：Business→400/409，Authentication→401，Authorization→403，
 ResourceNotFound→404，Validation→422，未预期异常→500（仅 "internal server error"）。
 
-## 7. 安全约定
+## 7. 认证 API（Phase 2 已落地）
+
+| 端点 | 方法 | 认证 | 说明 |
+|---|---|---|---|
+| /api/v1/auth/login | POST | 公开 | 返回 accessToken/tokenType/expiresIn/userId/username/roles |
+| /api/v1/auth/logout | POST | Bearer | 删除 Redis 会话，原 Token 立即失效（幂等） |
+| /api/v1/auth/me | GET | Bearer | 返回数据库最新 UserVO（无敏感字段） |
+
+- 认证头：`Authorization: Bearer <JWT>`；无/非法/过期 Token → 401 统一 JSON
+- 权限不足 → 403；登录失败统一 401（防枚举）；15 分钟窗口 5 次失败 → 429（锁定）
+- Token 有效 = JWT 签名/过期校验通过 **且** Redis 单会话匹配（后登录覆盖先登录）
+- 架构细节见 [docs/architecture/security.md](../architecture/security.md)
+
+## 8. 安全约定
 
 - 认证后接口通过 `Authorization: Bearer <JWT>` 传递凭证（Phase 2 落地）
 - 权限校验强制在后端（Master Prompt §7），前端隐藏按钮不构成任何安全边界

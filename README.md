@@ -8,7 +8,7 @@
 
 | 层 | 技术 |
 |---|---|
-| 后端 | Java 21 · Spring Boot 3.5.x · Spring Security（Phase 2）· MyBatis-Plus · JWT（Phase 2） |
+| 后端 | Java 21 · Spring Boot 3.5.x · Spring Security · MyBatis-Plus · JWT（认证已落地） |
 | 前端 | Vue 3 · TypeScript · Vite · Pinia · Vue Router · Element Plus |
 | 数据层 | MySQL 8.x · Redis · MinIO |
 | 测试 | JUnit 5 + MockMvc · Vitest · Python + Pytest + httpx ·（Playwright / Allure / JMeter 随 Phase 12–14 引入） |
@@ -79,4 +79,4 @@ pytest                             # API 自动化（需后端运行中）
 
 ## 项目阶段
 
-项目按 Phase 0–19 推进（见 [AI_TASKS.md](AI_TASKS.md)）：当前 **Phase 1 — Project Foundation 已完成**，下一阶段 Phase 2 — Authentication & User。
+项目按 Phase 0–19 推进（见 [AI_TASKS.md](AI_TASKS.md)）：当前 **Phase 0–2 已完成**（AI 治理体系 / 项目基础设施 / 认证与用户闭环——登录、JWT、Redis 单会话、登出、/me、用户管理 API、禁用踢线、登录失败限制、三线测试），**下一阶段 Phase 3 — RBAC** 待启动。

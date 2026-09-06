@@ -265,7 +265,11 @@
 >
 > **进度：P2-16 ~ P2-19 ✅ DONE（2026-09-06，批次提交）**——登录页（真实 API/手动校验/loading/防重复提交/统一错误展示）+ Dashboard（/me 用户资料+退出按钮）+ 路由守卫（公开白名单/无 token 重定向/有 token 强制 fetchMe 校验）+ Axios（Bearer 自动注入/401 清理回登录页防循环/403 不误登出/2xx 解包容 201）+ Pinia auth store（token 持久化 localStorage `workflowx_access_token`，currentUser 唯一来源 /me，ADR-011）；**修复真实 P0**：el-form validate() 在真实 Chrome 永久 pending 导致登录不可用 → 改同步手动校验。前端测试 9 个（auth store 4/LoginView 3/HealthView 2）；真实浏览器 E2E 14 步全部实证（空提交校验/错误密码 401/admin 登录 dashboard/刷新恢复/会话覆盖自动登出/伪造 token 自动回登录/member 闭环/403 不误登出）。**未实现**：P2-21 完整前端测试/P2-22 文档化/业务页面。
 >
-> **进度：P2-21 + P2-22 ✅ DONE（2026-09-06，批次提交）**——前端测试体系分层建成（Unit: token util；Component: LoginView 9/Dashboard 4；Integration: 真实 axios 实例+受控 adapter 验证拦截器链 8、真实 router 导航验证守卫 8、auth store 8），新增 36 个测试至 **45/45 全绿**（lint/build 同步全绿）；P2-22 建立 docs/testing/test-data.md（seed 账号/Python api_test_ 前缀与清理/Java p2_*_test_ 前缀与 @AfterEach 清理/前端 mock 数据/Redis 键与 TTL/锁定影响/人工清理命令/生产安全边界）。回归：mvn 144/144、pytest 28/28 全绿。**未实现**：P2-23 全链路验证/P2-24 文档收口/P2-25 最终验收。
+> **进度：P2-21 + P2-22 ✅ DONE（2026-09-06，批次提交）**——前端测试体系分层建成（Unit: token util；Component: LoginView 9/Dashboard 4；Integration: 真实 axios 实例+受控 adapter 验证拦截器链 8、真实 router 导航验证守卫 8、auth store 8），新增 36 个测试至 **45/45 全绿**（lint/build 同步全绿）；P2-22 建立 docs/testing/test-data.md（seed 账号/Python api_test_ 前缀与清理/Java p2_*_test_ 前缀与 @AfterEach 清理/前端 mock 数据/Redis 键与 TTL/锁定影响/人工清理命令/生产安全边界）。回归：mvn 144/144、pytest 28/28 全绿。
+>
+> **进度：P2-23 ✅ DONE（2026-09-06）**——Phase 2 全链路验证：E2E 脚本 42 项检查 **2 轮全过**（登录/统一 401 防枚举/5 次锁定 429/锁定期正确密码拒绝/锁定解除恢复/覆盖踢线/会话删除失效/用户管理 201·200·409·422·404/自禁用 400/权限矩阵/400~500 错误码+traceId/无敏感泄漏/Redis 停机 500 fail-closed 实测）+ 三线回归（mvn 144/pytest 28/Vitest 45）；环境问题修复（WSL 转发失效→Hyper-V 防火墙放行+portproxy）记录于 phase2-validation.md。**报告: docs/testing/phase2-validation.md**。
+>
+> **进度：P2-24 ✅ DONE（2026-09-06）**——文档收口：README（Phase 2 实际状态）/getting-started（登录 API 可用+测试账号+curl 示例）/api-conventions（新增认证 API 端点与规则节）；新增 docs/architecture/security.md（认证链路全景图+会话模型+失败限制+边界风险）。**未实现**：P2-25 最终验收（等用户指令）。
 
 ---
 

@@ -42,7 +42,9 @@
 - **P2-15 + P2-20 ✅ DONE**：Java 测试补 4 缺口（分页校验/路径类型/大小写语义/弱密钥 fail-fast）+ 2 异常处理器（BindException 422/TypeMismatch 400），mvn test 144/144；Python API 自动化体系建立（28 用例真实 HTTP 黑盒：auth/user/lockout + fixtures[单会话感知的 token/用户工厂/清理]），pytest 28/28，DB/Redis 清理零残留
 - **P2-16 ~ P2-19 ✅ DONE**：前端认证闭环——登录页（真实 API/手动校验/loading/防重复）、Dashboard（/me 资料+登出）、路由守卫（fetchMe 确认认证有效性）、Axios（Bearer 注入/401 回登录防循环/403 不误登出）、Pinia auth store（localStorage token 持久化，ADR-011）；修复真实 P0（el-form validate 永久 pending）；真实浏览器 E2E 14 步全过
 - **P2-21 + P2-22 ✅ DONE**：前端测试体系分层（Unit/Component/Integration，新增 36 测试至 45/45：token util/axios 拦截器真实链/路由守卫 8 场景/auth store 全场景/LoginView 交互/Dashboard）；docs/testing/test-data.md 建立测试数据全生命周期文档
-- 下一步：P2-23（全链路验证）+ P2-24（文档收口）+ P2-25（Phase 2 最终验收），**等用户指令后执行**
+- **P2-23 ✅ DONE**：Phase 2 全链路验证——E2E 脚本 42 项检查 2 轮全过（认证/锁定/覆盖/登出/踢线/权限矩阵/错误码 400~500/traceId/无泄漏）+ 三线回归（mvn 144、pytest 28、Vitest 45 全绿）+ 500 fail-closed 实测；报告 docs/testing/phase2-validation.md
+- **P2-24 ✅ DONE**：文档收口——README/getting-started/api-conventions 更新至 Phase 2 实际状态；新增 docs/architecture/security.md（认证架构全景）
+- 下一步：P2-25（Phase 2 最终验收），**等用户指令后执行**
 - Phase 1 — Project Foundation 已于 2026-09-06 完成并通过验收（DoD 8/8）
 
 ---
@@ -51,8 +53,8 @@
 
 | 模块 | 说明 | 状态 |
 |---|---|---|
-| auth | 认证（登录 / 登出 / JWT） | ⬜ 未开始（Phase 2，包占位已建） |
-| user | 用户管理 | ⬜ 未开始（Phase 2，包占位已建） |
+| auth | 认证（登录 / 登出 / JWT / Redis 会话） | ✅ Phase 2 完成 |
+| user | 用户管理（CRUD / 状态 / 禁用踢线） | ✅ Phase 2 完成 |
 | organization | 组织管理 | ⬜ 未开始（Phase 4，包占位已建） |
 | rbac | 角色权限（User-Role-Permission） | 🔵 身份域 5 表已建（V1），功能属 Phase 3 |
 | project | 项目管理 | ⬜ 未开始（Phase 5，包占位已建） |
@@ -80,6 +82,7 @@
 | Python / pip | ✅ 3.11.4 / 26.1.2（pytest + httpx 已装，TUNA 源） |
 | WSL | ✅ 2.7.13.0（Ubuntu 22.04 发行版，D:\WSL\Ubuntu；vmIdleTimeout 已延长，见 ~/.wslconfig） |
 | Docker | ✅ Docker CE 29.8.0 + Compose v5.5.1（WSL 内 systemd 管理；镜像加速三源已配 /etc/docker/daemon.json） |
+| WSL 网络修复 | ✅ P2-23 期间修复 docker stop/start 后 localhost 转发失效问题：Hyper-V 防火墙放行 WSL VM 入站 + `netsh portproxy` 127.0.0.1:3307/6379 → WSL IP（**WSL 重启后 IP 变化需更新 portproxy connectaddress**，见 docs/testing/phase2-validation.md） |
 | 遗留服务 | 本机 MySQL80（3306）与 redis 缺失等历史状态保留原样，WorkFlowX 不使用（ADR-007） |
 
 ### 项目环境
@@ -125,6 +128,9 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-06 | P2-23 完成：全链路 E2E 42 项 2 轮全过 + 三线回归（mvn 144/pytest 28/Vitest 45）；修复 WSL 转发失效（Hyper-V 防火墙 + portproxy）；报告 docs/testing/phase2-validation.md | Phase 2 |
+| 2026-09-06 | P2-24 完成：README/getting-started/api-conventions 收口 + docs/architecture/security.md | Phase 2 |
+| 2026-09-06 | P2-21 + P2-22 完成：前端测试体系分层（45/45）+ test-data.md | Phase 2 |
 | 2026-09-06 | P2-03+P2-04 完成：UserService/PasswordService/DTO 校验/PageVO，新增 30 测试（mvn 61/61），修复 @Email local≤64 边界认知 | Phase 2 |
 | 2026-09-06 | P2-02 完成：UserMapper + 分页插件（MP 3.5.9+ jsqlparser 拆分修正），mvn 31/31 | Phase 2 |
 | 2026-09-06 | P2-01 完成：User 实体/UserStatus/UserVO + V2 dev 种子（admin/user1 + ADMIN/MEMBER，BCrypt 双重验证）+ 16 测试，mvn 20/20 全绿 | Phase 2 |

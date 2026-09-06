@@ -86,7 +86,20 @@ npm run dev                  # 端口 5173，/api 代理到 8080
 | admin | Admin@123456 | ADMIN | 系统管理员（Phase 3 起用于权限验证） |
 | user1 | Member@123456 | MEMBER | 普通用户（用于越权/权限反例测试） |
 
-登录接口在 Phase 2 后续任务（P2-08）实现后可用。
+| 账号 | 密码 | 角色 | 说明 |
+|---|---|---|---|
+| admin | Admin@123456 | ADMIN | 系统管理员（用户管理 API 的操作者） |
+| user1 | Member@123456 | MEMBER | 普通用户（用于越权/权限反例测试） |
+
+登录接口 `POST /api/v1/auth/login` 已可用（curl 示例）：
+
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"Admin@123456"}'
+```
+
+相关端点：`POST /api/v1/auth/logout`、`GET /api/v1/auth/me`、用户管理 `GET/POST/PUT/PATCH /api/v1/users*`（ADMIN）。安全架构详见 [docs/architecture/security.md](../architecture/security.md)。
 
 ## 7. 运行测试
 
