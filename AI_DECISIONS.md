@@ -88,3 +88,13 @@
 - 理由: 将"永久规则 / 工作方式 / 当前状态 / 任务 / 决策"分离，各司其职，AI 每次会话可快速恢复上下文并受规则约束。
 - 备选方案: 单一巨型规则文件（放弃：职责混杂，状态类信息频繁变更会污染永久规则）。
 - 影响: AI 的所有工作受此体系约束；任务完成后必须同步更新 AI_CONTEXT.md 与 AI_TASKS.md。
+
+### ADR-007: 本地开发基础设施统一通过 Docker Compose 管理
+
+- 日期: 2026-09-06
+- 状态: Accepted
+- 背景: Phase 1 环境检查发现本机 Docker/WSL 未安装，同时存在原生 `MySQL80` 服务（3306）。需明确本地基础设施的统一管理方式，避免 Docker 与原生服务混用造成环境漂移（决策项 P1-ENV-1 / P1-ENV-2，用户确认均为方案 A）。
+- 决策: MySQL、Redis、MinIO 统一优先通过 Docker Compose（WSL2 + Docker Desktop）提供与管理；不采用 Windows 原生 Redis/MinIO 作为正式开发基础设施；本机原生 MySQL80 服务保留但不用于 WorkFlowX。环境决策 P1-ENV-1（安装 JDK 21 LTS 并设为 JAVA_HOME）为履行既有 ADR-002，不修改、不新增 ADR。
+- 理由: 与 Master Prompt §24 及 Phase 16 部署形态一致；环境一致性与可重建性优先；规避 Windows 原生 Redis 无官方支持的质量风险。
+- 备选方案: Phase 1 暂用本机原生服务（用户否决）；直连原生 MySQL80（放弃：与"统一 compose 管理"冲突）。
+- 影响: Phase 1 任务 1-2 按 compose 路径验收；compose MySQL 主机端口默认 3307（本机 3306 被原生服务占用）；后续所有 Phase 的数据层均以 compose 实例为基准。

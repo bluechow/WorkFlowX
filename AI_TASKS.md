@@ -67,16 +67,11 @@
 | Docker / WSL | ❌ 均未安装 | 任务 1-2 的 compose 验收被阻塞（决策项 P1-ENV-2） |
 | Git | ✅ 2.50.1 | — |
 
-**待用户决策：**
+**决策结果（2026-09-06 用户确认，均为方案 A）：**
 
-- **P1-ENV-1（JDK 21 落定方式）**
-  - 方案 A（推荐）：安装 JDK 21 LTS（如 Temurin 21），设 `JAVA_HOME`，完全符合 ADR-002
-  - 方案 B：使用现有 JDK 22 编译运行（`--release 21`），需新增 ADR 修订 ADR-002 的 "Java 21" 表述
-- **P1-ENV-2（本地基础设施路径）**
-  - 方案 A（推荐）：安装 WSL2 + Docker Desktop（`wsl --install` + Docker Desktop），Phase 1 按 compose 一键启动验收，完全符合 Master Prompt §24
-  - 方案 B：Phase 1 暂用本机原生服务（MySQL 已就绪；MinIO 用官方 Windows 原生 exe；Redis 用 Windows 移植版），compose 文件照常编写但**验收顺延**至 Docker 就绪，并新增 ADR 记录该偏差
-
-在 P1-ENV-1 / P1-ENV-2 决策前，任务 1-2 与 1-3 的执行验收保持 `TODO`（不 BLOCKED，因为方案 B 均可行，只是路径不同）。
+- **P1-ENV-1 → 方案 A**：安装 JDK 21 LTS 并将 `JAVA_HOME` 配置为 JDK 21；不采用 JDK 22；不修改 ADR-002
+- **P1-ENV-2 → 方案 A**：安装 WSL2 + Docker Desktop；MySQL / Redis / MinIO 统一优先通过 Docker Compose 管理；不采用 Windows 原生 Redis/MinIO 作为正式开发基础设施（已记录 **ADR-007**）
+- 执行约束：编码前必须重新验证 JDK 21 / WSL2 / Docker 可用性；验证通过后任务 1-2、1-3 按 compose 路径执行
 
 ---
 
