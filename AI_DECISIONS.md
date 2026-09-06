@@ -139,3 +139,19 @@
 - 理由: INCR 原子性消除并发竞态；统一计数是唯一同时满足"5 次锁定"与"防枚举"两要求的方案。
 - 备选方案: 仅对存在用户计数（放弃：429 泄漏用户存在性）；单独 lock key（放弃：count≥5 判断已等价，少一个键）。
 - 影响: 暴力破解被限制为每 username 15 分钟 5 次；测试/清理需覆盖 auth:fail:* 键（TTL 900s 跨运行残留）；P2-15 起的自动化测试沿用同一限制。
+
+### ADR-011: 前端认证闭环与 Token 存储方案
+
+- 日期: 2026-09-06
+- 状态: Accepted
+- 背景: P2-16~P2-19 建立前端认证闭环，需确定 Token 持久化、认证状态来源与 401/403 行为。
+- 决策:
+  1. Token 存储: localStorage `workflowx_access_token`（无 Refresh Token 架构下维持刷新登录态）。localStorage 非高安全等级方案，当前阶段（学习项目、无富文本 XSS 入口）接受；不存储密码/密码哈希/任何 secret。
+  2. 认证状态来源: Pinia auth store 持有 accessToken/roles/currentUser；**currentUser 唯一来源为 GET /auth/me**（数据库实时数据），login 响应字段仅作过渡；"token 存在 ≠ 认证有效"，路由守卫对无 currentUser 的已存 token 场景强制 fetchMe 校验。
+  3. Axios 行为: 请求拦截自动注入 Bearer；401（非 login 请求、非登录页）→ 清 token + 回 /login（防循环）；403 不自动登出（交页面展示）；5xx 归一化为安全消息。
+  4. 登出: 先尽力调用后端 logout（401 视为已失效），本地无条件清理后回 /login，用户绝不卡在登录态。
+  5. 前端角色仅用于 UI 展示/控制，权限强制始终在后端 @PreAuthorize（Master Prompt §7）。
+  6. 登录页校验: 同步手动校验 + 错误区展示——不依赖 el-form validate() 异步 Promise（真实 Chrome 环境观测到其永久 pending 导致登录不可用，已修复；测试佐证 P2-16 修复记录）。
+- 理由: 与 Master Prompt §6"前端权限仅 UI 展示"及无 Refresh Token 基线（D2）一致；/me 实时化保证禁用/资料变更立即反映。
+- 备选方案: 内存 token + 刷新即登出（放弃：体验差且无安全增益）；Cookie+CSRF（放弃：与无状态 JWT 架构不符）；el-form validate 异步校验（放弃：观测到 pending 缺陷）。
+- 影响: XSS 可读取 token 为已知接受风险（无富文本入口缓解）；P2-21 前端测试与 P2-23 全链路验证以本闭环为基线。

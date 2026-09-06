@@ -262,6 +262,8 @@
 > **进度：P2-14 修复 ✅ DONE（2026-09-06，fix(api) 提交）**——用户验收指出 login 在 OpenAPI 中错误继承根级 Bearer。修复：AuthController.login 空 @SecurityRequirements（公开标记）；logout/me 逐方法与 UserController 类级显式 @SecurityRequirement(bearerAuth)；文档声明与运行时鉴权一一对应。mvn test 140/140（OpenAPI 断言更新为逐端点），pytest/npm 回归全绿，运行时 JSON 实测（login=[]、logout/me/users=[{bearerAuth}]、health=[]、根级保留）。**未实现**：P2-15 后端测试扩展/P2-16 前端页面。
 >
 > **进度：P2-15 + P2-20 ✅ DONE（2026-09-06，批次提交）**——P2-15 补 4 个真实缺口测试（分页参数校验 422、路径变量类型错误 400、username 大小写唯一性语义、弱密钥 fail-fast）+ 2 个异常处理器（BindException→422、MethodArgumentTypeMismatch→400），mvn test 144/144；P2-20 建立 Python API 自动化体系（tests/api/：conftest fixtures[api_client/admin_token/member_token/用户工厂+清理] + test_auth_api 6 + test_user_api 13 + test_lockout_api 3 = 28 用例真实 HTTP 黑盒），依赖新增 pymysql+redis 仅用于清理 fixture；发现并修正测试设计问题：admin 多次登录被单会话语义顶掉（fixture 改为单次登录+工厂用户验证登录载荷）、unique_suffix 改函数级；pytest 28/28，清理零残留（users=2、api_test_/fail 键 0）。**未实现**：P2-21 前端测试/P2-22 文档化。
+>
+> **进度：P2-16 ~ P2-19 ✅ DONE（2026-09-06，批次提交）**——登录页（真实 API/手动校验/loading/防重复提交/统一错误展示）+ Dashboard（/me 用户资料+退出按钮）+ 路由守卫（公开白名单/无 token 重定向/有 token 强制 fetchMe 校验）+ Axios（Bearer 自动注入/401 清理回登录页防循环/403 不误登出/2xx 解包容 201）+ Pinia auth store（token 持久化 localStorage `workflowx_access_token`，currentUser 唯一来源 /me，ADR-011）；**修复真实 P0**：el-form validate() 在真实 Chrome 永久 pending 导致登录不可用 → 改同步手动校验。前端测试 9 个（auth store 4/LoginView 3/HealthView 2）；真实浏览器 E2E 14 步全部实证（空提交校验/错误密码 401/admin 登录 dashboard/刷新恢复/会话覆盖自动登出/伪造 token 自动回登录/member 闭环/403 不误登出）。**未实现**：P2-21 完整前端测试/P2-22 文档化/业务页面。
 
 ---
 
