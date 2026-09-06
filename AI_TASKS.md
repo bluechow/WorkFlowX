@@ -37,11 +37,12 @@
 
 ---
 
-## 3. Phase 1 — Project Foundation（进行中：执行计划已细化，编码未启动）
+## 3. Phase 1 — Project Foundation（已完成 ✅，待用户验收）
 
 - **目标**：搭建可运行的前后端基础工程与本地基础设施，形成"一键启动、可验证"的开发环境底座
-- **输入**：Phase 0 总控体系；Master Prompt §3/§4/§8/§9/§11/§19/§24/§27；ADR-001/002/005
+- **输入**：Phase 0 总控体系；Master Prompt §3/§4/§8/§9/§11/§19/§24/§27；ADR-001/002/005/007
 - **明确排除**（ADR-001，禁止引入）：Nacos、Sentinel、Seata、Kafka/RocketMQ、Kubernetes 及任何微服务组件；Nginx 反向代理延后至 Phase 16；ECharts 延后至 Phase 10（Product First，禁止装而不用）
+- **Phase 级 DoD 实测结论（2026-09-06）：8/8 全部满足**，逐项证据见各任务验收记录与最终验收报告
 
 ### Phase 级验收标准（Definition of Done）
 
@@ -170,13 +171,13 @@
 
 ### 1-8 README 与开发环境说明
 
-- 状态: TODO ｜ 依赖: 1-1 ~ 1-7 全部 ｜ 验证方式: 以文档为准从零走一遍启动流程
+- 状态: ✅ DONE（2026-09-06）｜ 依赖: 1-1 ~ 1-7 全部 ｜ 验证方式: 以文档为准从零走一遍启动流程
 - Subtask DoD: 文档可复现，含 Windows 环境细节
 
-| # | Subtask | 验收标准 |
-|---|---|---|
-| 1-8.1 | `README.md`：项目简介 / 架构图 / 技术栈 / 快速启动 / 文档索引 | 步骤与实际一致 |
-| 1-8.2 | `docs/development/getting-started.md`：环境要求 / 分步启动 / 常见问题 | 环境要求与 3.0 检查结果一致 |
+| # | Subtask | 验收标准 | 状态 |
+|---|---|---|---|
+| 1-8.1 | `README.md`：项目简介 / 架构图 / 技术栈 / 快速启动 / 文档索引 | 步骤与实际执行过程一致（本 Phase 全程实测过） | ✅ |
+| 1-8.2 | `docs/development/getting-started.md`：环境要求 / 分步启动 / 常见问题 | 环境要求与 3.0 检查结果一致，含 WSL/镜像加速等本机实测细节 | ✅ |
 
 ---
 
