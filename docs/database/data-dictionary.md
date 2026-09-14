@@ -42,10 +42,12 @@
 | 字段 | 类型 | 约束 | 说明 |
 |---|---|---|---|
 | id | BIGINT UNSIGNED | PK, AI | 主键 |
-| code | VARCHAR(100) | NOT NULL, UNIQUE | 权限编码 `resource:action`（如 `issue:delete`） |
+| code | VARCHAR(100) | NOT NULL, UNIQUE | 权限编码 `{resource}:{action}`（规范见 docs/architecture/rbac.md §2，正则 `^[a-z][a-z0-9_]{1,49}:[a-z][a-z0-9_]{1,49}$`） |
 | name | VARCHAR(50) | NOT NULL | 权限名称 |
 | type | ENUM | NOT NULL DEFAULT 'API' | MENU / API / BUTTON |
 | description | VARCHAR(200) | NULL | 描述 |
+
+系统权限 14 项由 V3 迁移种子（ADR-012），代码层禁止删除（RbacConstants.SYSTEM_PERMISSION_CODES）；ADMIN 角色全量绑定。
 
 ## 4. user_roles ✅
 

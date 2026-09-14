@@ -27,9 +27,12 @@
 
 ## 2. 当前阶段
 
-**Phase 2 — Authentication & User：✅ 全部完结并通过 Release Gate（2026-09-06，P2-25 Final QA PASS）**
+**Phase 3 — RBAC：进行中（2026-09-06）**
 
-- 决策 D1–D5 用户已确认：保持 users 表命名 / 无 Refresh Token / JWT 2h + Redis 单会话 / 失败 5 次锁 15 分钟 / 种子仅 dev
+- **P3-01 ✅ DONE**：RBAC 设计基线（docs/architecture/rbac.md + ADR-012）+ V3 系统权限种子迁移（14 项 + ADMIN 全量绑定）；五表零结构变更，Phase 2 机制不动
+- **P3-02 ✅ DONE**：rbac 模块领域能力（Entity/4 Mapper/DTO/VO/RbacConstants/三 Service：角色 CRUD+权限绑定、权限 CRUD+用户权限实时解析、用户角色幂等绑定）；新增测试 28 个，mvn 172/172，Phase 2 回归全绿（pytest 28/npm 45/运行时冒烟）
+- 下一步：P3-03（RBAC REST API + 权限注解接线），**等用户指令后执行**
+- Phase 2 — Authentication & User 已于 2026-09-06 通过 Release Gate（25 任务全部完结）
 - **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
 - **P2-02 ✅ DONE**：UserMapper（BaseMapper 极简）+ MybatisPlusConfig 分页插件（MySQL；MP 3.5.9+ 已补 mybatis-plus-jsqlparser 依赖）+ UserMapperTest 11 用例（真实 MySQL，SQL 实证 ORDER BY/LIMIT/count 正确）；mvn test 31/31 全绿
 - **P2-03 + P2-04 ✅ DONE**：UserService（查询/分页/创建/更新/状态，唯一性 409、404/409 异常体系复用）+ PasswordService（BCrypt 10 统一入口，PasswordEncoderConfig 全局唯一 Bean）+ DTO Bean Validation + PageVO 统一分页结构；新增测试 30 个，mvn test 61/61
@@ -56,6 +59,7 @@
 |---|---|---|
 | auth | 认证（登录 / 登出 / JWT / Redis 会话） | ✅ Phase 2 完成 |
 | user | 用户管理（CRUD / 状态 / 禁用踢线） | ✅ Phase 2 完成 |
+| rbac | 角色-权限-用户绑定领域 | 🔵 P3-01/02 完成（领域服务；REST API 属 P3-03） |
 | organization | 组织管理 | ⬜ 未开始（Phase 4，包占位已建） |
 | rbac | 角色权限（User-Role-Permission） | 🔵 身份域 5 表已建（V1），功能属 Phase 3 |
 | project | 项目管理 | ⬜ 未开始（Phase 5，包占位已建） |
@@ -129,6 +133,7 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-06 | P3-01+P3-02 完成：RBAC 设计基线（rbac.md/ADR-012）+ V3 权限种子 + rbac 模块领域服务 + 28 测试（mvn 172/172）；Phase 2 回归全绿 | Phase 3 |
 | 2026-09-06 | P2-25 完成：Phase 2 Release Gate **PASS**（交付/完整性/安全/文档核验 + 三线回归；pytest 首轮环境瞬时竞态已定位复验）；报告见 phase2-validation.md §Release Gate | Phase 2 收口 |
 | 2026-09-06 | P2-23 完成：全链路 E2E 42 项 2 轮全过 + 三线回归（mvn 144/pytest 28/Vitest 45）；修复 WSL 转发失效（Hyper-V 防火墙 + portproxy）；报告 docs/testing/phase2-validation.md | Phase 2 |
 | 2026-09-06 | P2-24 完成：README/getting-started/api-conventions 收口 + docs/architecture/security.md | Phase 2 |

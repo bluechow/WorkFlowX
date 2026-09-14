@@ -275,7 +275,24 @@
 
 ---
 
-## 5. Phase 2–19 里程碑概览
+## 5. Phase 3 — RBAC（进行中：P3-01 + P3-02 ✅ DONE，等用户指令继续）
+
+- **目标**: 用户-角色-权限模型落地与后端强制鉴权演进（Master Prompt §7、ADR-003/012）
+- **输入**: Phase 2 认证链路（JWT roles claim → ROLE_ authorities → @PreAuthorize）；V1 五表；ADR-012
+- **设计基线**: docs/architecture/rbac.md（权限编码 {resource}:{action}、系统角色/权限清单、衔接演进路径）
+
+| # | 任务 | 状态 | 说明 |
+|---|---|---|---|
+| P3-01 | RBAC 数据模型与领域设计 | ✅ DONE | 五表零结构变更；rbac.md 设计文档；ADR-012；V3 系统权限种子迁移（14 项 + ADMIN 全量绑定，公共 migration） |
+| P3-02 | RBAC 后端基础能力 | ✅ DONE | rbac 模块：Role/Permission 实体 + 4 Mapper（关联表注解 SQL）+ DTO/VO + Role/Permission/UserRole 三 Service（事务/唯一 409/404/系统保护 400）；新增测试 28 个 |
+| P3-03 | RBAC REST API + 权限注解接线 | ⬜ TODO | 角色/权限/用户角色管理端点（ADMIN + role:*/permission:*/user:assign_role）；Filter 增加权限 authorities / hasAuthority 细化 |
+| P3-04+ | RBAC 前端 + 测试完善 + 验收 | ⬜ TODO | 进入时细化 |
+
+> **进度：P3-01 ✅ DONE（2026-09-06）**——执行前检查确认五表真实结构（permissions UK + ENUM(MENU/API/BUTTON)，关联表 FK CASCADE）与 Security 行接点；产出 docs/architecture/rbac.md（编码规范/系统角色权限/衔接演进）、ADR-012（JWT 仅带 roles、权限服务端实时查询、零结构变更、Phase 2 机制不动）、V3__rbac_permissions.sql（14 项系统权限 + ADMIN 全量绑定，公共迁移幂等种子）；migration-plan V3 归属更新（组织表顺延 V5）。
+>
+> **进度：P3-02 ✅ DONE（2026-09-06）**——rbac 模块落地：Role/Permission 实体 + RoleMapper/PermissionMapper（BaseMapper）+ UserRoleMapper/RolePermissionMapper（复合键关联表注解 SQL，P2-08 先例）+ CreateRole/UpdateRole/CreatePermission/AssignRolePermissions DTO（编码正则守护）+ RoleVO/PermissionVO（system 标记）+ RbacConstants（系统角色/权限代码守护）+ RoleService（CRUD/replace 语义权限绑定/系统角色 400 保护/未知权限 404）+ PermissionService（CRUD/系统权限 400/三表 JOIN 用户权限实时解析）+ UserRoleService（幂等分配/回收/查询）；新增集成与校验测试 28 个；**回归: mvn 172/172（Phase 2 144 全绿无回归）+ pytest 28/28（新 jar）+ Vitest 45/45 + lint/build + 运行时冒烟（登录→me→users→logout 200）**；V3 迁移实测 success=1（permissions=14、ADMIN 绑定=14）。
+
+## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |
 |---|---|---|

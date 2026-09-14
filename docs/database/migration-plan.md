@@ -8,14 +8,15 @@
 |---|---|---|---|
 | V1__identity_core.sql | Phase 1 | 身份域 5 张表：users / roles / permissions / user_roles / role_permissions | ✅ 已落地 |
 | V2__seed_dev.sql（db/seed/dev） | Phase 2 | **仅 dev**：roles(ADMIN/MEMBER) 种子 + 测试账号 admin/user1（BCrypt 哈希）+ user_roles 关联；幂等（NOT EXISTS 守卫） | ✅ 已落地 |
-| V3（Phase 2 后续时定稿命名） | Phase 2 | users 演进字段（如手机号、头像）+ permissions 种子数据 | 待定 |
-| V4 | Phase 4 | organizations / organization_members | 待定 |
-| V5 | Phase 5 | projects / project_members | 待定 |
-| V6 | Phase 6 | issues | 待定 |
-| V7 | Phase 7 | issue_status_transitions | 待定 |
-| V8 | Phase 8 | issue_comments / attachments | 待定 |
-| V9 | Phase 9 | notifications | 待定 |
-| V10 | Phase 10 | audit_logs | 待定 |
+| V3__rbac_permissions.sql | Phase 3 | **公共**（产品数据）：系统权限 14 项种子（{resource}:{action}）+ ADMIN 角色全量绑定；MEMBER 暂无管理权限（ADR-012） | ✅ 已落地 |
+| V4（Phase 3 后续定稿） | Phase 3 | RBAC 后续演进迁移（如有） | 待定 |
+| V5 | Phase 4 | organizations / organization_members | 待定 |
+| V6 | Phase 5 | projects / project_members | 待定 |
+| V7 | Phase 6 | issues | 待定 |
+| V8 | Phase 7 | issue_status_transitions | 待定 |
+| V9 | Phase 8 | issue_comments / attachments | 待定 |
+| V10 | Phase 9 | notifications | 待定 |
+| V11 | Phase 10 | audit_logs | 待定 |
 
 ## 执行规则
 

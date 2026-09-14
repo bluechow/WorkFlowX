@@ -140,6 +140,21 @@
 - 备选方案: 仅对存在用户计数（放弃：429 泄漏用户存在性）；单独 lock key（放弃：count≥5 判断已等价，少一个键）。
 - 影响: 暴力破解被限制为每 username 15 分钟 5 次；测试/清理需覆盖 auth:fail:* 键（TTL 900s 跨运行残留）；P2-15 起的自动化测试沿用同一限制。
 
+### ADR-012: RBAC 数据模型与权限体系基线
+
+- 日期: 2026-09-06
+- 状态: Accepted
+- 背景: Phase 3 启动。V1 五表（users/roles/permissions/user_roles/role_permissions）已定稿且 permissions/role_permissions 为空表，需确定权限编码规范、系统角色/权限清单、初始化策略及与 Phase 2 Spring Security 机制的衔接。
+- 决策:
+  1. 零表结构变更：沿用 V1 五表，RBAC 能力以领域服务实现（com.workflowx.rbac 模块）。
+  2. 权限编码 `{resource}:{action}`（小写 snake_case，两段式，正则守护）；系统权限 14 项（user 6 + role 6 + permission 2）由 V3 公共迁移种子（产品数据，NOT EXISTS 幂等，dev/prod 均执行）；ADMIN 绑定全部，MEMBER 暂无管理权限。
+  3. 系统角色（ADMIN/MEMBER）与系统权限由代码常量守护（禁止删除/系统角色 code 不可改），不加数据库标记列。
+  4. JWT 继续只携带 roles claim（ADR-008 延续）；权限以服务端实时查询为准（PermissionService.findPermissionCodesByUserId），后续任务将 permission authorities 接入 Filter/注解（hasAuthority）——权限变更实时生效且 token 体积不受权限数影响。
+  5. Phase 2 机制完全保持：hasRole('ADMIN') 注解、AuthRoleQueryMapper、Filter 的 ROLE_ 映射均不修改。
+- 理由: 满足 Master Prompt §7 后端强制授权；渐进式演进避免一次性重写 Phase 2 已过 Gate 的认证链路。
+- 备选方案: permissions 写入 JWT（放弃：token 膨胀 + 收权不实时）；增加 is_system 列（放弃：代码常量足够，少一次 DDL）。
+- 影响: P3-02 提供领域服务但不暴露 REST API（属后续任务）；权限注解细化（hasAuthority）在后续任务接线；业务模块（Phase 4+）新增权限时须先在 rbac.md 登记。
+
 ### ADR-011: 前端认证闭环与 Token 存储方案
 
 - 日期: 2026-09-06
