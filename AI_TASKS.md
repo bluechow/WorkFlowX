@@ -269,7 +269,9 @@
 >
 > **进度：P2-23 ✅ DONE（2026-09-06）**——Phase 2 全链路验证：E2E 脚本 42 项检查 **2 轮全过**（登录/统一 401 防枚举/5 次锁定 429/锁定期正确密码拒绝/锁定解除恢复/覆盖踢线/会话删除失效/用户管理 201·200·409·422·404/自禁用 400/权限矩阵/400~500 错误码+traceId/无敏感泄漏/Redis 停机 500 fail-closed 实测）+ 三线回归（mvn 144/pytest 28/Vitest 45）；环境问题修复（WSL 转发失效→Hyper-V 防火墙放行+portproxy）记录于 phase2-validation.md。**报告: docs/testing/phase2-validation.md**。
 >
-> **进度：P2-24 ✅ DONE（2026-09-06）**——文档收口：README（Phase 2 实际状态）/getting-started（登录 API 可用+测试账号+curl 示例）/api-conventions（新增认证 API 端点与规则节）；新增 docs/architecture/security.md（认证链路全景图+会话模型+失败限制+边界风险）。**未实现**：P2-25 最终验收（等用户指令）。
+> **进度：P2-24 ✅ DONE（2026-09-06）**——文档收口：README（Phase 2 实际状态）/getting-started（登录 API 可用+测试账号+curl 示例）/api-conventions（新增认证 API 端点与规则节）；新增 docs/architecture/security.md（认证链路全景图+会话模型+失败限制+边界风险）。
+>
+> **进度：P2-25 ✅ DONE（2026-09-06）——Phase 2 Release Gate: PASS**——交付状态（clean/13 语义化提交）、产品完整性（后端 11+前端 7 关键组件+迁移配置全在位+运行时冒烟 5 链 200）、安全终检 8 项全过、文档一致性 5 项全过、三线回归（mvn 144/Vitest 45+lint+build/pytest 稳定 3 轮 28/28）；首轮 pytest 21 errors 定位为 WSL 容器冷启动竞态（环境瞬时，非产品缺陷），复验通过；**未发现产品缺陷，未修改任何生产代码**。Gate 报告: docs/testing/phase2-validation.md §Release Gate。**Phase 2 全部 25 任务完结，下一阶段 Phase 3 — RBAC 等用户指令。**
 
 ---
 

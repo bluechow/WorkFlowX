@@ -27,7 +27,7 @@
 
 ## 2. 当前阶段
 
-**Phase 2 — Authentication & User：进行中（2026-09-06）**
+**Phase 2 — Authentication & User：✅ 全部完结并通过 Release Gate（2026-09-06，P2-25 Final QA PASS）**
 
 - 决策 D1–D5 用户已确认：保持 users 表命名 / 无 Refresh Token / JWT 2h + Redis 单会话 / 失败 5 次锁 15 分钟 / 种子仅 dev
 - **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
@@ -44,7 +44,8 @@
 - **P2-21 + P2-22 ✅ DONE**：前端测试体系分层（Unit/Component/Integration，新增 36 测试至 45/45：token util/axios 拦截器真实链/路由守卫 8 场景/auth store 全场景/LoginView 交互/Dashboard）；docs/testing/test-data.md 建立测试数据全生命周期文档
 - **P2-23 ✅ DONE**：Phase 2 全链路验证——E2E 脚本 42 项检查 2 轮全过（认证/锁定/覆盖/登出/踢线/权限矩阵/错误码 400~500/traceId/无泄漏）+ 三线回归（mvn 144、pytest 28、Vitest 45 全绿）+ 500 fail-closed 实测；报告 docs/testing/phase2-validation.md
 - **P2-24 ✅ DONE**：文档收口——README/getting-started/api-conventions 更新至 Phase 2 实际状态；新增 docs/architecture/security.md（认证架构全景）
-- 下一步：P2-25（Phase 2 最终验收），**等用户指令后执行**
+- **P2-25 ✅ DONE（Release Gate: PASS）**：交付/完整性/安全 8 项/文档 5 项核验全过；三线回归 mvn 144 + Vitest 45 + pytest 稳定 28；无产品缺陷未改生产代码；Gate 报告见 docs/testing/phase2-validation.md
+- 下一步：**Phase 3 — RBAC**（用户-角色-权限模型与后端强制鉴权，V3 迁移），**等用户指令后启动**
 - Phase 1 — Project Foundation 已于 2026-09-06 完成并通过验收（DoD 8/8）
 
 ---
@@ -128,6 +129,7 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-06 | P2-25 完成：Phase 2 Release Gate **PASS**（交付/完整性/安全/文档核验 + 三线回归；pytest 首轮环境瞬时竞态已定位复验）；报告见 phase2-validation.md §Release Gate | Phase 2 收口 |
 | 2026-09-06 | P2-23 完成：全链路 E2E 42 项 2 轮全过 + 三线回归（mvn 144/pytest 28/Vitest 45）；修复 WSL 转发失效（Hyper-V 防火墙 + portproxy）；报告 docs/testing/phase2-validation.md | Phase 2 |
 | 2026-09-06 | P2-24 完成：README/getting-started/api-conventions 收口 + docs/architecture/security.md | Phase 2 |
 | 2026-09-06 | P2-21 + P2-22 完成：前端测试体系分层（45/45）+ test-data.md | Phase 2 |

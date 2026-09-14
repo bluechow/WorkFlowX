@@ -87,3 +87,55 @@
 - Maven: **144/144** ｜ Pytest: **28/28** ｜ Vitest: **45/45** ｜ lint/build: PASS
 - 测试数据清理: p2_23_ 前缀用户与 Redis 键清零（DB users 回到 seed 的 2 行）
 - 结论: **P2-01～P2-22 组合后的完整认证/用户链路验证通过，Phase 2 达到 Definition of Done**
+
+---
+
+# Phase 2 Release Gate（P2-25 Final QA）
+
+> 时间: 2026-09-06 ｜ Git: `678c8e0` 基线上执行 ｜ 结论: **GATE PASS**
+
+## A. 交付状态
+
+- working tree **clean**；Phase 2 共 13 个语义化提交（P2.0 规划 a54e8e8 → P2-23/24 收口 678c8e0），全部符合 conventional commits
+
+## B. 产品完整性核验
+
+- 后端 11 个关键组件（Auth/User Controller、AuthService、LoginAttemptService、UserService、PasswordService、SecurityConfig、JwtService、AuthSessionService、JwtAuthenticationFilter、GlobalExceptionHandler）全部在位 ✅
+- 前端 7 个关键组件（LoginView/DashboardView/auth store/auth api/http/router/token util）全部在位 ✅
+- Flyway V1（表结构）+ V2（dev 种子）在位 ✅；compose.yaml/.env.example 在位 ✅
+- 运行时冒烟: login → /me → ADMIN users → swagger-ui → logout 全链 **200** ✅
+
+## C. 安全终检（8 项全过）
+
+1. `.env` 未被 Git 跟踪 ✅ 2. prod 配置 5 项强制环境变量注入、零默认凭据 ✅ 3. Java 主代码无明文凭据 ✅ 4. 无 JWT secret 字面量 ✅ 5. 前端 token 存储无密码形态字段 ✅ 6. 无敏感 console 输出 ✅ 7. BCrypt 全项目唯一实例化点 ✅ 8. 运行日志无 token/密码 ✅
+
+## D. 文档一致性核验（5 项全过）
+
+1. README 阶段声明 = Phase 0–2 完成待 Phase 3 ✅ 2. api-conventions 端点与实际 Controller 路由一致 ✅ 3. security.md 关键参数（TTL 2h/单会话/5 次·15 分钟/auth:session: key）与实现逐项一致 ✅ 4. test-data.md 五个测试前缀与实际测试文件一致 ✅ 5. getting-started 凭据与 V2 seed 哈希对应（SeedPasswordHashTest 守护）✅
+
+> 观察项（非缺陷）: api-conventions 未逐条展开 users 5 端点——由文档泛化 REST 规则 + Swagger 运行时文档覆盖，P2-24 范围仅要求认证规则；Phase 5 文档阶段可补全。
+
+## E. 最终三线回归
+
+| 线 | 结果 |
+|---|---|
+| Maven | **144/144** |
+| Vitest | **45/45** + lint PASS + build PASS |
+| Pytest | 首轮 **7 passed / 21 errors** → 定位为环境瞬时竞态（WSL 容器冷启动循环中后端连接 MySQL/Redis 瞬断）→ 稳定后**连续 3 轮 28/28**、DB 零残留 ✅ |
+
+## F. 缺陷与处理
+
+| # | 类型 | 描述 | 判定与处理 |
+|---|---|---|---|
+| 1 | 环境 | Final QA 期间首轮 pytest 21 errors | **非产品缺陷**: WSL 容器空闲回收后冷启动循环，后端依赖连接瞬断；容器稳定后连续 3 轮 28/28。已通过 keep-alive + vmIdleTimeout 缓解，复验通过 |
+| 2 | 产品 | **未发现**——全部静态核验、动态回归、运行时冒烟无需修改任何生产代码 | — |
+
+## G. Gate 结论
+
+**Phase 2（Authentication & User, P2-01～P2-24）通过 Release Gate。**
+- 功能: 认证/用户/权限/错误处理全链路实证
+- 质量: 三线测试 217 项全绿（144 + 45 + 28）
+- 安全: 8 项终检全过，防枚举/防暴力破解/fail-closed 实证
+- 文档: 与实现一致，验证报告齐备
+- 下一阶段: Phase 3 — RBAC（待用户指令）
+
