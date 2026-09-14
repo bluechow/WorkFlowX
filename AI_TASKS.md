@@ -285,12 +285,15 @@
 |---|---|---|---|
 | P3-01 | RBAC 数据模型与领域设计 | ✅ DONE | 五表零结构变更；rbac.md 设计文档；ADR-012；V3 系统权限种子迁移（14 项 + ADMIN 全量绑定，公共 migration） |
 | P3-02 | RBAC 后端基础能力 | ✅ DONE | rbac 模块：Role/Permission 实体 + 4 Mapper（关联表注解 SQL）+ DTO/VO + Role/Permission/UserRole 三 Service（事务/唯一 409/404/系统保护 400）；新增测试 28 个 |
-| P3-03 | RBAC REST API + 权限注解接线 | ⬜ TODO | 角色/权限/用户角色管理端点（ADMIN + role:*/permission:*/user:assign_role）；Filter 增加权限 authorities / hasAuthority 细化 |
-| P3-04+ | RBAC 前端 + 测试完善 + 验收 | ⬜ TODO | 进入时细化 |
+| P3-03 | RBAC REST API + 权限注解接线 | ✅ DONE | 13 端点（角色 CRUD/角色权限 replace/权限只读/用户角色 get·assign·revoke·replace）；Filter 权限 authorities 实时接线；UserController 迁移 hasAuthority；AuthRoleQueryMapper 统一并删除；RbacControllerIntegrationTest 16 用例；mvn 188/188 |
+| P3-04 | RBAC 前端产品能力 | ✅ DONE | 系统管理三页（用户角色/角色管理/权限管理）+ ADMIN 菜单 + api/rbac.ts + RoleVO/PermissionVO 类型；Vitest 新增 11 用例（mock 仅 HTTP boundary）56/56；运行时冒烟权限矩阵+实时授予回收实证 |
+| P3-05+ | 前端权限细化/测试完善/验收 | ⬜ TODO | 进入时细化 |
 
 > **进度：P3-01 ✅ DONE（2026-09-06）**——执行前检查确认五表真实结构（permissions UK + ENUM(MENU/API/BUTTON)，关联表 FK CASCADE）与 Security 行接点；产出 docs/architecture/rbac.md（编码规范/系统角色权限/衔接演进）、ADR-012（JWT 仅带 roles、权限服务端实时查询、零结构变更、Phase 2 机制不动）、V3__rbac_permissions.sql（14 项系统权限 + ADMIN 全量绑定，公共迁移幂等种子）；migration-plan V3 归属更新（组织表顺延 V5）。
 >
 > **进度：P3-02 ✅ DONE（2026-09-06）**——rbac 模块落地：Role/Permission 实体 + RoleMapper/PermissionMapper（BaseMapper）+ UserRoleMapper/RolePermissionMapper（复合键关联表注解 SQL，P2-08 先例）+ CreateRole/UpdateRole/CreatePermission/AssignRolePermissions DTO（编码正则守护）+ RoleVO/PermissionVO（system 标记）+ RbacConstants（系统角色/权限代码守护）+ RoleService（CRUD/replace 语义权限绑定/系统角色 400 保护/未知权限 404）+ PermissionService（CRUD/系统权限 400/三表 JOIN 用户权限实时解析）+ UserRoleService（幂等分配/回收/查询）；新增集成与校验测试 28 个；**回归: mvn 172/172（Phase 2 144 全绿无回归）+ pytest 28/28（新 jar）+ Vitest 45/45 + lint/build + 运行时冒烟（登录→me→users→logout 200）**；V3 迁移实测 success=1（permissions=14、ADMIN 绑定=14）。
+>
+> **进度：P3-03 + P3-04 ✅ DONE（2026-09-06）**——P3-03：RbacController 13 端点（hasAuthority 全覆盖）+ JwtAuthenticationFilter 权限 authorities 实时接线（user→role→permission，收权即时生效）+ UserController hasRole→hasAuthority 迁移 + AuthRoleQueryMapper 统一删除（SQL 等价，AuthLogin 14 用例回归验证）+ AssignUserRolesRequest（元素级校验）+ replaceUserRoles；RbacControllerIntegrationTest 16 用例（权限矩阵/系统保护/实时授予回收），mvn 188/188。P3-04：系统管理三页（RolesView 创建/编辑/删除保护/权限分配对话框、PermissionsView 只读列表、UserRolesView 分页搜索+角色 replace 对话框）+ App 头部 ADMIN 菜单（纯 UX）+ api/rbac.ts + 类型；Vitest 新增 11 用例 56/56（mock 仅 HTTP boundary）+ lint/build 全绿；运行时冒烟：admin 200/member 403/未认证 401 + 同一 token 授予 role:list 403→200、回收 200→403 实时生效。pytest 28/28 回归。**发现修复**：测试数据小写前缀违反自身角色编码规范（P3-02 遗留，Service 层无 @Valid 故当时未拦截）→ 统一大写；WSL portproxy 指向过期 IP → 更新脚本化。
 
 ## 6. Phase 4–19 里程碑概览
 

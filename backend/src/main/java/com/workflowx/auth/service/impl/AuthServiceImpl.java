@@ -3,7 +3,6 @@ package com.workflowx.auth.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.workflowx.auth.dto.LoginRequest;
 import com.workflowx.auth.dto.LoginResponse;
-import com.workflowx.auth.mapper.AuthRoleQueryMapper;
 import com.workflowx.auth.service.AuthService;
 import com.workflowx.auth.service.LoginAttemptService;
 import com.workflowx.common.exception.AuthenticationException;
@@ -43,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordService passwordService;
     private final JwtService jwtService;
     private final AuthSessionService authSessionService;
-    private final AuthRoleQueryMapper authRoleQueryMapper;
+    private final com.workflowx.rbac.service.UserRoleService userRoleService;
     private final JwtProperties jwtProperties;
     private final UserService userService;
     private final LoginAttemptService loginAttemptService;
@@ -74,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(403, "账号已被锁定，请稍后重试");
         }
 
-        List<String> roles = authRoleQueryMapper.findRoleCodesByUserId(user.getId());
+        List<String> roles = userRoleService.findRoleCodesByUserId(user.getId());
         TokenIssuance issuance = jwtService.issueToken(user.getId(), user.getUsername(), roles);
         // fail-closed: 会话写入失败将抛出异常，登录即失败，不会返回无法通过认证链的 token
         authSessionService.createSession(user.getId(), issuance.jti());

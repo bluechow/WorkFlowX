@@ -26,13 +26,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * RoleService / UserRoleService 集成测试（P3-02）：真实 MySQL（compose :3307）。
- * 数据隔离: 测试角色统一 p3_test_ 前缀（非系统角色，可安全删除），用后清理。
+ * 数据隔离: 测试角色统一 P3_TEST_ 前缀（非系统角色，可安全删除），用后清理。
  * 系统角色（ADMIN/MEMBER）行为通过 V3 种子实测验证。
  */
 @SpringBootTest
 class RoleServiceIntegrationTest {
 
-    private static final String PREFIX = "p3_test_";
+    private static final String PREFIX = "P3_TEST_";
 
     @Autowired
     private RoleService roleService;
@@ -57,18 +57,18 @@ class RoleServiceIntegrationTest {
 
     @Test
     void createShouldPersistAndReturnVo() {
-        RoleVO created = createTestRole("create");
+        RoleVO created = createTestRole("CREATE");
         assertTrue(created.id() > 0);
-        assertEquals(PREFIX + "create", created.code());
+        assertEquals(PREFIX + "CREATE", created.code());
         assertFalse(created.system());
         Role persisted = roleMapper.selectById(created.id());
-        assertEquals("测试角色-create", persisted.getName());
+        assertEquals("测试角色-CREATE", persisted.getName());
     }
 
     @Test
     void createDuplicateCodeShouldThrow409() {
-        createTestRole("dup");
-        BusinessException ex = assertThrows(BusinessException.class, () -> createTestRole("dup"));
+        createTestRole("DUP");
+        BusinessException ex = assertThrows(BusinessException.class, () -> createTestRole("DUP"));
         assertEquals(409, ex.getStatus());
     }
 
@@ -92,19 +92,19 @@ class RoleServiceIntegrationTest {
 
     @Test
     void updateShouldChangeNameAndDescriptionButNotCode() {
-        RoleVO created = createTestRole("upd");
+        RoleVO created = createTestRole("UPD");
         RoleVO updated = roleService.update(created.id(),
                 new UpdateRoleRequest("改名角色", "new-desc"));
         assertEquals("改名角色", updated.name());
         assertEquals("new-desc", updated.description());
-        assertEquals(PREFIX + "upd", updated.code(), "code 不可被 update 修改");
+        assertEquals(PREFIX + "UPD", updated.code(), "code 不可被 update 修改");
     }
 
     // ===== 删除与系统角色保护 =====
 
     @Test
     void deleteNonSystemRoleShouldSucceed() {
-        RoleVO created = createTestRole("del");
+        RoleVO created = createTestRole("DEL");
         roleService.delete(created.id());
         assertThrows(ResourceNotFoundException.class, () -> roleService.getById(created.id()));
     }
@@ -122,7 +122,7 @@ class RoleServiceIntegrationTest {
 
     @Test
     void assignPermissionsShouldReplaceSetAtomically() {
-        RoleVO created = createTestRole("bind");
+        RoleVO created = createTestRole("BIND");
         roleService.assignPermissions(created.id(),
                 new AssignRolePermissionsRequest(Set.of("user:list", "user:get")));
         assertEquals(List.of("user:list", "user:get"), roleService.getPermissionCodes(created.id()));
@@ -137,14 +137,14 @@ class RoleServiceIntegrationTest {
 
     @Test
     void assignPermissionsWithUnknownCodeShouldThrow404() {
-        RoleVO created = createTestRole("bind404");
+        RoleVO created = createTestRole("BIND404");
         assertThrows(ResourceNotFoundException.class, () -> roleService.assignPermissions(created.id(),
                 new AssignRolePermissionsRequest(Set.of("no_such:permission"))));
     }
 
     @Test
     void assignEmptySetShouldClearPermissions() {
-        RoleVO created = createTestRole("clear");
+        RoleVO created = createTestRole("CLEAR");
         roleService.assignPermissions(created.id(),
                 new AssignRolePermissionsRequest(Set.of("user:list")));
         roleService.assignPermissions(created.id(), new AssignRolePermissionsRequest(Set.of()));
@@ -166,14 +166,14 @@ class RoleServiceIntegrationTest {
     void assignAndRevokeRoleShouldBeIdempotent() {
         // user1 为 dev seed MEMBER 用户；绑定 p3_test_ 角色后回收（不污染 seed 的 MEMBER 绑定）
         Long user1Id = 2L;
-        createTestRole("assign");
-        userRoleService.assignRole(user1Id, PREFIX + "assign");
-        userRoleService.assignRole(user1Id, PREFIX + "assign");
-        assertTrue(userRoleService.findRoleCodesByUserId(user1Id).contains(PREFIX + "assign"));
+        createTestRole("ASSIGN");
+        userRoleService.assignRole(user1Id, PREFIX + "ASSIGN");
+        userRoleService.assignRole(user1Id, PREFIX + "ASSIGN");
+        assertTrue(userRoleService.findRoleCodesByUserId(user1Id).contains(PREFIX + "ASSIGN"));
 
-        userRoleService.revokeRole(user1Id, PREFIX + "assign");
-        userRoleService.revokeRole(user1Id, PREFIX + "assign");
-        assertFalse(userRoleService.findRoleCodesByUserId(user1Id).contains(PREFIX + "assign"));
+        userRoleService.revokeRole(user1Id, PREFIX + "ASSIGN");
+        userRoleService.revokeRole(user1Id, PREFIX + "ASSIGN");
+        assertFalse(userRoleService.findRoleCodesByUserId(user1Id).contains(PREFIX + "ASSIGN"));
         // seed 绑定不受影响
         assertTrue(userRoleService.findRoleCodesByUserId(user1Id).contains("MEMBER"));
     }

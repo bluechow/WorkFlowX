@@ -58,3 +58,29 @@ export interface PageVO<T> {
   page: number
   size: number
 }
+
+/** 权限类型（后端 PermissionType） */
+export type PermissionType = 'MENU' | 'API' | 'BUTTON'
+
+/** 角色视图对象（后端 RoleVO，P3-03） */
+export interface RoleVO {
+  id: number
+  code: string
+  name: string
+  description: string | null
+  system: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+/** 权限视图对象（后端 PermissionVO，P3-03） */
+export interface PermissionVO {
+  id: number
+  code: string
+  name: string
+  type: PermissionType
+  description: string | null
+  system: boolean
+  createdAt: string
+  updatedAt: string
+}

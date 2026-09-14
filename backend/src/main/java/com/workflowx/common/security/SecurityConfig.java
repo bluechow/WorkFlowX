@@ -40,6 +40,7 @@ public class SecurityConfig {
 
     private final JwtService jwtService;
     private final AuthSessionService authSessionService;
+    private final com.workflowx.rbac.service.PermissionService permissionService;
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final RestAccessDeniedHandler accessDeniedHandler;
 
@@ -54,7 +55,7 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService, authSessionService),
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService, authSessionService, permissionService),
                         UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

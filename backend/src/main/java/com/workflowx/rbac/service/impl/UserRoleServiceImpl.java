@@ -41,6 +41,23 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
+    @Transactional
+    public void replaceUserRoles(Long userId, java.util.Set<String> roleCodes) {
+        List<String> current = userRoleMapper.findRoleCodesByUserId(userId);
+        for (String code : current) {
+            if (!roleCodes.contains(code)) {
+                userRoleMapper.deleteByRoleCode(userId, code);
+            }
+        }
+        for (String code : roleCodes) {
+            if (!current.contains(code)) {
+                requireRoleByCode(code);
+                userRoleMapper.insertByRoleCode(userId, code);
+            }
+        }
+    }
+
+    @Override
     public List<String> findRoleCodesByUserId(Long userId) {
         return userRoleMapper.findRoleCodesByUserId(userId);
     }

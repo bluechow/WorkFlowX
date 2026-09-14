@@ -63,11 +63,20 @@ users ──< user_roles >── roles ──< role_permissions >── permissi
 - `PermissionService.findPermissionCodesByUserId(userId)` — user_roles ⋈ role_permissions ⋈ permissions 实时查询
 - Role/Permission/UserRole 三个领域 Service（CRUD/绑定，事务 + 唯一约束 409 + 系统保护）
 
-**演进路径（后续任务，不在 P3-01/02 范围）**:
+**演进路径（P3-03 已落地）**:
 
-1. JwtAuthenticationFilter 在 ROLE_ authorities 之外追加 permission authorities（无前缀），或
-2. 端点注解从 `hasRole('ADMIN')` 逐步细化为 `hasAuthority('user:create')` 等
-3. 两种方式均不影响 JWT 结构（roles claim 不变），权限以服务端查询为准——**权限变更实时生效，无需重签 token**（相比把 permissions 塞进 JWT 的优势：token 体积小 + 收权即时）
+```text
+JwtAuthenticationFilter（每个认证请求）
+    ├─ roles claim → authorities += ROLE_{code}        （角色 authority，兼容 hasRole）
+    └─ PermissionService.findPermissionCodesByUserId
+        (user_roles ⋈ role_permissions ⋈ permissions 实时查询)
+        → authorities += {resource}:{action}            （权限 authority，配 hasAuthority）
+端点注解: @PreAuthorize("hasAuthority('user:create')") 等（UserController 已全部迁移；
+          RbacController 全部使用 hasAuthority；无任何端点保留 hasRole 作为唯一防线）
+```
+
+- 权限以服务端实时查询为准——**授权/收权即时生效，无需重签 token**（运行时实测：同一 token 授予权限 403→200、回收 200→403）
+- AuthRoleQueryMapper 已删除统一到 rbac 模块 UserRoleService（登录 roles 数据源，SQL 等价，AuthLogin 集成测试全量回归验证）
 
 ## 6. 约束汇总
 

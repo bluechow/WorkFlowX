@@ -32,6 +32,15 @@ class SecurityConfigTest {
     @Autowired
     private AuthSessionService authSessionService;
 
+    @Autowired
+    private com.workflowx.user.service.UserService userService;
+
+    @Autowired
+    private com.workflowx.rbac.service.UserRoleService userRoleService;
+
+    @Autowired
+    private com.workflowx.user.mapper.UserMapper userMapper;
+
     @Test
     void healthEndpointShouldBePublic() throws Exception {
         mockMvc.perform(get("/api/v1/health"))
@@ -58,14 +67,23 @@ class SecurityConfigTest {
 
     @Test
     void validBearerTokenShouldPassSecurityChain() throws Exception {
-        // P2-07 起 token 需同时具备有效 Redis 会话：签发 + 创建会话后再访问
-        // P2-11 起 /api/v1/users 有真实 Controller 且 alice 具备 ADMIN 角色 → 返回 200 分页结构
-        TokenIssuance issuance = jwtService.issueToken(42L, "alice", List.of("ADMIN"));
-        authSessionService.createSession(42L, issuance.jti());
-        mockMvc.perform(get("/api/v1/users").header("Authorization", "Bearer " + issuance.accessToken()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.list").isArray());
+        // P3-03 权限接线后: authorities = ROLE_* + 实时权限（user→role→permission），
+        // 因此使用真实用户（p3_sec_test_ 前缀 + ADMIN 角色）走完整链路
+        var created = userService.create(new com.workflowx.user.dto.CreateUserRequest(
+                "p3_sec_test_admin", "p3_sec_test_admin@test.local", "SecPass@123", "sec-test"));
+        userRoleService.assignRole(created.id(), "ADMIN");
+        TokenIssuance issuance = jwtService.issueToken(created.id(), created.username(), List.of("ADMIN"));
+        authSessionService.createSession(created.id(), issuance.jti());
+        try {
+            mockMvc.perform(get("/api/v1/users").header("Authorization", "Bearer " + issuance.accessToken()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(200))
+                    .andExpect(jsonPath("$.data.list").isArray());
+        } finally {
+            authSessionService.deleteSession(created.id());
+            userRoleService.revokeRole(created.id(), "ADMIN");
+            userMapper.deleteById(created.id());
+        }
     }
 
     @Test

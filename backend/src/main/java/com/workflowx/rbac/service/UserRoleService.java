@@ -16,6 +16,9 @@ public interface UserRoleService {
     /** 回收用户角色（按角色编码，未绑定静默成功） */
     void revokeRole(Long userId, String roleCode);
 
+    /** 整体替换用户角色（按角色编码集合，replace 语义，事务内；未知角色 → 404） */
+    void replaceUserRoles(Long userId, java.util.Set<String> roleCodes);
+
     /** 用户的角色编码列表 */
     List<String> findRoleCodesByUserId(Long userId);
 

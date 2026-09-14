@@ -22,6 +22,21 @@ const router = createRouter({
       name: 'dashboard',
       component: () => import('@/views/DashboardView.vue'),
     },
+    {
+      path: '/system/roles',
+      name: 'system-roles',
+      component: () => import('@/views/system/RolesView.vue'),
+    },
+    {
+      path: '/system/permissions',
+      name: 'system-permissions',
+      component: () => import('@/views/system/PermissionsView.vue'),
+    },
+    {
+      path: '/system/user-roles',
+      name: 'system-user-roles',
+      component: () => import('@/views/system/UserRolesView.vue'),
+    },
   ],
 })
 
