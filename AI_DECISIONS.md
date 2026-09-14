@@ -140,6 +140,16 @@
 - 备选方案: 仅对存在用户计数（放弃：429 泄漏用户存在性）；单独 lock key（放弃：count≥5 判断已等价，少一个键）。
 - 影响: 暴力破解被限制为每 username 15 分钟 5 次；测试/清理需覆盖 auth:fail:* 键（TTL 900s 跨运行残留）；P2-15 起的自动化测试沿用同一限制。
 
+### ADR-013: 组织架构模型与归属设计
+
+- 日期: 2026-09-06
+- 状态: Accepted
+- 背景: Phase 4 组织架构需支持后续 Project 归属与用户部门归属；数据字典已预设计 organizations/organization_members，未含部门。
+- 决策: V4 迁移落地 organizations（code UK/owner_id 逻辑引用）、departments（org 内树：parent_id 自引用 FK，UK(org_id, code)，删父提升子级）、organization_members（复合 PK，role ENUM(OWNER/ADMIN/MEMBER)，department_id SET NULL）；users 表零改动（归属关系全部走成员表）；组织删除仅 OWNER（数据级规则，与 org:delete authority 叠加）；部门树防环（同组织/非自身/非自身后代）；org 权限 11 项入 V5 种子并扩充系统权限保护清单。
+- 理由: 成员表承载归属使 users 保持单一职责；SET NULL 策略保证部门调整不丢失成员关系；owner 校验是业务规则而非权限（授权给非 owner 的 ADMIN 仍不可删他人组织）。
+- 备选方案: users 加 org_id/department_id 列（放弃：破坏 users 单一职责与"零改动"原则）；部门层级物化路径（放弃：当前深度需求简单，邻接表足够）。
+- 影响: P4-02 的 OrgController 以 hasAuthority + owner 规则双重控制；Project（V6）引用 org_id。
+
 ### ADR-012: RBAC 数据模型与权限体系基线
 
 - 日期: 2026-09-06
