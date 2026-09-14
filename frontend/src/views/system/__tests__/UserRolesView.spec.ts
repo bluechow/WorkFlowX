@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { createPinia } from 'pinia'
+import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import UserRolesView from '../UserRolesView.vue'
 import { getUserRoles, listRoles, replaceUserRoles } from '@/api/rbac'
 import http from '@/api/http'
+import { useAuthStore } from '@/stores/auth'
 
 vi.mock('@/api/rbac', () => ({
   listRoles: vi.fn(),
@@ -46,11 +47,13 @@ const ROLES = [
 ]
 
 const mountView = () =>
-  mount(UserRolesView, { global: { plugins: [createPinia(), ElementPlus] } })
+  mount(UserRolesView, { global: { plugins: [getActivePinia() ?? createPinia(), ElementPlus] } })
 
 describe('UserRolesView（P3-04）', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    setActivePinia(createPinia())
+    useAuthStore().permissionCodes = ['user:assign_role', 'user:get']
     mockedHttp.mockResolvedValue({ data: USERS_PAGE } as never)
     mocked.listRoles.mockResolvedValue(ROLES)
   })

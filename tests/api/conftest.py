@@ -98,6 +98,22 @@ def created_users():
 
 
 @pytest.fixture(scope="session")
+def cleanup_roles(api_client, admin_token):
+    """本运行经 API 创建的测试角色 id 列表（会话结束经 API 删除，非系统角色可删）"""
+    role_ids: list[int] = []
+
+    def _cleanup():
+        for rid in role_ids:
+            try:
+                api_client.delete(f"/api/v1/roles/{rid}", headers=auth_headers(admin_token))
+            except Exception:
+                pass  # 已被用例自身删除则忽略
+
+    yield role_ids
+    _cleanup()
+
+
+@pytest.fixture(scope="session")
 def cleanup(db, redis_client, created_users):
     """测试数据清理: api_test_ 前缀用户（级联 user_roles）+ 会话/失败计数键"""
     def _cleanup():

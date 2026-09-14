@@ -25,9 +25,16 @@ def test_admin_can_list_users(api_client: httpx.Client, admin_token):
     assert body["data"]["total"] >= 2, "应包含 seed 用户 admin/user1"
     assert body["data"]["page"] == 1
     assert body["data"]["size"] == 10
-    usernames = [u["username"] for u in body["data"]["list"]]
-    assert "admin" in usernames and "user1" in usernames
     assert_no_sensitive_fields(resp.text)
+
+
+def test_admin_can_find_seed_user_by_keyword(api_client: httpx.Client, admin_token):
+    # 用 keyword 精确断言 seed 用户可达（与执行顺序/其它用例创建的数据量无关）
+    resp = api_client.get("/api/v1/users", params={"keyword": "admin", "page": 1, "size": 10},
+                          headers=auth_headers(admin_token))
+    assert resp.status_code == 200
+    usernames = [u["username"] for u in resp.json()["data"]["list"]]
+    assert "admin" in usernames
 
 
 def test_member_cannot_list_users(api_client: httpx.Client, member_token):

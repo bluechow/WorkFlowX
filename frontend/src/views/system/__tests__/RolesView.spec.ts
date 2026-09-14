@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { createPinia } from 'pinia'
+import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import RolesView from '../RolesView.vue'
+import { useAuthStore } from '@/stores/auth'
 import { assignRolePermissions, createRole, deleteRole, getRolePermissions, listPermissions, listRoles, updateRole } from '@/api/rbac'
 
 vi.mock('@/api/rbac', () => ({
@@ -34,12 +35,20 @@ const ROLES = [
 ]
 
 const mountView = () =>
-  mount(RolesView, { global: { plugins: [createPinia(), ElementPlus] } })
+  mount(RolesView, { global: { plugins: [getActivePinia() ?? createPinia(), ElementPlus] } })
+
+/** 预置管理端权限码（按钮 UX 数据源 = /auth/me/permissions） */
+function givenPermissions(codes: string[]) {
+  const store = useAuthStore()
+  store.permissionCodes = codes
+}
 
 describe('RolesView（P3-04）', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocked.listRoles.mockResolvedValue(ROLES)
+    setActivePinia(createPinia())
+    givenPermissions(['role:create', 'role:update', 'role:delete', 'role:assign_permission'])
   })
 
   it('加载并渲染角色列表（含系统标记）', async () => {
@@ -120,5 +129,20 @@ describe('RolesView（P3-04）', () => {
     const wrapper = mountView()
     await flushPromises()
     expect(wrapper.text()).toContain('角色管理')
+  })
+
+  it('无 role:create 权限时新建按钮不渲染（UX 层）', async () => {
+    givenPermissions([])
+    const wrapper = mountView()
+    await flushPromises()
+    const createBtn = wrapper.findAll('button').find((b) => b.text() === '新建角色')
+    expect(createBtn).toBeUndefined()
+  })
+
+  it('有权限时操作按钮渲染', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    expect(wrapper.findAll('button').filter((b) => b.text() === '新建角色').length).toBe(1)
+    expect(wrapper.findAll('button').filter((b) => b.text() === '权限').length).toBe(3)
   })
 })

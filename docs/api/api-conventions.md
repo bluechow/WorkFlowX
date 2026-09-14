@@ -95,6 +95,7 @@ ResourceNotFound→404，Validation→422，未预期异常→500（仅 "interna
 | /api/v1/auth/login | POST | 公开 | 返回 accessToken/tokenType/expiresIn/userId/username/roles |
 | /api/v1/auth/logout | POST | Bearer | 删除 Redis 会话，原 Token 立即失效（幂等） |
 | /api/v1/auth/me | GET | Bearer | 返回数据库最新 UserVO（无敏感字段） |
+| /api/v1/auth/me/permissions | GET | Bearer | 当前用户实时权限编码（P3-05，供前端按钮级 UX；安全边界仍为后端 authority） |
 
 - 认证头：`Authorization: Bearer <JWT>`；无/非法/过期 Token → 401 统一 JSON
 - 权限不足 → 403；登录失败统一 401（防枚举）；15 分钟窗口 5 次失败 → 429（锁定）

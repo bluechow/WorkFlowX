@@ -4,6 +4,8 @@ import com.workflowx.auth.dto.LoginRequest;
 import com.workflowx.auth.dto.LoginResponse;
 import com.workflowx.user.vo.UserVO;
 
+import java.util.List;
+
 /**
  * 认证服务（P2-08 login，P2-09 logout，P2-10 /me）。
  * 登录流程: 查用户 → PasswordService.matches（统一错误防枚举）→ 状态检查（DISABLED/LOCKED 拒绝）
@@ -26,4 +28,10 @@ public interface AuthService {
      * 保证 email/nickname 等变更后立即生效；用户已被删除时抛 ResourceNotFoundException(404)。
      */
     UserVO getCurrentUser(Long userId);
+
+    /**
+     * 当前用户的实时权限编码（P3-05）：供前端按钮级 UX（纯展示层）；
+     * 后端 authority 才是安全边界。数据与 Filter 权限接线同源（user→role→permission 实时查询）。
+     */
+    List<String> getMyPermissions(Long userId);
 }

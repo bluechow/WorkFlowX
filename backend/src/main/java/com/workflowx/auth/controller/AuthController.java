@@ -49,4 +49,10 @@ public class AuthController {
     public Result<UserVO> me(@AuthenticationPrincipal JwtPayload principal) {
         return Result.ok(authService.getCurrentUser(principal.userId()));
     }
+
+    @GetMapping("/me/permissions")
+    @SecurityRequirement(name = "bearerAuth")
+    public Result<java.util.List<String>> myPermissions(@AuthenticationPrincipal JwtPayload principal) {
+        return Result.ok(authService.getMyPermissions(principal.userId()));
+    }
 }

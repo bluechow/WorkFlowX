@@ -244,4 +244,32 @@ class AuthLogoutMeIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404));
     }
+
+    @Test
+    void mePermissionsShouldReflectRoleBindings() throws Exception {
+        // 无角色绑定的测试用户 → 权限列表为空
+        createTestUser("perms", UserStatus.ACTIVE);
+        String userToken = loginAndGetToken(PREFIX + "perms");
+        mockMvc.perform(get("/api/v1/auth/me/permissions").header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isEmpty());
+
+        // admin（ADMIN 角色）→ 解析出 V3 系统权限（admin 密码与工厂用户不同，单独构造登录）
+        org.springframework.test.web.servlet.MvcResult adminResult = mockMvc
+                .perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"admin\",\"password\":\"Admin@123456\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        String adminToken = objectMapper.readValue(adminResult.getResponse().getContentAsString(), java.util.Map.class)
+                .get("data") instanceof java.util.Map<?, ?> data
+                ? (String) data.get("accessToken")
+                : null;
+        String body = mockMvc.perform(get("/api/v1/auth/me/permissions").header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertTrue(body.contains("user:create"), "admin 权限应包含 user:create: " + body);
+        // 清理 admin 会话（避免单会话顶掉后续测试的 admin fixture）
+        redisTemplate.delete("auth:session:1");
+    }
 }

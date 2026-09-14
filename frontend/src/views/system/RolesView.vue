@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
 import {
   assignRolePermissions,
   createRole,
@@ -16,6 +17,7 @@ import type { PermissionVO, RoleVO } from '@/types/api'
  * 角色管理（P3-04）：真实 API 列表/新建/编辑/删除/权限分配。
  * UX 约束: 系统角色禁止删除（按钮禁用）——真正保护在后端（400）。
  */
+const auth = useAuthStore()
 const roles = ref<RoleVO[]>([])
 const permissions = ref<PermissionVO[]>([])
 const loading = ref(false)
@@ -136,7 +138,7 @@ onMounted(refresh)
   <section class="roles-view">
     <div class="roles-view__toolbar">
       <h2>角色管理</h2>
-      <el-button type="primary" @click="openCreate">新建角色</el-button>
+      <el-button v-if="auth.hasPermission('role:create')" type="primary" @click="openCreate">新建角色</el-button>
     </div>
 
     <el-table v-loading="loading" :data="roles" border>
@@ -152,9 +154,9 @@ onMounted(refresh)
       <el-table-column prop="description" label="描述" min-width="160" show-overflow-tooltip />
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openPermissions(row)">权限</el-button>
-          <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
-          <el-button link type="danger" :disabled="row.system" @click="handleDelete(row)">删除</el-button>
+          <el-button v-if="auth.hasPermission('role:assign_permission')" link type="primary" @click="openPermissions(row)">权限</el-button>
+          <el-button v-if="auth.hasPermission('role:update')" link type="primary" @click="openEdit(row)">编辑</el-button>
+          <el-button v-if="auth.hasPermission('role:delete')" link type="danger" :disabled="row.system" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>

@@ -23,3 +23,9 @@ export async function fetchMe(): Promise<UserVO> {
   }
   return data.data
 }
+
+/** 当前用户实时权限编码（P3-05）：供前端按钮级 UX；安全边界仍为后端 authority */
+export async function fetchMyPermissions(): Promise<string[]> {
+  const { data } = await http.get<Result<string[]>>('/auth/me/permissions')
+  return data.data ?? []
+}

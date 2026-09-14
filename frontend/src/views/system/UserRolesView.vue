@@ -3,12 +3,14 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import http from '@/api/http'
 import { getUserRoles, listRoles, replaceUserRoles } from '@/api/rbac'
+import { useAuthStore } from '@/stores/auth'
 import type { PageVO, RoleVO, UserVO } from '@/types/api'
 
 /**
  * 用户角色管理（P3-04）：用户列表 + 角色分配对话框（replace 语义，一次提交）。
  * 前端仅 UX；授权边界在后端（user:assign_role authority）。
  */
+const auth = useAuthStore()
 const page = ref<PageVO<UserVO> | null>(null)
 const roles = ref<RoleVO[]>([])
 const loading = ref(false)
@@ -90,7 +92,7 @@ onMounted(refresh)
       <el-table-column prop="status" label="状态" width="90" />
       <el-table-column label="操作" width="120" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openAssign(row)">分配角色</el-button>
+          <el-button v-if="auth.hasPermission('user:assign_role')" link type="primary" @click="openAssign(row)">分配角色</el-button>
         </template>
       </el-table-column>
     </el-table>

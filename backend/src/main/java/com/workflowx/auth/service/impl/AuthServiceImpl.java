@@ -46,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtProperties jwtProperties;
     private final UserService userService;
     private final LoginAttemptService loginAttemptService;
+    private final com.workflowx.rbac.service.PermissionService permissionService;
 
     @Override
     @Transactional
@@ -100,5 +101,11 @@ public class AuthServiceImpl implements AuthService {
         // 数据来源为数据库而非 JWT claims: email/nickname 等变更后 /me 立即反映最新值；
         // 会话有效但用户已被删除 → ResourceNotFoundException(404)，绝不返回 200 + null
         return userService.getById(userId);
+    }
+
+    @Override
+    public List<String> getMyPermissions(Long userId) {
+        // 与 Filter 权限接线同源的实时查询（ADR-012）：收权后前端 UX 即时反映
+        return permissionService.findPermissionCodesByUserId(userId);
     }
 }

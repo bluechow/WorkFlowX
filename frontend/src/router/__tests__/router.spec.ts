@@ -6,6 +6,7 @@ import { fetchMe } from '@/api/auth'
 
 vi.mock('@/api/auth', () => ({
   fetchMe: vi.fn(),
+  fetchMyPermissions: vi.fn().mockResolvedValue([]),
   login: vi.fn(),
   logout: vi.fn(),
 }))
