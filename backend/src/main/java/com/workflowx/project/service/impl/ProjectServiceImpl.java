@@ -11,6 +11,8 @@ import com.workflowx.project.dto.CreateProjectRequest;
 import com.workflowx.project.dto.UpdateProjectRequest;
 import com.workflowx.project.entity.Project;
 import com.workflowx.project.entity.ProjectStatus;
+import com.workflowx.project.entity.ProjectMemberRole;
+import com.workflowx.project.mapper.ProjectMemberMapper;
 import com.workflowx.project.mapper.ProjectMapper;
 import com.workflowx.project.service.ProjectService;
 import com.workflowx.project.vo.ProjectVO;
@@ -30,6 +32,7 @@ import org.springframework.util.StringUtils;
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectMapper projectMapper;
+    private final ProjectMemberMapper projectMemberMapper;
     private final OrganizationMapper organizationMapper;
     private final OrganizationMemberMapper organizationMemberMapper;
 
@@ -53,6 +56,8 @@ public class ProjectServiceImpl implements ProjectService {
         } catch (DuplicateKeyException e) {
             throw new com.workflowx.common.exception.BusinessException(409, "项目 key 已存在: " + request.key());
         }
+        // 创建者即项目负责人（OWNER），同事务写入成员表（ADR-015）
+        projectMemberMapper.insert(project.getId(), operatorId, ProjectMemberRole.OWNER.name());
         return ProjectVO.from(requireProject(project.getId()));
     }
 
