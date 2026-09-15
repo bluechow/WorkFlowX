@@ -9,7 +9,6 @@ vi.mock('@/api/auth', () => ({
   logout: vi.fn(),
   fetchMe: vi.fn(),
   fetchMyPermissions: vi.fn().mockResolvedValue([]),
-  fetchMyPermissions: vi.fn().mockResolvedValue([]),
 }))
 
 const mockedLogin = vi.mocked(loginApi)

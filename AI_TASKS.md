@@ -295,6 +295,12 @@
 >
 > **进度：P3-03 + P3-04 ✅ DONE（2026-09-06）**——P3-03：RbacController 13 端点（hasAuthority 全覆盖）+ JwtAuthenticationFilter 权限 authorities 实时接线（user→role→permission，收权即时生效）+ UserController hasRole→hasAuthority 迁移 + AuthRoleQueryMapper 统一删除（SQL 等价，AuthLogin 14 用例回归验证）+ AssignUserRolesRequest（元素级校验）+ replaceUserRoles；RbacControllerIntegrationTest 16 用例（权限矩阵/系统保护/实时授予回收），mvn 188/188。P3-04：系统管理三页（RolesView 创建/编辑/删除保护/权限分配对话框、PermissionsView 只读列表、UserRolesView 分页搜索+角色 replace 对话框）+ App 头部 ADMIN 菜单（纯 UX）+ api/rbac.ts + 类型；Vitest 新增 11 用例 56/56（mock 仅 HTTP boundary）+ lint/build 全绿；运行时冒烟：admin 200/member 403/未认证 401 + 同一 token 授予 role:list 403→200、回收 200→403 实时生效。pytest 28/28 回归。**发现修复**：测试数据小写前缀违反自身角色编码规范（P3-02 遗留，Service 层无 @Valid 故当时未拦截）→ 统一大写；WSL portproxy 指向过期 IP → 更新脚本化。
 
+> **进度：P4-01 ✅ DONE（2026-09-15）**——V4 迁移（organizations/departments/organization_members，users 零改动）；org 模块（实体×3/Mapper×3/DTO×4/VO×3/服务×2）+ ForbiddenException；ADR-013 + organization.md；集成测试 14 个；mvn 202/202。
+>
+> **进度：P4-02 ✅ DONE（2026-09-15）**——V5 权限种子（org×6 + department×5，ADMIN 全量绑定，系统保护清单扩至 25）；OrgController 13 端点（hasAuthority 全覆盖 + org:delete 数据级 OWNER 校验叠加）；OrgControllerIntegrationTest 12 用例（权限矩阵/OWNER 规则/防环/409/422/404）；mvn 214/214；运行时冒烟 201/403/400/200 实证。
+>
+> **进度：P4-03+** 组织前端页面/Python org 用例/Phase 4 验收 ⬜ TODO（进入时细化）
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |
