@@ -315,6 +315,20 @@
 >
 > **进度：Phase 5 Release Gate ✅ PASS（2026-09-15）**——三线 244/48/77 全绿 + 12 步真实 HTTP 冒烟 + MySQL/Redis 残留清零 + Swagger 同步；Gate 记录 docs/testing/phase5-gate.md。**Phase 5 全部完结，下一阶段 Phase 6 — Issue Management 等用户指令。**
 
+## 5.5 Phase 6 — Issue Management（✅ 全部完结并通过 Release Gate，2026-09-15）
+
+- **目标**：建立完整 Issue 核心领域（创建/查询/更新/编号/分派/状态基础），为 Phase 7 Workflow / Phase 8 Comment / Phase 9 Notification 留稳定接口
+- **P6-01 ✅**：V9（projects.issue_seq + issues 表，data-dictionary §10 落地，索引补齐）；ADR-016（行锁序号/业务编号拼装/Phase 6 状态边界/数据级=项目成员/severity 规则/归档项目待决策）
+- **P6-02 ✅**：IssueService——create（reporter=操作者/issue_no 事务内行锁分配/assignee 项目成员约束/severity 仅 BUG）、getById（防跨项目 404）、page（keyword 双字段+issueNo+四枚举+reporter+assignee+组合+分页≤100+稳定排序）、update（不可变字段/assignee 重校验）、updateStatus（仅枚举，流转属 Phase 7）
+- **P6-03 ✅**：V10 权限种子（issue×5，系统权限 36）+ IssueController 6 端点（hasAuthority）+ 权限矩阵测试（401/403/200/201）
+- **P6-04 ✅**：查询全维测试（keyword 双字段/issueNo 精确/枚举/人员/组合/分页/稳定序/项目隔离）
+- **P6-05 ✅**：状态边界——本阶段仅枚举合法值（流转矩阵属 Phase 7，ADR-016.3）
+- **P6-06 ✅**：Java 集成测试 19 个（领域 12 + Controller 7），含 reporter 不可伪造/issue_no 不可变/跨项目 404
+- **P6-07 ✅**：Python test_issue_api.py 10 用例真实 HTTP（生命周期/五维过滤/issue_no 不可变/数据级归属）
+- **P6-08 ✅**：前端 IssuesView（列表/筛选/创建/编辑/状态下拉/分派下拉/权限 UX）+ api/issue.ts + 路由 + 项目行入口；Vitest 84/84
+- **P6-09 ✅**：E2E 12 步真实 HTTP + 三线全量回归（mvn 263 / pytest 48 / Vitest 84）
+- **P6-10 ✅ Gate PASS**：docs/testing/phase6-gate.md；**修复真实 Bug 1 个**（取消分派 assigneeId=null 被 MP updateById 忽略，f48c5de）；Phase 6 正式关闭
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |

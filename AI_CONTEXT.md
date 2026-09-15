@@ -44,7 +44,9 @@
 - **P5-04 ✅ DONE**：V8 project_members + ADR-015（角色 OWNER/MANAGER/MEMBER + 组织成员前置）+ ProjectMemberService/Controller 3 端点；mvn 244/244
 - **P5-05 ✅ DONE**：Python project+member 10 用例；pytest 48/48 两轮
 - **Phase 5 ✅ Release Gate PASS**（docs/testing/phase5-gate.md）；本机动态端口范围已纠正（1024-15000 → 49152-65535，根治 8080 被 winnat 排除的间歇故障）
-- 下一步：Phase 6 — Issue Management（V9 issues + issue_no/key 编号体系），**等用户指令后执行**
+- **Phase 6 ✅ 全部完结并通过 Release Gate（2026-09-15）**：Issue 模块（V9/V10 迁移+6 端点+领域服务+Python 10 用例+前端 IssuesView+权限双层+数据级项目成员校验）；ADR-016；修复真实 Bug（取消分派 MP null 忽略）；mvn 263/pytest 48/Vitest 84 全绿；Gate 记录 docs/testing/phase6-gate.md
+- 下一步：**Phase 7 — Workflow**（状态流转矩阵 + issue:transition authority，修订 ADR-016.3），**等用户指令后执行**
+- 下一步：**Phase 7 — Workflow**（状态流转矩阵 + issue:transition authority），**等用户指令后执行**
 - Phase 2 — Authentication & User 已于 2026-09-06 通过 Release Gate（25 任务全部完结）
 - **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
 - **P2-02 ✅ DONE**：UserMapper（BaseMapper 极简）+ MybatisPlusConfig 分页插件（MySQL；MP 3.5.9+ 已补 mybatis-plus-jsqlparser 依赖）+ UserMapperTest 11 用例（真实 MySQL，SQL 实证 ORDER BY/LIMIT/count 正确）；mvn test 31/31 全绿
@@ -76,7 +78,7 @@
 | organization | 组织管理 | ⬜ 未开始（Phase 4，包占位已建） |
 | rbac | 角色权限（User-Role-Permission） | 🔵 身份域 5 表已建（V1），功能属 Phase 3 |
 | project | 项目管理 | ⬜ 未开始（Phase 5，包占位已建） |
-| issue | Issue 管理 | ⬜ 未开始（Phase 6，包占位已建） |
+| issue | Issue 管理（编号/类型/分派/状态基础） | ✅ Phase 6 完成（Workflow 状态机属 Phase 7） |
 | workflow | Issue 状态机 | ⬜ 未开始（Phase 7） |
 | comment | 评论 | ⬜ 未开始（Phase 8） |
 | attachment | 附件（MinIO） | ⬜ 未开始（Phase 8；MinIO 基础设施已就绪） |
@@ -146,6 +148,7 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-15 | Phase 6 完成：Issue 模块全量（V9/V10+领域+6 端点+Python 10+前端 IssuesView）；修复取消分派 MP null Bug；Gate PASS（phase6-gate.md） | Phase 6 收口 |
 | 2026-09-15 | P5-03~05+Gate 完成：项目前端+V8 成员迁移+31 权限+Python 10 用例；三线 244/48/77 全绿；Gate PASS（phase5-gate.md）；修复 winnat 排除段占用 8080 | Phase 5 收口 |
 | 2026-09-15 | P4-03+Gate+P5-01+P5-02 完成：组织前端+Phase3/4 Gate PASS+V6/V7 迁移+Project 5 端点+数据级归属；mvn 235/Vitest 70/pytest 43 全绿 | Phase 4 收口+Phase 5 |
 | 2026-09-15 | P3-05+P4-01+P4-02 完成：Phase 3 收口（/me/permissions+按钮 UX+10 Python 用例）；组织架构 V4/V5 迁移+13 REST 端点+OWNER 规则；mvn 214/Vitest 58/pytest 38 全绿 | Phase 3 收口+Phase 4 |
