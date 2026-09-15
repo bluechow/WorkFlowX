@@ -52,6 +52,11 @@ const router = createRouter({
       name: 'system-projects',
       component: () => import('@/views/system/ProjectsView.vue'),
     },
+    {
+      path: '/system/projects/:projectId/issues',
+      name: 'system-project-issues',
+      component: () => import('@/views/system/IssuesView.vue'),
+    },
   ],
 })
 

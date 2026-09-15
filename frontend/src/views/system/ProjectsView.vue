@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { createProject, listOrgOptions, listProjects, updateProject, updateProjectStatus } from '@/api/project'
 import { useAuthStore } from '@/stores/auth'
@@ -10,6 +11,7 @@ import type { ProjectStatus, ProjectVO } from '@/types/api'
  * 无物理删除——归档代替（与后端一致）；按钮按 project:* 权限码渲染（纯 UX）。
  */
 const auth = useAuthStore()
+const router = useRouter()
 
 const projects = ref<ProjectVO[]>([])
 const total = ref(0)
@@ -173,8 +175,16 @@ onMounted(refresh)
         </template>
       </el-table-column>
       <el-table-column prop="description" label="描述" min-width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="180" fixed="right">
+      <el-table-column label="操作" width="230" fixed="right">
         <template #default="{ row }">
+          <el-button
+            v-if="auth.hasPermission('issue:list')"
+            link
+            type="primary"
+            @click="router.push(`/system/projects/${row.id}/issues`)"
+          >
+            Issues
+          </el-button>
           <el-button
             v-if="auth.hasPermission('project:update')"
             link

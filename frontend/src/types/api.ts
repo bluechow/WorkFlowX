@@ -110,6 +110,28 @@ export interface DepartmentVO {
   updatedAt: string
 }
 
+/** Issue 枚举与视图对象（后端 V9，P6-02） */
+export type IssueType = 'BUG' | 'TASK' | 'FEATURE' | 'IMPROVEMENT'
+export type IssuePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
+export type IssueSeverity = 'S1' | 'S2' | 'S3' | 'S4'
+export type IssueStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'TESTING' | 'CLOSED' | 'REOPENED'
+
+export interface IssueVO {
+  id: number
+  projectId: number
+  issueNo: number
+  title: string
+  description: string | null
+  type: IssueType
+  priority: IssuePriority
+  severity: IssueSeverity | null
+  status: IssueStatus
+  reporterId: number
+  assigneeId: number | null
+  createdAt: string
+  updatedAt: string
+}
+
 /** 项目状态（后端 ProjectStatus，V6） */
 export type ProjectStatus = 'ACTIVE' | 'ARCHIVED'
 
