@@ -13,7 +13,10 @@
 | V5__org_permissions.sql | Phase 4 | org×6 + department×5 权限种子 + ADMIN 绑定（系统权限达 25 项） | ✅ 已落地 |
 | V6__project_core.sql | Phase 5 | projects（key UK/org_id CASCADE/status 归档/owner_id） | ✅ 已落地 |
 | V7__project_permissions.sql | Phase 5 | project×5 权限种子 + ADMIN 绑定（系统权限达 30 项） | ✅ 已落地 |
-| V8 | Phase 5 后续/Phase 6 | project_members、issues | 待定 |
+| V8__project_members.sql | Phase 5 | project_members + project:assign_member 种子 | ✅ 已落地 |
+| V9__issue_core.sql | Phase 6 | ALTER projects ADD issue_seq + issues 表（枚举/索引/UK(project,issue_no)） | ✅ 已落地 |
+| V10__issue_permissions.sql | Phase 6 | issue×5 权限种子 + ADMIN 绑定（系统权限达 36 项） | ✅ 已落地 |
+| V11 | Phase 7 | workflow/状态流转相关 | 待定 |
 | V6 | Phase 5 | projects / project_members | 待定 |
 | V7 | Phase 6 | issues | 待定 |
 | V8 | Phase 7 | issue_status_transitions | 待定 |

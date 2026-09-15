@@ -140,6 +140,22 @@
 - 备选方案: 仅对存在用户计数（放弃：429 泄漏用户存在性）；单独 lock key（放弃：count≥5 判断已等价，少一个键）。
 - 影响: 暴力破解被限制为每 username 15 分钟 5 次；测试/清理需覆盖 auth:fail:* 键（TTL 900s 跨运行残留）；P2-15 起的自动化测试沿用同一限制。
 
+### ADR-016: Issue 编号并发分配与状态边界
+
+- 日期: 2026-09-15
+- 状态: Accepted
+- 背景: P6-01/02 要求 issue_no 为项目内递增序号、并发下不可重复、禁止 `SELECT MAX+1` 无保护写法；同时须划定 Phase 6 状态能力边界。
+- 决策:
+  1. **序号分配**: V9 为 projects 增加 `issue_seq BIGINT NOT NULL DEFAULT 0` 计数器列；创建 Issue 时在同一事务内执行 `UPDATE projects SET issue_seq = issue_seq + 1 WHERE id = ?`（InnoDB 行锁串行化并发），随后 `SELECT issue_seq` 取得本次序号并写入 issue_no。`UNIQUE(project_id, issue_no)` 作为最终防线。计数器不回收：项目删除级联清 issues 后 issue_seq 随项目行消失，不产生正确性问题。
+  2. **业务编号**: 对外展示 `project.key-issue_no`（如 WFX-12），由 VO/前端拼装，库内不冗余存储。
+  3. **Phase 6 状态边界**: status 仅校验枚举合法值（PATCH，非法 422），**不实现流转矩阵**（Phase 7 Workflow 负责）；issue:transition authority 本阶段不引入，状态端点使用 issue:update。
+  4. **数据级权限**: Issue 写操作（create/update/status/assignee）要求操作者为**项目成员**（project_members，强于 ADR-014 的组织成员规则）；读操作仅 authority。
+  5. **severity**: 仅 type=BUG 可设置；type≠BUG 且携带 severity → 400；severity 可空，无默认值。
+  6. **归档项目建 Issue**: 既有任务/ADR 未定义禁止规则 → 本阶段不限制，记录为待决策项。
+- 理由: 行锁递增是单库场景下最简洁可靠的并发序号方案；不引入独立 sequence 表（少一张表与一次 JOIN）；状态边界严格遵守 Phase 划分。
+- 备选方案: 独立 issue_sequence 表（放弃：多一表多一次 JOIN，收益相同）；SELECT MAX+1 后 INSERT（禁止：并发重复）；UUID 业务编号（放弃：违背 data-dictionary 既有 issue_no 设计）。
+- 影响: ProjectMapper 新增 incrementIssueSeq/selectIssueSeq；issues 表 UNIQUE 兜底并发；Phase 7 引入流转矩阵时需新增 issue:transition authority 并修订本 ADR。
+
 ### ADR-015: 项目成员模型与前置规则
 
 - 日期: 2026-09-15

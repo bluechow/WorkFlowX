@@ -85,7 +85,7 @@
 | user_id | BIGINT UNSIGNED, PK, FK | 成员 |
 | role | ENUM, NOT NULL DEFAULT 'MEMBER' | OWNER / ADMIN / MEMBER |
 
-## 8. projects 📋（Phase 5）
+## 8. projects ✅（Phase 5 落地）
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
@@ -93,6 +93,8 @@
 | name | VARCHAR(100), NOT NULL | 项目名称 |
 | `key` | VARCHAR(20), UNIQUE, NOT NULL | 项目标识（issue 编号前缀，如 WFX） |
 | org_id | BIGINT UNSIGNED, NOT NULL, FK | 所属组织 |
+| owner_id | BIGINT UNSIGNED, NOT NULL | 创建者/负责人（V6，逻辑引用 users.id） |
+| issue_seq | BIGINT UNSIGNED, NOT NULL DEFAULT 0 | Issue 序号计数器（V9，ADR-016 行锁递增） |
 | description | VARCHAR(500), NULL | 描述 |
 | status | ENUM, NOT NULL DEFAULT 'ACTIVE' | ACTIVE / ARCHIVED |
 
