@@ -333,6 +333,14 @@ class IssueControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.assigneeId").value(member.intValue()));
 
+        // 取消分派（assigneeId=null）→ 200 且写库为空（回归: MP updateById 忽略 null 的坑）
+        mockMvc.perform(patch("/api/v1/projects/{id}/issues/{iid}/assignee", projectId, issueId)
+                        .header("Authorization", "Bearer " + admin())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"assigneeId\":null}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.assigneeId").doesNotExist());
+
         // 404: 跨项目访问 A 项目 issue 用 B 项目路径
         Long orgB = createTestOrg("FLOWB");
         Long projectB = createTestProject("FLOWB", orgB);

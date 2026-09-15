@@ -121,7 +121,9 @@ public class IssueServiceImpl implements IssueService {
         if (request.severity() != null && !IssueType.BUG.equals(issue.getType())) {
             throw new BusinessException(400, "severity 仅适用于 BUG 类型");
         }
-        if (request.assigneeId() != null) {
+        // ADR-016 哨兵: assigneeId=0 表示取消分派（清空），跳过成员校验
+        boolean clearAssignee = request.assigneeId() != null && request.assigneeId() == 0;
+        if (request.assigneeId() != null && !clearAssignee) {
             requireAssigneeIsProjectMember(projectId, request.assigneeId());
         }
         if (StringUtils.hasText(request.title())) {
@@ -136,12 +138,19 @@ public class IssueServiceImpl implements IssueService {
         if (request.severity() != null) {
             issue.setSeverity(request.severity());
         }
-        // assigneeId: null 表示"未提供"，语义上无法区分"清空"——本阶段以字段存在即更新处理：
-        // 为避免误清空，仅在显式传 0 时置空（0 为保留哨兵，Service 转换为 NULL），后续 API 层可改为 JSON null 语义
+        // assigneeId 语义: null=未提供（不变）；0=哨兵表示清空分派（置 NULL）
         if (request.assigneeId() != null) {
-            issue.setAssigneeId(request.assigneeId() == 0 ? null : request.assigneeId());
+            issue.setAssigneeId(clearAssignee ? null : request.assigneeId());
         }
-        issueMapper.updateById(issue);
+        if (clearAssignee) {
+            // MP updateById 默认忽略 null 字段——显式 set null 才能写库
+            issueMapper.update(null,
+                    new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Issue>()
+                            .eq(Issue::getId, issueId)
+                            .set(Issue::getAssigneeId, null));
+        } else {
+            issueMapper.updateById(issue);
+        }
         return IssueVO.from(requireIssue(projectId, issueId));
     }
 
