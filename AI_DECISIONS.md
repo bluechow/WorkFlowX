@@ -140,6 +140,19 @@
 - 备选方案: 仅对存在用户计数（放弃：429 泄漏用户存在性）；单独 lock key（放弃：count≥5 判断已等价，少一个键）。
 - 影响: 暴力破解被限制为每 username 15 分钟 5 次；测试/清理需覆盖 auth:fail:* 键（TTL 900s 跨运行残留）；P2-15 起的自动化测试沿用同一限制。
 
+### ADR-014: 项目模型与组织归属数据级权限
+
+- 日期: 2026-09-15
+- 状态: Accepted
+- 背景: Phase 5 项目管理启动。projects 在数据字典已有设计（key UK/org_id/status），需确定负责人字段、归档策略与组织级数据权限。
+- 决策:
+  1. V6 projects：数据字典设计基础上新增 owner_id（创建者/负责人合一，逻辑引用）；`key` 全局唯一且不可修改（正则 `^[A-Z][A-Z0-9]{1,19}$`，Issue 编号前缀）；FK(org_id) CASCADE。
+  2. 归档策略：status ENUM(ACTIVE/ARCHIVED)，无物理删除端点；project:delete authority 预留不用。
+  3. 数据级权限：写操作（create/update/status）要求操作者是目标组织成员（organization_members 存在，含 OWNER）→ 403；与 project:* authority 叠加（authority 是能力，归属是范围）。
+- 理由: 满足 Master Prompt §7 后端强制与真实企业场景（跨组织操作者即使有全局权限也不应越组织写数据）；为 project_members/Issue 留出细粒度模型空间。
+- 备选方案: 仅 authority 无归属校验（放弃：任意组织互写）；按项目成员校验（放弃：Project Member 属后续任务，组织成员是最小可行边界）。
+- 影响: P5-02 五端点 + V7 权限种子；project_members 引入后可在组织成员之上细化到项目成员（届时修订本 ADR）。
+
 ### ADR-013: 组织架构模型与归属设计
 
 - 日期: 2026-09-06
