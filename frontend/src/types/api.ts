@@ -110,6 +110,22 @@ export interface DepartmentVO {
   updatedAt: string
 }
 
+/** 项目状态（后端 ProjectStatus，V6） */
+export type ProjectStatus = 'ACTIVE' | 'ARCHIVED'
+
+/** 项目视图对象（后端 ProjectVO，P5-02） */
+export interface ProjectVO {
+  id: number
+  orgId: number
+  key: string
+  name: string
+  description: string | null
+  status: ProjectStatus
+  ownerId: number
+  createdAt: string
+  updatedAt: string
+}
+
 /** 组织成员视图对象（后端 OrganizationMemberVO，P4-02） */
 export interface OrganizationMemberVO {
   orgId: number

@@ -24,6 +24,9 @@ async function handleLogout() {
         <el-menu-item v-if="auth.hasPermission('org:list')" index="/system/organizations">
           组织管理
         </el-menu-item>
+        <el-menu-item v-if="auth.hasPermission('project:list')" index="/system/projects">
+          项目管理
+        </el-menu-item>
         <el-menu-item v-if="auth.hasPermission('user:assign_role')" index="/system/user-roles">
           用户角色
         </el-menu-item>
