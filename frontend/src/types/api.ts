@@ -84,3 +84,37 @@ export interface PermissionVO {
   createdAt: string
   updatedAt: string
 }
+
+/** 组织成员角色（后端 OrgMemberType，V4） */
+export type OrgMemberRole = 'OWNER' | 'ADMIN' | 'MEMBER'
+
+/** 组织视图对象（后端 OrganizationVO，P4-02） */
+export interface OrganizationVO {
+  id: number
+  name: string
+  code: string
+  ownerId: number
+  description: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+/** 部门视图对象（后端 DepartmentVO，P4-02） */
+export interface DepartmentVO {
+  id: number
+  orgId: number
+  parentId: number | null
+  name: string
+  code: string
+  createdAt: string
+  updatedAt: string
+}
+
+/** 组织成员视图对象（后端 OrganizationMemberVO，P4-02） */
+export interface OrganizationMemberVO {
+  orgId: number
+  userId: number
+  role: OrgMemberRole
+  departmentId: number | null
+  createdAt: string
+}

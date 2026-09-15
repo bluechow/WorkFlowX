@@ -21,9 +21,18 @@ async function handleLogout() {
     <el-header class="app__header">
       <span class="app__brand">WorkFlowX</span>
       <el-menu v-if="isAdmin" mode="horizontal" router class="app__menu" :ellipsis="false">
-        <el-menu-item index="/system/user-roles">用户角色</el-menu-item>
-        <el-menu-item index="/system/roles">角色管理</el-menu-item>
-        <el-menu-item index="/system/permissions">权限管理</el-menu-item>
+        <el-menu-item v-if="auth.hasPermission('org:list')" index="/system/organizations">
+          组织管理
+        </el-menu-item>
+        <el-menu-item v-if="auth.hasPermission('user:assign_role')" index="/system/user-roles">
+          用户角色
+        </el-menu-item>
+        <el-menu-item v-if="auth.hasPermission('role:list')" index="/system/roles">
+          角色管理
+        </el-menu-item>
+        <el-menu-item v-if="auth.hasPermission('permission:list')" index="/system/permissions">
+          权限管理
+        </el-menu-item>
       </el-menu>
       <span class="app__spacer" />
       <span v-if="auth.isAuthenticated" class="app__user">{{ displayName }}</span>

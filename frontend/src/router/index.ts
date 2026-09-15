@@ -37,6 +37,16 @@ const router = createRouter({
       name: 'system-user-roles',
       component: () => import('@/views/system/UserRolesView.vue'),
     },
+    {
+      path: '/system/organizations',
+      name: 'system-organizations',
+      component: () => import('@/views/system/OrganizationsView.vue'),
+    },
+    {
+      path: '/system/organizations/:id',
+      name: 'system-organization-detail',
+      component: () => import('@/views/system/OrganizationDetailView.vue'),
+    },
   ],
 })
 
