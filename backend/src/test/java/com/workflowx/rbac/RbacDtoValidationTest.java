@@ -72,12 +72,13 @@ class RbacDtoValidationTest {
     @Test
     void systemConstantsShouldMatchV3V5SeedScope() {
         assertEquals(2, RbacConstants.SYSTEM_ROLE_CODES.size());
-        assertEquals(25, RbacConstants.SYSTEM_PERMISSION_CODES.size(), "V3(14) + V5(11) = 25");
+        assertEquals(30, RbacConstants.SYSTEM_PERMISSION_CODES.size(), "V3(14) + V5(11) + V7(5) = 30");
         assertTrue(RbacConstants.isSystemRole("ADMIN") && RbacConstants.isSystemRole("MEMBER"));
         assertTrue(!RbacConstants.isSystemRole("GUEST"));
         assertTrue(RbacConstants.isSystemPermission("user:create"));
         assertTrue(RbacConstants.isSystemPermission("org:create"));
         assertTrue(RbacConstants.isSystemPermission("department:delete"));
+        assertTrue(RbacConstants.isSystemPermission("project:create"));
         assertTrue(!RbacConstants.isSystemPermission("p3_test:x"));
     }
 }

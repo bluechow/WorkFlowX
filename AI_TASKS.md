@@ -299,7 +299,15 @@
 >
 > **进度：P4-02 ✅ DONE（2026-09-15）**——V5 权限种子（org×6 + department×5，ADMIN 全量绑定，系统保护清单扩至 25）；OrgController 13 端点（hasAuthority 全覆盖 + org:delete 数据级 OWNER 校验叠加）；OrgControllerIntegrationTest 12 用例（权限矩阵/OWNER 规则/防环/409/422/404）；mvn 214/214；运行时冒烟 201/403/400/200 实证。
 >
-> **进度：P4-03+** 组织前端页面/Python org 用例/Phase 4 验收 ⬜ TODO（进入时细化）
+> **进度：P4-03 ✅ DONE（2026-09-15）**——组织管理前端：OrganizationsView（分页/搜索/CRUD/删除确认）+ OrganizationDetailView（部门树 el-tree/成员管理/权限码按钮）+ 菜单权限化 + api/org.ts；Vitest 新增 12 用例 70/70。
+>
+> **进度：Phase 3 + Phase 4 Release Gate ✅ PASS（2026-09-15，67dfe6f）**——三线 214/43/70 全绿 + 真实 HTTP 冒烟 + MySQL/Redis 残留清零 + Swagger 同步；Gate 记录 docs/testing/phase34-gate.md。
+>
+> **进度：P5-01 ✅ DONE（2026-09-15）**——V6 projects 迁移（key UK/org_id CASCADE/status 归档/owner_id）；ADR-014（数据级归属：写操作须为组织成员）+ project.md；project 模块（实体/枚举/Mapper/DTO×3/VO/Service）；集成测试 11 个；mvn 225/225。
+>
+> **进度：P5-02 ✅ DONE（2026-09-15）**——V7 权限种子（project×5，系统权限达 30）；ProjectController 5 端点（hasAuthority）；数据级归属测试（authority 有+非成员 403→加入成员 200）；ProjectControllerIntegrationTest 10 用例；mvn 235/235；运行时冒烟 201/409/归档恢复/级联全过；pytest 43 两轮 + Vitest 70 + lint/build 全绿。
+>
+> **进度：P5-03+** 项目前端页面/Python project 用例/成员管理/Phase 5 验收 ⬜ TODO（进入时细化）
 
 ## 6. Phase 4–19 里程碑概览
 

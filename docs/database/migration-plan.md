@@ -11,7 +11,9 @@
 | V3__rbac_permissions.sql | Phase 3 | **公共**（产品数据）：系统权限 14 项种子（{resource}:{action}）+ ADMIN 角色全量绑定；MEMBER 暂无管理权限（ADR-012） | ✅ 已落地 |
 | V4__organization_core.sql | Phase 4 | organizations / departments（树）/ organization_members（含部门归属）；users 零改动 | ✅ 已落地 |
 | V5__org_permissions.sql | Phase 4 | org×6 + department×5 权限种子 + ADMIN 绑定（系统权限达 25 项） | ✅ 已落地 |
-| V6 | Phase 4 后续/Phase 5 | RBAC/组织演进、projects | 待定 |
+| V6__project_core.sql | Phase 5 | projects（key UK/org_id CASCADE/status 归档/owner_id） | ✅ 已落地 |
+| V7__project_permissions.sql | Phase 5 | project×5 权限种子 + ADMIN 绑定（系统权限达 30 项） | ✅ 已落地 |
+| V8 | Phase 5 后续/Phase 6 | project_members、issues | 待定 |
 | V6 | Phase 5 | projects / project_members | 待定 |
 | V7 | Phase 6 | issues | 待定 |
 | V8 | Phase 7 | issue_status_transitions | 待定 |
