@@ -98,6 +98,22 @@ def created_users():
 
 
 @pytest.fixture(scope="session")
+def cleanup_orgs(api_client, admin_token):
+    """本运行经 API 创建的测试组织 id 列表（owner=admin 可删）"""
+    org_ids: list[int] = []
+
+    def _cleanup():
+        for oid in org_ids:
+            try:
+                api_client.delete(f"/api/v1/orgs/{oid}", headers=auth_headers(admin_token))
+            except Exception:
+                pass
+
+    yield org_ids
+    _cleanup()
+
+
+@pytest.fixture(scope="session")
 def cleanup_roles(api_client, admin_token):
     """本运行经 API 创建的测试角色 id 列表（会话结束经 API 删除，非系统角色可删）"""
     role_ids: list[int] = []
