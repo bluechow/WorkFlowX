@@ -307,7 +307,13 @@
 >
 > **进度：P5-02 ✅ DONE（2026-09-15）**——V7 权限种子（project×5，系统权限达 30）；ProjectController 5 端点（hasAuthority）；数据级归属测试（authority 有+非成员 403→加入成员 200）；ProjectControllerIntegrationTest 10 用例；mvn 235/235；运行时冒烟 201/409/归档恢复/级联全过；pytest 43 两轮 + Vitest 70 + lint/build 全绿。
 >
-> **进度：P5-03+** 项目前端页面/Python project 用例/成员管理/Phase 5 验收 ⬜ TODO（进入时细化）
+> **进度：P5-03 ✅ DONE（2026-09-15）**——项目管理前端：ProjectsView（列表/搜索/status+组织筛选/创建/编辑/归档恢复确认/权限 UX）+ 菜单 + api/project.ts + 类型；Vitest 7 用例（含组织下拉真实交互），77/77。
+>
+> **进度：P5-04 ✅ DONE（2026-09-15）**——V8 project_members（复合PK/OWNER,MANAGER,MEMBER/FK CASCADE）+ project:assign_member 种子（系统权限 31）；ADR-015（组织成员前置/角色最小集）；ProjectMemberService（前置 400/重复 409/OWNER 保护 400/操作者数据级 403）+ ProjectServiceImpl.create 同事务写 OWNER 行；ProjectMemberController 3 端点；集成测试 9 个；mvn 244/244。
+>
+> **进度：P5-05 ✅ DONE（2026-09-15）**——tests/api/test_project_api.py 10 用例（CRUD 生命周期/keyword+status+orgId 过滤/dup 409/invalid 422/缺 org 404/不可变字段/归档恢复/成员生命周期/数据级归属 403→入组 201→移出 403）；pytest 48/48 两轮。
+>
+> **进度：Phase 5 Release Gate ✅ PASS（2026-09-15）**——三线 244/48/77 全绿 + 12 步真实 HTTP 冒烟 + MySQL/Redis 残留清零 + Swagger 同步；Gate 记录 docs/testing/phase5-gate.md。**Phase 5 全部完结，下一阶段 Phase 6 — Issue Management 等用户指令。**
 
 ## 6. Phase 4–19 里程碑概览
 

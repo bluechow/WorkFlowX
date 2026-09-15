@@ -40,7 +40,11 @@
 - **Phase 3 + Phase 4 ✅ Release Gate PASS**（docs/testing/phase34-gate.md）
 - **P5-01 ✅ DONE**：V6 projects 迁移 + project 模块 + ADR-014（数据级归属）+ 11 测试；mvn 225/225
 - **P5-02 ✅ DONE**：V7 权限种子（30 系统权限）+ ProjectController 5 端点 + 归属/归档/矩阵测试；mvn 235/235
-- 下一步：P5-03+（项目前端/成员管理/Phase 5 验收），**等用户指令后执行**
+- **P5-03 ✅ DONE**：项目管理前端 ProjectsView + 菜单 + api/project.ts；Vitest 77/77
+- **P5-04 ✅ DONE**：V8 project_members + ADR-015（角色 OWNER/MANAGER/MEMBER + 组织成员前置）+ ProjectMemberService/Controller 3 端点；mvn 244/244
+- **P5-05 ✅ DONE**：Python project+member 10 用例；pytest 48/48 两轮
+- **Phase 5 ✅ Release Gate PASS**（docs/testing/phase5-gate.md）；本机动态端口范围已纠正（1024-15000 → 49152-65535，根治 8080 被 winnat 排除的间歇故障）
+- 下一步：Phase 6 — Issue Management（V9 issues + issue_no/key 编号体系），**等用户指令后执行**
 - Phase 2 — Authentication & User 已于 2026-09-06 通过 Release Gate（25 任务全部完结）
 - **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
 - **P2-02 ✅ DONE**：UserMapper（BaseMapper 极简）+ MybatisPlusConfig 分页插件（MySQL；MP 3.5.9+ 已补 mybatis-plus-jsqlparser 依赖）+ UserMapperTest 11 用例（真实 MySQL，SQL 实证 ORDER BY/LIMIT/count 正确）；mvn test 31/31 全绿
@@ -142,6 +146,7 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-15 | P5-03~05+Gate 完成：项目前端+V8 成员迁移+31 权限+Python 10 用例；三线 244/48/77 全绿；Gate PASS（phase5-gate.md）；修复 winnat 排除段占用 8080 | Phase 5 收口 |
 | 2026-09-15 | P4-03+Gate+P5-01+P5-02 完成：组织前端+Phase3/4 Gate PASS+V6/V7 迁移+Project 5 端点+数据级归属；mvn 235/Vitest 70/pytest 43 全绿 | Phase 4 收口+Phase 5 |
 | 2026-09-15 | P3-05+P4-01+P4-02 完成：Phase 3 收口（/me/permissions+按钮 UX+10 Python 用例）；组织架构 V4/V5 迁移+13 REST 端点+OWNER 规则；mvn 214/Vitest 58/pytest 38 全绿 | Phase 3 收口+Phase 4 |
 | 2026-09-06 | P3-03+P3-04 完成：RBAC 13 REST 端点 + Filter 权限实时接线（收权即时生效实证）+ 前端系统管理三页；mvn 188/188 + Vitest 56/56 + pytest 28/28 | Phase 3 |
