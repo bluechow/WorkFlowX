@@ -4,7 +4,6 @@ import com.workflowx.common.web.PageVO;
 import com.workflowx.issue.dto.CreateIssueRequest;
 import com.workflowx.issue.dto.IssuePageQuery;
 import com.workflowx.issue.dto.UpdateIssueRequest;
-import com.workflowx.issue.dto.UpdateIssueStatusRequest;
 import com.workflowx.issue.vo.IssueVO;
 
 /**
@@ -28,6 +27,4 @@ public interface IssueService {
     /** 更新：issueNo/projectId/reporterId 不可变；assignee 变更重新校验项目成员；severity 规则同创建 */
     IssueVO update(Long projectId, Long issueId, UpdateIssueRequest request, Long operatorId);
 
-    /** 状态更新：仅枚举合法值（Phase 7 引入流转矩阵） */
-    IssueVO updateStatus(Long projectId, Long issueId, UpdateIssueStatusRequest request, Long operatorId);
 }

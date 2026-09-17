@@ -307,6 +307,15 @@ class IssueControllerIntegrationTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), java.util.Map.class);
         @SuppressWarnings("unchecked")
         var beforeData = (java.util.Map<String, Object>) before.get("data");
+        MvcResult putResult = mockMvc.perform(put("/api/v1/projects/{id}/issues/{iid}", projectId, issueId)
+                        .header("Authorization", "Bearer " + admin())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new com.workflowx.issue.dto.UpdateIssueRequest(
+                                "CTRL-流程-改", null, com.workflowx.issue.entity.IssuePriority.URGENT, null, null))))
+                .andReturn();
+        java.nio.file.Files.writeString(java.nio.file.Path.of("target", "p7_debug.txt"),
+                "PUT_STATUS=" + putResult.getResponse().getStatus() + " PUT_BODY="
+                        + putResult.getResponse().getContentAsString());
         mockMvc.perform(put("/api/v1/projects/{id}/issues/{iid}", projectId, issueId)
                         .header("Authorization", "Bearer " + admin())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -317,11 +326,11 @@ class IssueControllerIntegrationTest {
                 .andExpect(jsonPath("$.data.issueNo").value(((Number) beforeData.get("issueNo")).longValue()))
                 .andExpect(jsonPath("$.data.reporterId").value(((Number) beforeData.get("reporterId")).longValue()));
 
-        // 状态 PATCH
+        // 状态 PATCH（ADR-017: fromStatus 并发保护 + 正式矩阵校验；OPEN→IN_PROGRESS 合法）
         mockMvc.perform(patch("/api/v1/projects/{id}/issues/{iid}/status", projectId, issueId)
                         .header("Authorization", "Bearer " + admin())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"IN_PROGRESS\"}"))
+                        .content("{\"fromStatus\":\"OPEN\",\"toStatus\":\"IN_PROGRESS\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("IN_PROGRESS"));
 

@@ -140,6 +140,23 @@
 - 备选方案: 仅对存在用户计数（放弃：429 泄漏用户存在性）；单独 lock key（放弃：count≥5 判断已等价，少一个键）。
 - 影响: 暴力破解被限制为每 username 15 分钟 5 次；测试/清理需覆盖 auth:fail:* 键（TTL 900s 跨运行残留）；P2-15 起的自动化测试沿用同一限制。
 
+### ADR-017: Issue Workflow 状态转换矩阵
+
+- 日期: 2026-09-15
+- 状态: Accepted
+- 背景: Phase 6（ADR-016.3）明确状态流转矩阵属 Phase 7。Master Prompt §15 已给出示例主链（OPEN→IN_PROGRESS→RESOLVED→TESTING→CLOSED；测试失败 TESTING→REOPENED→IN_PROGRESS），Phase 7 基于该既有定义形成正式矩阵。
+- 决策:
+  1. **正式矩阵（唯一合法集合，共 6 条）**: OPEN→IN_PROGRESS；IN_PROGRESS→RESOLVED；RESOLVED→TESTING；TESTING→CLOSED；TESTING→REOPENED；REOPENED→IN_PROGRESS。
+  2. **CLOSED 为唯一终态**（无出边）；REOPENED 只能进 IN_PROGRESS 重新进入工作流。
+  3. **禁止跳过中间状态**（如 OPEN→CLOSED、OPEN→RESOLVED），保守矩阵防误操作与统计失真。
+  4. **禁止相同状态重复 transition** → 409。
+  5. **非法 transition → 409 Conflict**，message 携带当前状态与允许目标列表。
+  6. **并发保护**: 条件 UPDATE（`WHERE status = fromStatus`）乐观并发；条件不满足（状态已被并发变更）→ 409。不新增 version 字段。
+  7. **权限**: 新增 issue:transition authority（V11 种子，ADMIN 绑定）；PATCH status 端点从 issue:update 迁移为 issue:transition；数据级仍要求操作者为项目成员（沿 ADR-016.4）。不新增 reason/comment 等字段。
+- 理由: 严格主链+REOPENED 回路完全对齐 Master Prompt §15 既有示例；条件 UPDATE 在不增加 schema 的前提下根治"最后写入覆盖"。
+- 备选方案: 宽松矩阵（允许 OPEN→CLOSED 等跳转，放弃：误操作风险）；version 乐观锁字段（放弃：状态场景条件 UPDATE 足够，少一列）；issue:transition 沿用 issue:update（放弃：Phase 7 起流转为独立受控能力）。
+- 影响: ADR-016.3 由本 ADR 取代（Phase 6"仅枚举校验"状态随即终止）；IssueController PATCH status 请求体新增 fromStatus 必填字段（对旧客户端为破坏性变更，当前无外部消费者）；系统权限 36→37。
+
 ### ADR-016: Issue 编号并发分配与状态边界
 
 - 日期: 2026-09-15

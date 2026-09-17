@@ -9,7 +9,6 @@ import com.workflowx.common.web.PageVO;
 import com.workflowx.issue.dto.CreateIssueRequest;
 import com.workflowx.issue.dto.IssuePageQuery;
 import com.workflowx.issue.dto.UpdateIssueRequest;
-import com.workflowx.issue.dto.UpdateIssueStatusRequest;
 import com.workflowx.issue.entity.Issue;
 import com.workflowx.issue.entity.IssueSeverity;
 import com.workflowx.issue.entity.IssueType;
@@ -154,16 +153,6 @@ public class IssueServiceImpl implements IssueService {
         return IssueVO.from(requireIssue(projectId, issueId));
     }
 
-    @Override
-    @Transactional
-    public IssueVO updateStatus(Long projectId, Long issueId, UpdateIssueStatusRequest request, Long operatorId) {
-        requireProject(projectId);
-        Issue issue = requireIssue(projectId, issueId);
-        requireProjectMembership(projectId, operatorId);
-        issue.setStatus(request.status());
-        issueMapper.updateById(issue);
-        return IssueVO.from(requireIssue(projectId, issueId));
-    }
 
     private Issue requireIssue(Long projectId, Long issueId) {
         Issue issue = issueMapper.selectById(issueId);

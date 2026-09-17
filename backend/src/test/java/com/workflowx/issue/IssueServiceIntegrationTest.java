@@ -8,7 +8,6 @@ import com.workflowx.common.web.PageVO;
 import com.workflowx.issue.dto.CreateIssueRequest;
 import com.workflowx.issue.dto.IssuePageQuery;
 import com.workflowx.issue.dto.UpdateIssueRequest;
-import com.workflowx.issue.dto.UpdateIssueStatusRequest;
 import com.workflowx.issue.entity.Issue;
 import com.workflowx.issue.entity.IssuePriority;
 import com.workflowx.issue.entity.IssueSeverity;
@@ -55,6 +54,9 @@ class IssueServiceIntegrationTest {
 
     @Autowired
     private IssueService issueService;
+
+    @Autowired
+    private com.workflowx.issue.service.WorkflowService workflowService;
 
     @Autowired
     private ProjectService projectService;
@@ -264,25 +266,31 @@ class IssueServiceIntegrationTest {
     // ===== 状态（P6-05） =====
 
     @Test
-    void statusUpdateShouldAcceptAnyValidEnumInPhase6() {
+    void statusTransitionShouldFollowMatrixAndRejectIllegals() {
+        // P7: 状态能力迁移至 WorkflowService——主链 OPEN→IN_PROGRESS→RESOLVED→TESTING→CLOSED
         Long ownerId = createOrgAndProject("ST");
         Long projectId = projectIdFor("ST");
         IssueVO created = issueService.create(projectId, createRequest("P6-状态"), ownerId);
-        for (IssueStatus s : IssueStatus.values()) {
-            IssueVO updated = issueService.updateStatus(projectId, created.id(),
-                    new UpdateIssueStatusRequest(s), ownerId);
-            assertEquals(s, updated.status(), "Phase 6 仅校验枚举合法，不做流转限制");
-        }
+        IssueVO inProgress = workflowService.transition(projectId, created.id(),
+                IssueStatus.OPEN, IssueStatus.IN_PROGRESS, ownerId);
+        assertEquals(IssueStatus.IN_PROGRESS, inProgress.status());
+        IssueVO resolved = workflowService.transition(projectId, inProgress.id(),
+                IssueStatus.IN_PROGRESS, IssueStatus.RESOLVED, ownerId);
+        IssueVO testing = workflowService.transition(projectId, resolved.id(),
+                IssueStatus.RESOLVED, IssueStatus.TESTING, ownerId);
+        IssueVO closed = workflowService.transition(projectId, testing.id(),
+                IssueStatus.TESTING, IssueStatus.CLOSED, ownerId);
+        assertEquals(IssueStatus.CLOSED, closed.status());
     }
 
     @Test
-    void statusUpdateByNonMemberShouldThrow403() {
+    void statusTransitionByNonMemberShouldThrow403() {
         Long ownerId = createOrgAndProject("STN");
         Long projectId = projectIdFor("STN");
         Long outsider = createTestUser("stn");
         IssueVO created = issueService.create(projectId, createRequest("P6-状态越权"), ownerId);
-        ForbiddenException ex = assertThrows(ForbiddenException.class, () -> issueService.updateStatus(
-                projectId, created.id(), new UpdateIssueStatusRequest(IssueStatus.CLOSED), outsider));
+        ForbiddenException ex = assertThrows(ForbiddenException.class, () -> workflowService.transition(
+                projectId, created.id(), IssueStatus.OPEN, IssueStatus.IN_PROGRESS, outsider));
         assertEquals(403, ex.getStatus());
     }
 
@@ -302,8 +310,10 @@ class IssueServiceIntegrationTest {
                 "P6-登录崩溃", "紧急修复", IssueType.BUG, IssuePriority.URGENT, IssueSeverity.S1, member), ownerId);
         IssueVO task = issueService.create(projectId, new CreateIssueRequest(
                 "P6-写文档", null, IssueType.TASK, IssuePriority.LOW, null, null), ownerId);
-        issueService.updateStatus(projectId, task.id(),
-                new UpdateIssueStatusRequest(IssueStatus.RESOLVED), ownerId);
+        workflowService.transition(projectId, task.id(),
+                IssueStatus.OPEN, IssueStatus.IN_PROGRESS, ownerId);
+        workflowService.transition(projectId, task.id(),
+                IssueStatus.IN_PROGRESS, IssueStatus.RESOLVED, ownerId);
 
         // keyword（标题/描述）
         assertEquals(1, issueService.page(projectId,

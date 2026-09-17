@@ -6,7 +6,6 @@ import com.workflowx.common.web.Result;
 import com.workflowx.issue.dto.CreateIssueRequest;
 import com.workflowx.issue.dto.IssuePageQuery;
 import com.workflowx.issue.dto.UpdateIssueRequest;
-import com.workflowx.issue.dto.UpdateIssueStatusRequest;
 import com.workflowx.issue.service.IssueService;
 import com.workflowx.issue.vo.IssueVO;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -37,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class IssueController {
 
     private final IssueService issueService;
+    private final com.workflowx.issue.service.WorkflowService workflowService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('issue:list')")
@@ -81,13 +81,17 @@ public class IssueController {
         return Result.ok(issueService.update(projectId, issueId, request, operator.userId()));
     }
 
-    /** 状态（P6-05）：仅枚举校验；流转矩阵 Phase 7 */
+    /**
+     * 状态流转（P7-04，ADR-017）：issue:transition authority + 正式矩阵校验（非法 409）+
+     * 条件 UPDATE 并发保护（fromStatus 不匹配当前状态 → 409）。
+     */
     @PatchMapping("/{issueId}/status")
-    @PreAuthorize("hasAuthority('issue:update')")
-    public Result<IssueVO> updateStatus(@PathVariable Long projectId, @PathVariable Long issueId,
-                                        @Valid @RequestBody UpdateIssueStatusRequest request,
-                                        @AuthenticationPrincipal JwtPayload operator) {
-        return Result.ok(issueService.updateStatus(projectId, issueId, request, operator.userId()));
+    @PreAuthorize("hasAuthority('issue:transition')")
+    public Result<IssueVO> transition(@PathVariable Long projectId, @PathVariable Long issueId,
+                                      @Valid @RequestBody com.workflowx.issue.dto.TransitionIssueStatusRequest request,
+                                      @AuthenticationPrincipal JwtPayload operator) {
+        return Result.ok(workflowService.transition(projectId, issueId,
+                request.fromStatus(), request.toStatus(), operator.userId()));
     }
 
     /** 简单 body 载体（assigneeId 可空表示取消分派） */
