@@ -329,6 +329,20 @@
 - **P6-09 ✅**：E2E 12 步真实 HTTP + 三线全量回归（mvn 263 / pytest 48 / Vitest 84）
 - **P6-10 ✅ Gate PASS**：docs/testing/phase6-gate.md；**修复真实 Bug 1 个**（取消分派 assigneeId=null 被 MP updateById 忽略，f48c5de）；Phase 6 正式关闭
 
+## 5.7 Phase 7 — Workflow（✅ 全部完结并通过 Release Gate，2026-09-21）
+
+- **目标**：建立正式 Issue 状态机（矩阵/权限/并发保护），流转能力受控可验证，为 Phase 8 Comment 留稳定接口
+- **P7-01 ✅**：ADR-017 正式状态转换矩阵（6 条合法流转/CLOSED 唯一终态/REOPENED 回路/禁跳转/禁自环/非法 409），取代 ADR-016.3
+- **P7-02 ✅**：WorkflowService 领域服务（VALID_TRANSITIONS 矩阵收敛 Service 层，Controller 零状态机逻辑；非法流转 message 携带允许目标）
+- **P7-03 ✅**：V11 issue:transition 种子 + ADMIN 绑定（系统权限 36→37）；数据级仍要求项目成员（双层校验）
+- **P7-04 ✅**：PATCH status 迁移至 issue:transition + WorkflowService；TransitionIssueStatusRequest（fromStatus/toStatus 均必填，防并发伪造）
+- **P7-05 ✅**：条件 UPDATE 乐观并发（`WHERE status=fromStatus`，affected=0→409；无 version 字段、无 MAX+1 类方案）；WorkflowConcurrencyTest 8 线程 1×成功+7×409
+- **P7-06 ✅**：Java 集成测试（矩阵主链/REOPENED 回路/终态/非法跳转/自环 409/数据级 403/跨项目 404/8 线程并发）；mvn 264/264
+- **P7-07 ✅**：tests/api/test_workflow_api.py 12 用例真实 HTTP（主链/回路/终态/自环/非法/422/401/403/404/8 线程并发/完整回路）
+- **P7-08 ✅**：前端 allowedTargets 合法目标下拉（VALID_TRANSITIONS 镜像常量）+ issue:transition 权限 gating + 防重复提交；Vitest IssuesWorkflow 5 用例
+- **P7-09 ✅**：E2E 严格断言 22 项 ALL PASS（tests/e2e/phase7_workflow_e2e.sh 归档：幂等预清理/逐步硬断言/角色回收）
+- **P7-10 ✅ Gate PASS**：docs/testing/phase7-gate.md；关键测试连续两轮（mvn 264×2 / pytest 60×2 / Vitest 89×2）；Phase 7 正式关闭
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |
