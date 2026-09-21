@@ -4,14 +4,14 @@ import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import IssuesView from '../IssuesView.vue'
 import { useAuthStore } from '@/stores/auth'
-import { assignIssue, createIssue, listIssues, updateIssue, updateIssueStatus } from '@/api/issue'
+import { assignIssue, createIssue, listIssues, transitionIssueStatus, updateIssue } from '@/api/issue'
 
 vi.mock('@/api/issue', () => ({
   listIssues: vi.fn(),
   getIssue: vi.fn(),
   createIssue: vi.fn(),
   updateIssue: vi.fn(),
-  updateIssueStatus: vi.fn(),
+  transitionIssueStatus: vi.fn(),
   assignIssue: vi.fn(),
   listProjectOptions: vi.fn(),
 }))
@@ -42,7 +42,7 @@ const mocked = {
   listIssues: vi.mocked(listIssues),
   createIssue: vi.mocked(createIssue),
   updateIssue: vi.mocked(updateIssue),
-  updateIssueStatus: vi.mocked(updateIssueStatus),
+  transitionIssueStatus: vi.mocked(transitionIssueStatus),
   assignIssue: vi.mocked(assignIssue),
 }
 
@@ -106,7 +106,7 @@ describe('IssuesView（P6-08）', () => {
   })
 
   it('状态变更调用 status API 并刷新', async () => {
-    mocked.updateIssueStatus.mockResolvedValue(ISSUES[0])
+    mocked.transitionIssueStatus.mockResolvedValue(ISSUES[0])
     const wrapper = mountView()
     await flushPromises()
     const selects = wrapper.findAll('.el-table .el-select')

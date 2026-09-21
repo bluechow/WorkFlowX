@@ -3,11 +3,12 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
+  allowedTargets,
   createIssue,
   listIssues,
   listProjectOptions,
+  transitionIssueStatus,
   updateIssue,
-  updateIssueStatus,
 } from '@/api/issue'
 import { useAuthStore } from '@/stores/auth'
 import type { IssueStatus, IssueVO, ProjectVO } from '@/types/api'
@@ -25,6 +26,7 @@ const issues = ref<IssueVO[]>([])
 const total = ref(0)
 const loading = ref(false)
 const submitting = ref(false)
+const transitioning = ref(false)
 const pager = reactive({ page: 1, size: 10, keyword: '' })
 const filters = reactive({
   type: undefined as undefined | string,
@@ -148,16 +150,17 @@ async function submit() {
   }
 }
 
-const STATUS_OPTIONS: IssueStatus[] = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'TESTING', 'CLOSED', 'REOPENED']
-
-async function changeStatus(issue: IssueVO, status: IssueStatus) {
-  if (issue.status === status) return
+async function doTransition(issue: IssueVO, toStatus: IssueStatus) {
+  if (transitioning.value) return
+  transitioning.value = true
   try {
-    await updateIssueStatus(projectId.value, issue.id, status)
-    ElMessage.success(`状态已更新为 ${status}`)
+    await transitionIssueStatus(projectId.value, issue.id, issue.status, toStatus)
+    ElMessage.success(`状态已流转为 ${toStatus}`)
     await refresh()
   } catch (e) {
-    ElMessage.error((e as { message?: string }).message ?? '状态更新失败')
+    ElMessage.error((e as { message?: string }).message ?? '状态流转失败')
+  } finally {
+    transitioning.value = false
   }
 }
 
@@ -241,17 +244,26 @@ onMounted(async () => {
       <el-table-column label="严重程度" width="100">
         <template #default="{ row }">{{ row.severity ?? '—' }}</template>
       </el-table-column>
-      <el-table-column label="状态" width="120">
+      <el-table-column label="状态" width="130">
         <template #default="{ row }">
           <el-select
-            v-if="auth.hasPermission('issue:update')"
+            v-if="auth.hasPermission('issue:transition') && allowedTargets(row.status).length"
             :model-value="row.status"
             size="small"
-            @change="(s: IssueStatus) => changeStatus(row, s)"
+            :disabled="transitioning"
+            placeholder="流转…"
+            @change="(s: IssueStatus) => doTransition(row, s)"
           >
-            <el-option v-for="s in STATUS_OPTIONS" :key="s" :label="s" :value="s" />
+            <el-option
+              v-for="t in allowedTargets(row.status)"
+              :key="t"
+              :label="t"
+              :value="t"
+            />
           </el-select>
-          <span v-else>{{ row.status }}</span>
+          <el-tag v-else :type="row.status === 'CLOSED' ? 'info' : 'success'" size="small">
+            {{ row.status }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column label="报告人" width="90">

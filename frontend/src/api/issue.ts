@@ -88,12 +88,33 @@ export async function updateIssue(
   return data.data
 }
 
-export async function updateIssueStatus(
+/**
+ * 状态流转（P7-04，ADR-017）：fromStatus 必传做乐观并发（条件 UPDATE）。
+ * 合法目标矩阵与后端 VALID_TRANSITIONS 镜像（前端仅 UX；安全边界在后端矩阵校验）。
+ */
+export const VALID_TRANSITIONS: Record<IssueStatus, IssueStatus[]> = {
+  OPEN: ['IN_PROGRESS'],
+  IN_PROGRESS: ['RESOLVED'],
+  RESOLVED: ['TESTING'],
+  TESTING: ['CLOSED', 'REOPENED'],
+  REOPENED: ['IN_PROGRESS'],
+  CLOSED: [],
+}
+
+export function allowedTargets(from: IssueStatus): IssueStatus[] {
+  return VALID_TRANSITIONS[from] ?? []
+}
+
+export async function transitionIssueStatus(
   projectId: number,
   issueId: number,
-  status: IssueStatus,
+  fromStatus: IssueStatus,
+  toStatus: IssueStatus,
 ): Promise<IssueVO> {
-  const { data } = await http.patch<Result<IssueVO>>(`/projects/${projectId}/issues/${issueId}/status`, { status })
+  const { data } = await http.patch<Result<IssueVO>>(`/projects/${projectId}/issues/${issueId}/status`, {
+    fromStatus,
+    toStatus,
+  })
   if (!data.data) {
     return Promise.reject({ code: data.code, message: 'empty issue data', traceId: data.traceId })
   }
