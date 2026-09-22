@@ -5,6 +5,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -93,6 +94,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public void handleAccessDenied(AccessDeniedException ex) {
         throw ex;
+    }
+
+    /** multipart 超过 Spring 层大小限制（Phase 8; ADR-018）：业务上限由 AttachmentFilePolicy 校验，此处兜底转 413。 */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Result<Void>> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        log.warn("upload size exceeded: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(Result.of(413, "附件超过大小限制", null));
     }
 
     /** 兜底：完整堆栈只进日志，对外隐藏一切内部细节 */

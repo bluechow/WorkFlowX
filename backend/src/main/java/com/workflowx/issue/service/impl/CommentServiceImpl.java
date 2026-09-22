@@ -1,0 +1,122 @@
+package com.workflowx.issue.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.workflowx.common.exception.ForbiddenException;
+import com.workflowx.common.exception.ResourceNotFoundException;
+import com.workflowx.common.web.PageVO;
+import com.workflowx.issue.dto.CreateCommentRequest;
+import com.workflowx.issue.dto.UpdateCommentRequest;
+import com.workflowx.issue.entity.Issue;
+import com.workflowx.issue.entity.IssueComment;
+import com.workflowx.issue.mapper.CommentMapper;
+import com.workflowx.issue.mapper.IssueMapper;
+import com.workflowx.issue.service.CommentService;
+import com.workflowx.issue.vo.CommentVO;
+import com.workflowx.project.entity.Project;
+import com.workflowx.project.mapper.ProjectMapper;
+import com.workflowx.project.mapper.ProjectMemberMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+/**
+ * 评论领域实现（P8-03；ADR-018）。
+ * 校验链: project 404 → issue 404（防跨项目 ID 拼接）→ 项目成员 403 → ownership 403（编辑/删除）。
+ * authority 校验在 Controller @PreAuthorize；本类负责数据级与业务规则。
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CommentServiceImpl implements CommentService {
+
+    private final CommentMapper commentMapper;
+    private final IssueMapper issueMapper;
+    private final ProjectMapper projectMapper;
+    private final ProjectMemberMapper projectMemberMapper;
+
+    @Override
+    public CommentVO create(Long projectId, Long issueId, CreateCommentRequest request, Long operatorId) {
+        requireIssueInProject(projectId, issueId);
+        requireProjectMembership(projectId, operatorId);
+        IssueComment comment = new IssueComment();
+        comment.setIssueId(issueId);
+        comment.setAuthorId(operatorId);
+        comment.setContent(request.content());
+        commentMapper.insert(comment);
+        return CommentVO.from(commentMapper.selectById(comment.getId()));
+    }
+
+    @Override
+    public PageVO<CommentVO> page(Long projectId, Long issueId, long page, long size, Long operatorId) {
+        requireIssueInProject(projectId, issueId);
+        requireProjectMembership(projectId, operatorId);
+        LambdaQueryWrapper<IssueComment> wrapper = new LambdaQueryWrapper<IssueComment>()
+                .eq(IssueComment::getIssueId, issueId)
+                .orderByAsc(IssueComment::getCreatedAt)
+                .orderByAsc(IssueComment::getId);
+        IPage<IssueComment> result = commentMapper.selectPage(new Page<>(page, size), wrapper);
+        return PageVO.of(result.convert(CommentVO::from));
+    }
+
+    @Override
+    public CommentVO getById(Long projectId, Long issueId, Long commentId, Long operatorId) {
+        requireIssueInProject(projectId, issueId);
+        requireProjectMembership(projectId, operatorId);
+        return CommentVO.from(requireCommentInIssue(issueId, commentId));
+    }
+
+    @Override
+    public CommentVO update(Long projectId, Long issueId, Long commentId, UpdateCommentRequest request, Long operatorId) {
+        requireIssueInProject(projectId, issueId);
+        requireProjectMembership(projectId, operatorId);
+        IssueComment comment = requireCommentInIssue(issueId, commentId);
+        requireAuthor(comment, operatorId);
+        comment.setContent(request.content());
+        commentMapper.updateById(comment);
+        return CommentVO.from(commentMapper.selectById(commentId));
+    }
+
+    @Override
+    public void delete(Long projectId, Long issueId, Long commentId, Long operatorId) {
+        requireIssueInProject(projectId, issueId);
+        requireProjectMembership(projectId, operatorId);
+        IssueComment comment = requireCommentInIssue(issueId, commentId);
+        requireAuthor(comment, operatorId);
+        commentMapper.deleteById(commentId);
+    }
+
+    /** comment 必须属于指定 issue，跨 issue/跨项目访问一律 404（不泄露存在性）。 */
+    private IssueComment requireCommentInIssue(Long issueId, Long commentId) {
+        IssueComment comment = commentMapper.selectById(commentId);
+        if (comment == null || !comment.getIssueId().equals(issueId)) {
+            throw new ResourceNotFoundException("comment", commentId);
+        }
+        return comment;
+    }
+
+    /** ownership: 仅作者本人可编辑/删除；ADMIN 非 owner 同样 403（ADR-018，对齐 Phase 4/5 先例）。 */
+    private void requireAuthor(IssueComment comment, Long operatorId) {
+        if (!comment.getAuthorId().equals(operatorId)) {
+            throw new ForbiddenException("仅评论作者可操作该评论");
+        }
+    }
+
+    private void requireIssueInProject(Long projectId, Long issueId) {
+        Project project = projectMapper.selectById(projectId);
+        if (project == null) {
+            throw new ResourceNotFoundException("project", projectId);
+        }
+        Issue issue = issueMapper.selectById(issueId);
+        if (issue == null || !issue.getProjectId().equals(projectId)) {
+            throw new ResourceNotFoundException("issue", issueId);
+        }
+    }
+
+    private void requireProjectMembership(Long projectId, Long operatorId) {
+        if (projectMemberMapper.findMember(projectId, operatorId) == null) {
+            throw new ForbiddenException("仅项目成员可访问该项目的评论");
+        }
+    }
+}

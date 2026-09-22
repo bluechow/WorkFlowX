@@ -19,6 +19,13 @@ logging:
   level:
     com.workflowx: info
 
+# MinIO：生产必须显式注入
+minio:
+  endpoint: ${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
+  access-key: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+  secret-key: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+  bucket: ${MINIO_BUCKET:?MINIO_BUCKET is required}
+
 # 生产环境默认关闭 API 文档端点
 springdoc:
   api-docs:

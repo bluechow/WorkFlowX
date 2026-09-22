@@ -37,6 +37,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- MinIO 对象存储 SDK（Phase 8; ADR-018） -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.17</version>
+        </dependency>
 
         <!-- 数据访问：MyBatis-Plus + MySQL + Flyway -->
         <dependency>

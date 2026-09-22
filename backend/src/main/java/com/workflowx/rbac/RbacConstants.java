@@ -11,7 +11,7 @@ public final class RbacConstants {
     /** 系统角色: 禁止删除、code 不可修改 */
     public static final Set<String> SYSTEM_ROLE_CODES = Set.of("ADMIN", "MEMBER");
 
-    /** 系统权限: 禁止删除（与 V3/V5/V7/V8/V10/V11 种子一致，37 项） */
+    /** 系统权限: 禁止删除（与 V3/V5/V7/V8/V10/V11/V12 种子一致，46 项） */
     public static final Set<String> SYSTEM_PERMISSION_CODES = Set.of(
             "user:list", "user:get", "user:create", "user:update", "user:status", "user:assign_role",
             "role:list", "role:get", "role:create", "role:update", "role:delete", "role:assign_permission",
@@ -21,7 +21,9 @@ public final class RbacConstants {
             "project:list", "project:get", "project:create", "project:update", "project:delete",
             "project:assign_member",
             "issue:list", "issue:get", "issue:create", "issue:update", "issue:assign",
-            "issue:transition");
+            "issue:transition",
+            "comment:list", "comment:get", "comment:create", "comment:update", "comment:delete",
+            "attachment:list", "attachment:get", "attachment:upload", "attachment:delete");
 
     private RbacConstants() {
     }
