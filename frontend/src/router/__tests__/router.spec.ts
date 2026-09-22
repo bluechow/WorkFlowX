@@ -110,3 +110,18 @@ describe('router guard（P2-21）', () => {
     expect(router.currentRoute.value.query.reason).toBe('401')
   })
 })
+
+// ===== P11-03: 未知路由统一兜底 404（不出现空白页）=====
+
+describe('P11-03 catch-all 404', () => {
+  it('未知路由解析到 not-found', async () => {
+    await reset()
+    givenToken('valid-token')
+    mockedFetchMe.mockResolvedValue(ME)
+    await router.push('/definitely/not/a/route')
+    await router.isReady()
+    expect(router.currentRoute.value.matched[0]?.components?.default).toBeDefined()
+    // catch-all 命中: 路径保持原样且不会是空白（有组件承接）
+    expect(router.currentRoute.value.path).toBe('/definitely/not/a/route')
+  })
+})

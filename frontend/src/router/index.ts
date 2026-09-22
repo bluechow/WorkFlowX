@@ -63,6 +63,18 @@ const router = createRouter({
       name: 'system-project-issues',
       component: () => import('@/views/system/IssuesView.vue'),
     },
+    {
+      path: '/system/users',
+      name: 'system-users',
+      component: () => import('@/views/system/UsersView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      // P11-03: 未知路由统一兜底 404（不出现空白页）
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/views/NotFoundView.vue'),
+    },
   ],
 })
 
