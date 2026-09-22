@@ -134,6 +134,16 @@ def cleanup(db, redis_client, created_users):
     """测试数据清理: api_test_ 前缀用户（级联 user_roles）+ 会话/失败计数键"""
     def _cleanup():
         with db.cursor() as cur:
+            # Phase 12: 工厂用户（api_test_ 前缀）的通知/审计命名空间清理
+            # （通知无 FK、审计记录业务事实——按收件人/命名空间回收，而非全表清空）
+            cur.execute(
+                "DELETE FROM notifications WHERE recipient_id IN "
+                "(SELECT id FROM users WHERE username LIKE %s)", (USER_PREFIX + "%",))
+            cur.execute(
+                "DELETE FROM audit_logs WHERE user_id IN "
+                "(SELECT id FROM users WHERE username LIKE %s)", (USER_PREFIX + "%",))
+            cur.execute(
+                "DELETE FROM audit_logs WHERE summary LIKE %s", ("AA %",))
             cur.execute(
                 "DELETE FROM user_roles WHERE user_id IN "
                 "(SELECT id FROM users WHERE username LIKE %s)", (USER_PREFIX + "%",))
