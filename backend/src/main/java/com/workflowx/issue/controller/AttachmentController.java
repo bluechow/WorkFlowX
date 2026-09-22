@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
@@ -60,27 +60,29 @@ public class AttachmentController {
         return Result.ok(attachmentService.page(projectId, issueId, query.pageNum(), query.pageSize(), operator.userId()));
     }
 
-    /** 后端鉴权后流式转发对象内容；filename* 按 RFC 5987 编码以支持中文文件名。 */
+    /** 后端鉴权后同步读取对象内容；filename* 按 RFC 5987 编码以支持中文文件名。
+     * 同步 byte[]（上限 attachment.max-size-bytes）：避免 StreamingResponseBody 异步写出污染 keep-alive 连接。 */
     @GetMapping("/{attachmentId}/download")
     @PreAuthorize("hasAuthority('attachment:get')")
-    public ResponseEntity<StreamingResponseBody> download(@PathVariable Long projectId, @PathVariable Long issueId,
-                                                          @PathVariable Long attachmentId,
-                                                          @AuthenticationPrincipal JwtPayload operator) {
+    public ResponseEntity<byte[]> download(@PathVariable Long projectId, @PathVariable Long issueId,
+                                           @PathVariable Long attachmentId,
+                                           @AuthenticationPrincipal JwtPayload operator) {
         AttachmentService.DownloadResult download =
                 attachmentService.download(projectId, issueId, attachmentId, operator.userId());
         String encodedName = URLEncoder.encode(download.metadata().fileName(), StandardCharsets.UTF_8)
                 .replace("+", "%20");
-        StreamingResponseBody body = output -> {
-            try (var in = download.object().stream()) {
-                in.transferTo(output);
-            }
-        };
+        byte[] content;
+        try (var in = download.object().stream()) {
+            content = in.readAllBytes();
+        } catch (IOException e) {
+            throw new IllegalStateException("读取附件内容失败: " + e.getMessage(), e);
+        }
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename*=UTF-8''" + encodedName)
-                .contentLength(download.object().size())
+                .contentLength(content.length)
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(body);
+                .body(content);
     }
 
     @DeleteMapping("/{attachmentId}")
