@@ -31,7 +31,7 @@ export async function listAttachments(
     `/projects/${projectId}/issues/${issueId}/attachments`,
     { params: { page, size } },
   )
-  return resp.data.data
+  return resp.data.data as PageVO<AttachmentVO>
 }
 
 /** 上传附件（multipart/form-data，字段 file） */
@@ -55,7 +55,7 @@ export async function uploadAttachment(
       },
     },
   )
-  return resp.data.data
+  return resp.data.data as AttachmentVO
 }
 
 /** 下载附件（后端鉴权后返回文件流；禁止绕过后端直连对象存储） */

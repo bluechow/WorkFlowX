@@ -22,7 +22,7 @@ export async function listComments(
     `/projects/${projectId}/issues/${issueId}/comments`,
     { params: { page, size } },
   )
-  return resp.data.data
+  return resp.data.data as PageVO<CommentVO>
 }
 
 /** 创建评论（author 服务端绑定） */
@@ -35,7 +35,7 @@ export async function createComment(
     `/projects/${projectId}/issues/${issueId}/comments`,
     { content },
   )
-  return resp.data.data
+  return resp.data.data as CommentVO
 }
 
 /** 编辑本人评论 */
@@ -49,7 +49,7 @@ export async function updateComment(
     `/projects/${projectId}/issues/${issueId}/comments/${commentId}`,
     { content },
   )
-  return resp.data.data
+  return resp.data.data as CommentVO
 }
 
 /** 删除本人评论（无软删除） */
