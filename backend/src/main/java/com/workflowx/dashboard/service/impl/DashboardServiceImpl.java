@@ -41,15 +41,34 @@ public class DashboardServiceImpl implements DashboardService {
         boolean globalScope = roles != null && roles.contains("ADMIN");
         List<Long> scopeProjectIds = globalScope ? null
                 : projectMemberMapper.findAllProjectIdsByUserId(operatorId);
+        // 空成员范围直接返回零统计（避免 IN () 非法 SQL；语义=无成员项目即无数据）
+        if (!globalScope && scopeProjectIds.isEmpty()) {
+            return new DashboardOverviewVO(new ProjectStats(0, 0, 0),
+                    new IssueStats(0, Map.of(), Map.of(), Map.of(), Map.of(), 0),
+                    zeroTrend());
+        }
         return new DashboardOverviewVO(
                 projectStats(scopeProjectIds),
                 issueStats(scopeProjectIds),
                 createdTrend(scopeProjectIds));
     }
 
+    private List<TrendPoint> zeroTrend() {
+        LocalDate today = LocalDate.now();
+        List<TrendPoint> trend = new ArrayList<>();
+        for (int i = 0; i < TREND_DAYS; i++) {
+            trend.add(new TrendPoint(today.minusDays(TREND_DAYS - 1L - i).toString(), 0L));
+        }
+        return trend;
+    }
+
     private ProjectStats projectStats(List<Long> scopeProjectIds) {
-        long total = projectMapper.selectCount(inScope(new QueryWrapper<Project>(), scopeProjectIds));
-        long archived = projectMapper.selectCount(inScope(new QueryWrapper<Project>(), scopeProjectIds)
+        // projects 表自身主键为 id（scope 过滤列名与 issues 表不同）
+        QueryWrapper<Project> totalWrapper = inScope(new QueryWrapper<Project>().eq("status", "ACTIVE"), scopeProjectIds);
+        long total = projectMapper.selectCount(new QueryWrapper<Project>()
+                .in(scopeProjectIds != null, "id", scopeProjectIds));
+        long archived = projectMapper.selectCount(new QueryWrapper<Project>()
+                .in(scopeProjectIds != null, "id", scopeProjectIds)
                 .eq("status", "ARCHIVED"));
         return new ProjectStats(total, total - archived, archived);
     }
