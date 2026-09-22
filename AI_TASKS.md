@@ -399,6 +399,18 @@
 - **P10-19 ✅**：audit.md/dashboard.md/字典 §14 更新/ADR-020/phase10-gate.md
 - **Gate ✅ PASS**：**修复真实缺陷 2 个**（审计 user_id UNSIGNED 越界归一化；并发登录失败 REQUIRES_NEW 连接池死锁→login 移除事务）——第一轮按规则未宣布 PASS，根因分析→修复→完整回归通过
 
+## 5.11 Phase 11 — Frontend Completion（✅ 全部完结并通过 Release Gate，2026-09-23）
+
+- **目标**：Phase 2~10 分散前端能力产品化收口（gap analysis→补缺→系统浏览器回归），非重写
+- **P11-01 ✅**：gap analysis（G1 无 404/G2 Users 页缺失/G3 列表解析缺陷；其余逐页证据齐备）
+- **P11-02~03 ✅**：顶栏 Layout 保持（菜单权限矩阵 admin 7 项/user1 0 项）+ 404 catch-all + UsersView 补齐（api/user.ts 对齐契约）
+- **P11-04~19 ✅**：Axios 归一化确认/页面状态矩阵/交互防重/危险确认/异常实证（401 会话被顶自动跳转/403 提示/404 兜底）/桌面响应式/代码收口（`as PageVO` 错误模式 grep=0）
+- **P11-20 ✅**：Vitest 136/136（新增 UsersView 7+catch-all 1）
+- **P11-21 ✅**：真实浏览器 E2E 两轮（21 步全链+8 项复验；业务=UI=审计三方一致+权限隔离）
+- **P11-22~23 ✅**：视觉一致性（既有形态统一）+性能检查（无轮询/ECharts 销毁/无重复请求）
+- **P11-24~25 ✅**：Gate；后端回归 mvn 311/pytest 97；终态全零
+- **Gate ✅ PASS**：**修复真实缺陷 3 个**（listOrgs/listProjects 解析错误致列表恒空；issue.ts 同款自 Phase 6 潜伏——Vitest mock 掩盖、P11 浏览器回归首次暴露）；phase11-gate.md
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |
