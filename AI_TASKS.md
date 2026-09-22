@@ -411,6 +411,18 @@
 - **P11-24~25 ✅**：Gate；后端回归 mvn 311/pytest 97；终态全零
 - **Gate ✅ PASS**：**修复真实缺陷 3 个**（listOrgs/listProjects 解析错误致列表恒空；issue.ts 同款自 Phase 6 潜伏——Vitest mock 掩盖、P11 浏览器回归首次暴露）；phase11-gate.md
 
+## 5.12 Phase 12 — API Automation（✅ 全部完结并通过 Release Gate，2026-09-23）
+
+- **目标**：系统化 API 自动化体系（Client/Fixture/Factory/Assertion/Contract/分层 markers/自然归零清理），非堆用例
+- **P12-01 ✅**：coverage matrix（60+ 端点 vs 97 用例核对；真缺口=contract/issue 边界/跨组织/issue_no 并发/业务链/分层）
+- **P12-02~07 ✅**：clients.py（ApiSession 独立 token）+ factories.py（真实 API 工厂+级联清理）+ assertions.py（envelope/PageVO 断言）+ pytest.ini markers（smoke/regression/contract/concurrency）；**铁律：禁止重登 seed 用户**
+- **P12-08/22 ✅**：contract suite 10 用例（envelope/PageVO/资源结构/敏感词；安全层 401/403 无 data 契约锁定）
+- **P12-13/21/24 ✅**：issue 边界+跨组织隔离+8 线程 issue_no 并发 7 用例
+- **P12-29 ✅**：完整业务链 1 用例（15 环节 HTTP 全链+SQL 终态核验+三方一致）
+- **P12-26/30 ✅**：清理体系修复（auth:fail 跨轮累积→全清；cleanup 失败可见化；seed/匿名审计命名空间回收）——**终态自然归零达成**
+- **P12-28 ✅**：两轮 smoke 10/regression 8/full 115 + mvn 311×2 + Vitest 136×2 + lint/build 全绿
+- **Gate ✅ PASS**：docs/testing/api-automation.md + phase12-gate.md；真实产品缺陷 0；测试侧修复 4（重登 seed 会话污染/auth:fail 跨轮累积/清理静默吞/403 无 data 契约）
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |

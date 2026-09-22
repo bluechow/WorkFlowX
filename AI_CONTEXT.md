@@ -27,7 +27,7 @@
 
 ## 2. 当前阶段
 
-**Phase 11 — Frontend Completion：✅ 全部完结并通过 Release Gate（2026-09-23）**；下一步 Phase 12 — API Automation（等用户指令）
+**Phase 12 — API Automation：✅ 全部完结并通过 Release Gate（2026-09-23）**；下一步 Phase 13 — UI Automation（等用户指令）
 
 - **P3-01 ✅ DONE**：RBAC 设计基线（docs/architecture/rbac.md + ADR-012）+ V3 系统权限种子迁移（14 项 + ADMIN 全量绑定）；五表零结构变更，Phase 2 机制不动
 - **P3-02 ✅ DONE**：rbac 模块领域能力（Entity/4 Mapper/DTO/VO/RbacConstants/三 Service：角色 CRUD+权限绑定、权限 CRUD+用户权限实时解析、用户角色幂等绑定）；新增测试 28 个，mvn 172/172，Phase 2 回归全绿（pytest 28/npm 45/运行时冒烟）
@@ -49,8 +49,9 @@
 - **Phase 8 ✅ 全部完结并通过 Release Gate（2026-09-22）**：Comment & Attachment（V12+ADR-018+MinIO 真实存储+E2E 双侧核验）；mvn 287/pytest 81/Vitest 105 各连续两轮全绿；docs/testing/phase8-gate.md
 - **Phase 9 ✅ 全部完结并通过 Release Gate（2026-09-22）**：Notification（V13+ADR-019+前端通知中心+浏览器 E2E 两轮）；mvn 299/pytest 89/Vitest 120 各连续两轮全绿；docs/testing/phase9-gate.md
 - **Phase 10 ✅ 全部完结并通过 Release Gate（2026-09-22）**：Audit & Dashboard（V14+ADR-020+16 接线点+角色数据范围+§14 决策 D；修复 user_id 越界+连接池死锁 2 缺陷）；mvn 311/pytest 97/Vitest 128 各连续两轮全绿；docs/testing/phase10-gate.md
-- **Phase 11 ✅ 全部完结并通过 Release Gate（2026-09-23）**：前端收口（gap analysis→补 Users 管理页+404 兜底；**修复 listOrgs/listProjects/issue.ts Result 解析 3 处真实缺陷——组织/项目/Issue 列表浏览器端曾恒空，Vitest mock 掩盖、P11 浏览器回归首次暴露**）；Vitest 136 两轮+E2E 两轮（21 步全链）+后端回归 311/97；docs/testing/phase11-gate.md
-- 下一步：**Phase 12 — API Automation**（API 自动化体系），**等用户指令后执行**
+- **Phase 11 ✅ 全部完结并通过 Release Gate（2026-09-23）**：前端收口（gap analysis+Users 页+404 兜底；修复列表解析 3 处真实缺陷）；Vitest 136+E2E 两轮；docs/testing/phase11-gate.md
+- **Phase 12 ✅ 全部完结并通过 Release Gate（2026-09-23）**：API 自动化体系（clients/factories/assertions/markers 架构+contract suite+边界/隔离/并发+15 环节业务链；**单会话铁律**；清理体系修复后终态自然归零）；pytest 115（smoke 10/regression 8）+mvn 311+Vitest 136 各两轮全绿；docs/testing/api-automation.md + phase12-gate.md
+- 下一步：**Phase 13 — UI Automation**（Playwright 页面自动化），**等用户指令后执行**
 - Phase 2 — Authentication & User 已于 2026-09-06 通过 Release Gate（25 任务全部完结）
 - **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
 - **P2-02 ✅ DONE**：UserMapper（BaseMapper 极简）+ MybatisPlusConfig 分页插件（MySQL；MP 3.5.9+ 已补 mybatis-plus-jsqlparser 依赖）+ UserMapperTest 11 用例（真实 MySQL，SQL 实证 ORDER BY/LIMIT/count 正确）；mvn test 31/31 全绿
@@ -152,6 +153,7 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-23 | Phase 12 完成：API 自动化体系（clients/factories/assertions 架构+contract suite+分层 markers+业务链 15 环节；单会话铁律+清理体系修复终态自然归零）；pytest 115/mvn 311/Vitest 136 各两轮全绿；Gate PASS（phase12-gate.md） | Phase 12 收口 |
 | 2026-09-23 | Phase 11 完成：前端收口（gap analysis+Users 管理页+404 兜底+浏览器 E2E 两轮）；修复列表解析 3 处真实缺陷（orgs/projects/issues 浏览器端曾恒空）；Vitest 136/后端 311/97 回归；Gate PASS（phase11-gate.md） | Phase 11 收口 |
 | 2026-09-22 | Phase 10 完成：Audit & Dashboard 全量（V14+ADR-020+16 接线点+双事务语义+角色数据范围聚合+ECharts 前端+§14 决策 D）；修复审计 user_id 越界与并发登录连接池死锁 2 个真实缺陷；三线 311/97/128 各两轮全绿；Gate PASS（phase10-gate.md） | Phase 10 收口 |
 | 2026-09-22 | Phase 9 完成：Notification 全量（V13+ADR-019+3 类型共事务触发+self 资源隔离+前端通知中心+真实浏览器 E2E 两轮）；三线 299/89/120 各两轮全绿；Gate PASS（phase9-gate.md） | Phase 9 收口 |
