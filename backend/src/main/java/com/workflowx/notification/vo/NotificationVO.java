@@ -15,12 +15,19 @@ public record NotificationVO(
         Long relatedId,
         Boolean isRead,
         LocalDateTime readAt,
-        LocalDateTime createdAt) {
+        LocalDateTime createdAt,
+        /** related Issue 所属项目（跳转 /system/projects/{projectId}/issues 用）；Issue 已删时为 null */
+        Long projectId) {
 
     public static NotificationVO from(Notification notification) {
+        return from(notification, null);
+    }
+
+    public static NotificationVO from(Notification notification, Long projectId) {
         return new NotificationVO(notification.getId(), notification.getType(),
                 notification.getTitle(), notification.getContent(),
                 notification.getRelatedType(), notification.getRelatedId(),
-                notification.getIsRead(), notification.getReadAt(), notification.getCreatedAt());
+                notification.getIsRead(), notification.getReadAt(), notification.getCreatedAt(),
+                projectId);
     }
 }

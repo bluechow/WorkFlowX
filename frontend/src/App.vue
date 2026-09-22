@@ -2,8 +2,11 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notification'
+import NotificationBell from '@/components/notification/NotificationBell.vue'
 
 const auth = useAuthStore()
+const notificationStore = useNotificationStore()
 const router = useRouter()
 
 const displayName = computed(() => auth.currentUser?.nickname || auth.currentUser?.username || auth.username)
@@ -12,6 +15,8 @@ const isAdmin = computed(() => auth.roles.includes('ADMIN'))
 
 async function handleLogout() {
   await auth.logout()
+  // P9-09: 登出清理通知状态；切换用户时不残留上一用户未读数
+  notificationStore.reset()
   router.push('/login')
 }
 </script>
@@ -38,6 +43,7 @@ async function handleLogout() {
         </el-menu-item>
       </el-menu>
       <span class="app__spacer" />
+      <NotificationBell v-if="auth.isAuthenticated" />
       <span v-if="auth.isAuthenticated" class="app__user">{{ displayName }}</span>
       <el-button v-if="auth.isAuthenticated" link type="danger" @click="handleLogout">退出登录</el-button>
       <router-link v-else to="/login" class="app__login-link">登录</router-link>

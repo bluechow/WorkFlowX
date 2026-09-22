@@ -10,11 +10,14 @@ import com.workflowx.notification.entity.NotificationType;
 import com.workflowx.notification.mapper.NotificationMapper;
 import com.workflowx.notification.service.NotificationService;
 import com.workflowx.notification.vo.NotificationVO;
+import com.workflowx.issue.mapper.IssueMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 通知领域实现（P9-04; ADR-019）。
@@ -30,6 +33,7 @@ public class NotificationServiceImpl implements NotificationService {
     public static final String RELATED_ISSUE = "ISSUE";
 
     private final NotificationMapper notificationMapper;
+    private final IssueMapper issueMapper;
 
     @Override
     public void create(NotificationType type, Long recipientId, String title, String content,
@@ -57,7 +61,21 @@ public class NotificationServiceImpl implements NotificationService {
         }
         wrapper.orderByDesc(Notification::getCreatedAt).orderByDesc(Notification::getId);
         IPage<Notification> result = notificationMapper.selectPage(new Page<>(page, size), wrapper);
-        return PageVO.of(result.convert(NotificationVO::from));
+        // 批量解析 related Issue 的 projectId（单次 IN 查询，避免逐条 N+1）；Issue 已删 → projectId=null
+        List<Long> issueIds = result.getRecords().stream()
+                .filter(n -> NotificationServiceImpl.RELATED_ISSUE.equals(n.getRelatedType()))
+                .map(Notification::getRelatedId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
+        Map<Long, Long> projectIdByIssue = issueIds.isEmpty() ? Map.of()
+                : issueMapper.selectBatchIds(issueIds).stream()
+                        .collect(java.util.stream.Collectors.toMap(
+                                com.workflowx.issue.entity.Issue::getId,
+                                com.workflowx.issue.entity.Issue::getProjectId));
+        return PageVO.of(result.convert(n -> NotificationVO.from(n,
+                NotificationServiceImpl.RELATED_ISSUE.equals(n.getRelatedType())
+                        ? projectIdByIssue.get(n.getRelatedId()) : null)));
     }
 
     @Override
