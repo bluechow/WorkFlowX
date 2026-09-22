@@ -41,6 +41,9 @@ async function handleLogout() {
         <el-menu-item v-if="auth.hasPermission('permission:list')" index="/system/permissions">
           权限管理
         </el-menu-item>
+        <el-menu-item v-if="auth.hasPermission('audit:list')" index="/system/audit">
+          审计日志
+        </el-menu-item>
       </el-menu>
       <span class="app__spacer" />
       <NotificationBell v-if="auth.isAuthenticated" />

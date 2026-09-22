@@ -28,6 +28,12 @@ const router = createRouter({
       component: () => import('@/views/system/RolesView.vue'),
     },
     {
+      path: '/system/audit',
+      name: 'system-audit',
+      component: () => import('@/views/system/AuditView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/system/permissions',
       name: 'system-permissions',
       component: () => import('@/views/system/PermissionsView.vue'),

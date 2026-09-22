@@ -9,6 +9,12 @@ import { logout as logoutApi } from '@/api/auth'
 const push = vi.fn()
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push }),
+  createRouter: () => ({
+    beforeEach: vi.fn(),
+    push: vi.fn(),
+    currentRoute: { value: { params: {}, path: '/dashboard', query: {} } },
+  }),
+  createWebHistory: () => ({}),
 }))
 vi.mock('@/api/auth', () => ({
   fetchMe: vi.fn(),
