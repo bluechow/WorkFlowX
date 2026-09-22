@@ -118,7 +118,7 @@ public class CommentServiceImpl implements CommentService {
         }
     }
 
-    private void requireIssueInProject(Long projectId, Long issueId) {
+    private Issue requireIssueInProject(Long projectId, Long issueId) {
         Project project = projectMapper.selectById(projectId);
         if (project == null) {
             throw new ResourceNotFoundException("project", projectId);
@@ -127,6 +127,7 @@ public class CommentServiceImpl implements CommentService {
         if (issue == null || !issue.getProjectId().equals(projectId)) {
             throw new ResourceNotFoundException("issue", issueId);
         }
+        return issue;
     }
 
     private void requireProjectMembership(Long projectId, Long operatorId) {
