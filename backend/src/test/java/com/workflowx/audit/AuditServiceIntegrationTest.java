@@ -170,8 +170,8 @@ class AuditServiceIntegrationTest {
         assertEquals(1, auditService.query(new AuditService.AuditQueryParams(
                 operator, null, "LOGIN_FAIL", null, null, null, null, null, 1, 10)).total());
         assertEquals(1, auditService.query(new AuditService.AuditQueryParams(
-                null, null, null, false, null, null, null, null, 1, 10)).total(),
-                "success=false 筛选");
+                operator, null, null, false, null, null, null, null, 1, 10)).total(),
+                "operator+success=false 筛选（全局计数受历史运行审计累积影响，不作全局断言）");
         // 组合精确断言（抗测试顺序/历史残留：只断言本用例产出的确定性组合）
         assertEquals(1, auditService.query(new AuditService.AuditQueryParams(
                 operator, "USER", "CREATE", true, null, null, null, null, 1, 10)).total());

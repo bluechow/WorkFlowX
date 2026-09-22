@@ -49,7 +49,9 @@ public class AuditServiceImpl implements AuditService {
     private AuditLog buildEntry(String module, String action, String target, String summary,
                                 boolean success, Long userId) {
         AuditLog entry = new AuditLog();
-        entry.setUserId(userId);
+        // 归一化: null/非正数（如 0、-1 等系统占位 id）一律存 NULL——user_id 列为 UNSIGNED，
+        // 且占位 id 不是真实用户（真实缺陷修复: 既有测试/调用方用 -1L 作系统操作者占位）
+        entry.setUserId(userId == null || userId <= 0 ? null : userId);
         entry.setModule(module);
         entry.setAction(action);
         entry.setTarget(target);

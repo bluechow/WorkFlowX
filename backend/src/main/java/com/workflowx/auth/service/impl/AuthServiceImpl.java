@@ -50,8 +50,10 @@ public class AuthServiceImpl implements AuthService {
     private final com.workflowx.rbac.service.PermissionService permissionService;
 
     @Override
-    @Transactional
     public LoginResponse login(LoginRequest request) {
+        // 无 @Transactional（ADR-020 修复）: login 仅含单条 lastLoginAt 更新+Redis 会话，无多表原子性需求；
+        // 且并发失败路径的 recordStandalone(REQUIRES_NEW) 在外层事务存在时会因"挂起连接+新连接"耗尽连接池（死锁）。
+        // LOGIN_FAIL 审计在无外层事务时由 REQUIRED 语义独立提交，失败事实同样幸存。
         // P2-13: 锁定检查最前——锁定期间不查库、不验密码、不签发 token、不建会话
         if (loginAttemptService.isLocked(request.username())) {
             throw new BusinessException(429, "登录尝试次数过多，请稍后再试");
