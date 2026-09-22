@@ -140,6 +140,23 @@
 - 备选方案: 仅对存在用户计数（放弃：429 泄漏用户存在性）；单独 lock key（放弃：count≥5 判断已等价，少一个键）。
 - 影响: 暴力破解被限制为每 username 15 分钟 5 次；测试/清理需覆盖 auth:fail:* 键（TTL 900s 跨运行残留）；P2-15 起的自动化测试沿用同一限制。
 
+### ADR-020: Audit 审计与 Dashboard 统计设计基线（含 issue_status_transitions 最终决策）
+
+- 日期: 2026-09-22
+- 状态: Accepted
+- 背景: Phase 10（Master Prompt §5/§16；数据字典 §15）实现审计日志与数据统计。同时正式处理 §14 issue_status_transitions 历史遗留（标注 Phase 7 但从未建表）。
+- 决策:
+  1. **issue_status_transitions 不建表（决策 D）**: 其三个候选职责已被完全覆盖——状态规则=WorkflowService 内存矩阵（ADR-017）；操作事实=audit_logs（ISSUE/TRANSITION 含 from→to 摘要）；用户告知=notifications。无任何 API/UI 消费领域状态历史，不为"补齐字典"建空表。数据字典 §14 标注替代关系。
+  2. **audit_logs 按字典 §15 权威命名**（user_id/module/action/http_method/uri/ip/target/success）+ 最小扩展 trace_id（项目已有 MDC 链路）/summary（白名单业务摘要）/user_agent/created_at；索引 idx_audit_user_time/idx_audit_module/idx_audit_created。
+  3. **事务双语义（含真实缺陷修复）**: 默认 record=同事务（REQUIRED）——业务回滚不留"成功"审计；recordStandalone=REQUIRES_NEW——专用于"失败事实必须幸存"（登录失败，业务回滚不抹掉失败审计）。**真实缺陷修复**: ①审计 user_id 归一化（null/≤0 的系统占位 id 存 NULL——UNSIGNED 列越界）；②login 移除 @Transactional——并发失败路径每线程"外层事务连接+REQUIRES_NEW 新连接"双连接需求耗尽连接池（死锁），且 login 无多表原子性需求。
+  4. **接线 16 点（Service 层显式调用，与 Notification 模式一致）**: AUTH login成功/失败/登出；USER create/status；ORG create/delete；PROJECT create/status(归档恢复)/ASSIGN_MEMBER；ISSUE create/TRANSITION；COMMENT create/delete；ATTACHMENT upload/delete。读操作（GET/download）不记——无审计价值。
+  5. **敏感数据红线**: summary 仅白名单字段（业务编号/状态/操作者 id/文件名+大小）；绝不记录密码/JWT/Authorization/会话键/凭据；登录失败摘要仅"用户名或密码错误"不含输入值（密码不落任何字段）。测试断言守护。
+  6. **权限**: audit:list/audit:get/dashboard:view 3 项（V14，46→49，仅 ADMIN 绑定）。审计为全系统高敏感资源，无项目级子集授权（不存在"改 ID 看他人操作"面——普通角色 403）。
+  7. **Dashboard 数据范围**: ADMIN 角色=全系统；其他授权用户=仅其 project_members 成员项目（scope 下推 WHERE project_id IN；空成员范围直接零返回）。指标全部为数据库 GROUP BY 聚合（无全表捞取内存计算）。趋势仅创建趋势（14 天补零）——Issue 无"解决时刻"时间戳，不做假 resolved 趋势。
+- 理由: 审计与业务强一致（同事务）且失败事实独立幸存（REQUIRES_NEW 限定于登录失败），是最小且语义正确的组合；连接池死锁缺陷证明 REQUIRES_NEW 必须限定于无外层事务并发的路径。
+- 备选方案: 复用 operation_log（不存在该表，放弃）；issue_status_transitions 补建（放弃：无消费者，空表违背 Product First）；审计 AOP 切面全自动记录（放弃：Web 上下文参数组装隐式化，16 个显式点可控且可测）；Dashboard 前端聚合（放弃：核心统计必须后端计算）；MQ 异步审计（禁止且无需求）。
+- 影响: 系统权限 49 项；login 失去事务包裹（无原子性损失）；audit_logs 由测试/Gate 终态显式清零（无级联）；后续 Audit 页面扩展（导出/保留策略）与 Dashboard 图表扩展均可在此基线演进。
+
 ### ADR-019: Notification 通知模块设计基线
 
 - 日期: 2026-09-22

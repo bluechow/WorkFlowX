@@ -27,7 +27,7 @@
 
 ## 2. 当前阶段
 
-**Phase 9 — Notification：✅ 全部完结并通过 Release Gate（2026-09-22）**；下一步 Phase 10 — Audit & Dashboard（等用户指令）
+**Phase 10 — Audit & Dashboard：✅ 全部完结并通过 Release Gate（2026-09-22）**；下一步 Phase 11 — Frontend Completion（等用户指令）
 
 - **P3-01 ✅ DONE**：RBAC 设计基线（docs/architecture/rbac.md + ADR-012）+ V3 系统权限种子迁移（14 项 + ADMIN 全量绑定）；五表零结构变更，Phase 2 机制不动
 - **P3-02 ✅ DONE**：rbac 模块领域能力（Entity/4 Mapper/DTO/VO/RbacConstants/三 Service：角色 CRUD+权限绑定、权限 CRUD+用户权限实时解析、用户角色幂等绑定）；新增测试 28 个，mvn 172/172，Phase 2 回归全绿（pytest 28/npm 45/运行时冒烟）
@@ -47,8 +47,9 @@
 - **Phase 6 ✅ 全部完结并通过 Release Gate（2026-09-15）**：Issue 模块（V9/V10 迁移+6 端点+领域服务+Python 10 用例+前端 IssuesView+权限双层+数据级项目成员校验）；ADR-016；修复真实 Bug（取消分派 MP null 忽略）；mvn 263/pytest 48/Vitest 84 全绿；Gate 记录 docs/testing/phase6-gate.md
 - **Phase 7 ✅ 全部完结并通过 Release Gate（2026-09-21）**：Workflow 状态机（ADR-017 + V11 issue:transition 权限 37 + WorkflowService 收敛 + 条件 UPDATE 并发 + Python 12 用例 + 前端 allowedTargets + E2E 22 断言归档）；mvn 264/pytest 60/Vitest 89 各连续两轮全绿；docs/testing/phase7-gate.md
 - **Phase 8 ✅ 全部完结并通过 Release Gate（2026-09-22）**：Comment & Attachment（V12+ADR-018+MinIO 真实存储+E2E 双侧核验）；mvn 287/pytest 81/Vitest 105 各连续两轮全绿；docs/testing/phase8-gate.md
-- **Phase 9 ✅ 全部完结并通过 Release Gate（2026-09-22）**：Notification（V13+ADR-019 self 资源无权限码/SQL 收敛 ownership/共事务触发 3 类型/前端通知中心+未读数+切号重置/真实浏览器 E2E 两轮）；mvn 299/pytest 89/Vitest 120 各连续两轮全绿；docs/testing/phase9-gate.md
-- 下一步：**Phase 10 — Audit & Dashboard**（审计日志与统计），**等用户指令后执行**
+- **Phase 9 ✅ 全部完结并通过 Release Gate（2026-09-22）**：Notification（V13+ADR-019+前端通知中心+浏览器 E2E 两轮）；mvn 299/pytest 89/Vitest 120 各连续两轮全绿；docs/testing/phase9-gate.md
+- **Phase 10 ✅ 全部完结并通过 Release Gate（2026-09-22）**：Audit & Dashboard（V14+ADR-020 双事务语义审计 16 接线点+Dashboard 角色数据范围聚合+ECharts 前端+§14 决策 D 不建表；**修复真实缺陷 2 个**：审计 user_id UNSIGNED 越界归一化、并发登录失败 REQUIRES_NEW 连接池死锁）；mvn 311/pytest 97/Vitest 128 各连续两轮全绿；docs/testing/phase10-gate.md
+- 下一步：**Phase 11 — Frontend Completion**（前端完整化），**等用户指令后执行**
 - Phase 2 — Authentication & User 已于 2026-09-06 通过 Release Gate（25 任务全部完结）
 - **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
 - **P2-02 ✅ DONE**：UserMapper（BaseMapper 极简）+ MybatisPlusConfig 分页插件（MySQL；MP 3.5.9+ 已补 mybatis-plus-jsqlparser 依赖）+ UserMapperTest 11 用例（真实 MySQL，SQL 实证 ORDER BY/LIMIT/count 正确）；mvn test 31/31 全绿
@@ -85,8 +86,8 @@
 | comment | Issue 评论（author 绑定/ownership 三层/无软删除） | ✅ Phase 8 完成 |
 | attachment | 附件元数据 + MinIO 存储（白名单/objectKey 服务端生成/一致性补偿） | ✅ Phase 8 完成 |
 | notification | 站内通知（3 类型触发/self 隔离/共事务/前端通知中心） | ✅ Phase 9 完成 |
-| audit | 审计日志 | ⬜ 未开始（Phase 10，包占位已建） |
-| dashboard | 数据统计 | ⬜ 未开始（Phase 10，包占位已建） |
+| audit | 审计日志（16 接线点/双事务语义/敏感红线/仅 ADMIN） | ✅ Phase 10 完成 |
+| dashboard | 数据统计（真实聚合/角色数据范围/ECharts 可视化） | ✅ Phase 10 完成 |
 | system | 系统管理 | ✅ 基础能力已落地（健康检查 GET /api/v1/health） |
 | common | 统一响应 / 异常 / traceId / OpenAPI 配置 | ✅ 骨架已落地 |
 
@@ -150,6 +151,7 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-22 | Phase 10 完成：Audit & Dashboard 全量（V14+ADR-020+16 接线点+双事务语义+角色数据范围聚合+ECharts 前端+§14 决策 D）；修复审计 user_id 越界与并发登录连接池死锁 2 个真实缺陷；三线 311/97/128 各两轮全绿；Gate PASS（phase10-gate.md） | Phase 10 收口 |
 | 2026-09-22 | Phase 9 完成：Notification 全量（V13+ADR-019+3 类型共事务触发+self 资源隔离+前端通知中心+真实浏览器 E2E 两轮）；三线 299/89/120 各两轮全绿；Gate PASS（phase9-gate.md） | Phase 9 收口 |
 | 2026-09-22 | Phase 8 完成：Comment & Attachment 全量（V12+9 权限 46 项+StorageService+文件安全白名单+前端抽屉+E2E 20 断言）；修复 StreamingResponseBody 连接污染真实缺陷；ADR-018；Gate PASS（phase8-gate.md） | Phase 8 收口 |
 | 2026-09-21 | Phase 7 完成：Workflow 状态机（ADR-017 矩阵+V11 issue:transition+WorkflowService+条件 UPDATE 并发+Python 12+前端 allowedTargets+E2E 22 断言归档）；三线 264/60/89 连续两轮全绿；Gate PASS（phase7-gate.md） | Phase 7 收口 |

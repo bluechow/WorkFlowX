@@ -160,7 +160,7 @@
 
 索引：`idx_notifications_recipient(recipient_id, is_read)`
 
-## 14. issue_status_transitions 📋（Phase 7，状态机审计）
+## 14. issue_status_transitions 🗑️（不建表——ADR-020 决策 D：规则在 WorkflowService 内存矩阵、操作事实在 audit_logs、告知在 notifications；本表无独立消费者，已被实际实现替代）
 
 | 字段 | 类型 | 说明 |
 |---|---|---|

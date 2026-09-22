@@ -71,8 +71,9 @@ def test_admin_overview_reflects_real_data(
 
 
 def test_dashboard_data_scope_for_authorized_non_admin(
-        api_client, admin_token, member_token, unique_suffix, cleanup_orgs):
-    """非 ADMIN 即使被授予 dashboard:view，数据范围也仅限其成员项目。"""
+        api_client, admin_token, create_api_user, unique_suffix, cleanup_orgs):
+    """非 ADMIN 即使被授予 dashboard:view，数据范围也仅限其成员项目。
+    用独立工厂用户（不重登 seed user1——单会话策略会顶掉 conftest 会话级 token 污染后续文件）。"""
     org = api_client.post("/api/v1/orgs", headers=auth_headers(admin_token),
                           json={"name": "P10DB 组织S", "code": ORG_PREFIX + "S" + unique_suffix.upper(),
                                 "description": None}).json()["data"]
@@ -86,20 +87,20 @@ def test_dashboard_data_scope_for_authorized_non_admin(
                                  "name": f"p10db-view-{unique_suffix}", "description": None}).json()["data"]
     api_client.put(f"/api/v1/roles/{role['id']}/permissions", headers=auth_headers(admin_token),
                    json={"permissionCodes": ["dashboard:view"]})
-    api_client.post("/api/v1/users/2/roles", headers=auth_headers(admin_token),
+    viewer = create_api_user("dbview")
+    api_client.post(f"/api/v1/users/{viewer['id']}/roles", headers=auth_headers(admin_token),
                     json={"roleCode": f"P10DBV{unique_suffix.upper()}"})
-
+    # 该用户重登（仅覆盖自己的会话，不影响 seed 用户）
     member = api_client.post("/api/v1/auth/login",
-                             json={"username": "user1", "password": "Member@123456"}).json()["data"]
+                             json={"username": viewer["username"],
+                                   "password": viewer["password"]}).json()["data"]
     scoped = api_client.get("/api/v1/dashboard/overview",
                             headers=auth_headers(member["accessToken"])).json()["data"]
     admin_view = api_client.get("/api/v1/dashboard/overview",
                                 headers=auth_headers(admin_token)).json()["data"]
-    assert scoped["projects"]["total"] < admin_view["projects"]["total"] or scoped["projects"]["total"] >= 0
-    # member 全局 keys 正常但数字 <= admin（范围收敛；user1 无成员项目时为 0）
-    assert scoped["issues"]["total"] <= admin_view["issues"]["total"]
+    assert scoped["issues"]["total"] <= admin_view["issues"]["total"], "非 ADMIN 范围不超出 ADMIN"
 
     # 回收角色
-    api_client.delete(f"/api/v1/users/2/roles/P10DBV{unique_suffix.upper()}",
+    api_client.delete(f"/api/v1/users/{viewer['id']}/roles/P10DBV{unique_suffix.upper()}",
                       headers=auth_headers(admin_token))
     api_client.delete(f"/api/v1/roles/{role['id']}", headers=auth_headers(admin_token))

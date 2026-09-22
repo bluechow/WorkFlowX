@@ -381,6 +381,24 @@
 - **E2E ✅**：真实浏览器两轮（badge=3→点击已读跳转→全部已读→刷新持久化→切号隔离→二轮新通知 badge=1）
 - **Gate ✅ PASS**：docs/testing/phase9-gate.md；ADR-019；两轮 299/89/120 全绿；终态全零；**无产品缺陷**
 
+## 5.10 Phase 10 — Audit & Dashboard（✅ 全部完结并通过 Release Gate，2026-09-22）
+
+- **目标**：审计日志（16 高价值接线点/双事务语义/敏感红线）+ 真实聚合仪表盘（角色数据范围/ECharts 可视化）；收口 §14 历史遗留
+- **P10-01 ✅**：影响分析（issue_history/operation_log 均不存在；audit_logs 按字典 §15；§14 决策 D 不建表）
+- **P10-02 ✅**：V14 audit_logs（字典 §15 + trace_id/summary/user_agent/created_at；索引 ×3）
+- **P10-03 ✅**：AuditService（record 同事务 / recordStandalone REQUIRES_NEW / query 多条件稳定排序 / getById）
+- **P10-04 ✅**：16 接线点（AUTH×3/USER×2/ORG×2/PROJECT×3/ISSUE×2/COMMENT×2/ATTACHMENT×2）
+- **P10-05 ✅**：事务双语义 + 业务回滚不留成功审计（事务模板实证）
+- **P10-06~07 ✅**：audit:list/get 权限（仅 ADMIN）+ 全系统数据范围（权限即范围）
+- **P10-08 ✅**：§14 最终决策 D（字典更新替代说明，ADR-020）
+- **P10-09~11 ✅**：Dashboard 指标（项目/Issue 四维分布/14 天创建趋势——拒绝假 resolved 趋势）/overview API/角色数据范围（空成员短路）
+- **P10-12~13 ✅**：Dashboard 统计卡片+ECharts 饼图/趋势图；AuditView 筛选分页+无权限提示
+- **P10-14~16 ✅**：Java 12 + Python 8 + Vitest 8；三线 311/97/128 连续两轮全绿
+- **P10-17 ✅**：真实浏览器 E2E 两轮（业务=Audit=Dashboard 三方一致+权限隔离）
+- **P10-18 ✅**：SQL review（GROUP BY 下推/无 N+1/空 scope 短路/索引核验）
+- **P10-19 ✅**：audit.md/dashboard.md/字典 §14 更新/ADR-020/phase10-gate.md
+- **Gate ✅ PASS**：**修复真实缺陷 2 个**（审计 user_id UNSIGNED 越界归一化；并发登录失败 REQUIRES_NEW 连接池死锁→login 移除事务）——第一轮按规则未宣布 PASS，根因分析→修复→完整回归通过
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |
