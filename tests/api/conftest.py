@@ -105,9 +105,12 @@ def cleanup_orgs(api_client, admin_token):
     def _cleanup():
         for oid in org_ids:
             try:
-                api_client.delete(f"/api/v1/orgs/{oid}", headers=auth_headers(admin_token))
-            except Exception:
-                pass
+                resp = api_client.delete(f"/api/v1/orgs/{oid}", headers=auth_headers(admin_token))
+                if resp.status_code not in (200, 404):
+                    # P12-26: 清理失败必须可见（曾经 401 被 except pass 静默吞，导致跨轮累积 180+ 组织）
+                    print(f"WARNING: cleanup_orgs 删除组织 {oid} 返回 {resp.status_code}")
+            except Exception as exc:
+                print(f"WARNING: cleanup_orgs 删除组织 {oid} 异常: {exc}")
 
     yield org_ids
     _cleanup()
@@ -144,6 +147,13 @@ def cleanup(db, redis_client, created_users):
                 "(SELECT id FROM users WHERE username LIKE %s)", (USER_PREFIX + "%",))
             cur.execute(
                 "DELETE FROM audit_logs WHERE summary LIKE %s", ("AA %",))
+            # seed 账号（admin/user1）的全部审计：测试运行期以 seed 身份产生的操作记录，
+            # 跨轮无保留价值（组织/Issue 等实体已随清理消失，审计留着只会累积误导）
+            cur.execute(
+                "DELETE FROM audit_logs WHERE user_id IN "
+                "(SELECT id FROM users WHERE username IN ('admin', 'user1'))")
+            # 匿名失败审计（LOGIN_FAIL 对不存在用户名 → user_id=NULL）：跨轮无保留价值
+            cur.execute("DELETE FROM audit_logs WHERE user_id IS NULL")
             cur.execute(
                 "DELETE FROM user_roles WHERE user_id IN "
                 "(SELECT id FROM users WHERE username LIKE %s)", (USER_PREFIX + "%",))
@@ -152,9 +162,10 @@ def cleanup(db, redis_client, created_users):
             redis_client.delete(f"auth:session:{uid}")
         for key in redis_client.scan_iter(match=f"auth:fail:{USER_PREFIX}*"):
             redis_client.delete(key)
-        # 兜底: 清除测试过程中可能对 seed 账号产生的失败计数（避免跨运行锁定管理员）
-        for seed in ("admin", "user1"):
-            redis_client.delete(f"auth:fail:{seed}")
+        # 兜底（P12-26 稳定性）: 清除全部登录失败计数键——
+        # auth:fail TTL 900s，多轮连续跑会累积触发 429（401 变 429 的跨轮污染根因）
+        for key in redis_client.scan_iter(match="auth:fail:*"):
+            redis_client.delete(key)
     return _cleanup
 
 

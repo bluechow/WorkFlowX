@@ -17,13 +17,10 @@ pytestmark = [pytest.mark.smoke, pytest.mark.contract]
 
 
 @pytest.fixture(scope="module")
-def admin_session() -> ApiSession:
-    """模块级 admin 会话（contract 只读为主，避免反复登录）。"""
-    raw = httpx.Client(base_url=BASE_URL, timeout=15)
-    token = raw.post("/api/v1/auth/login",
-                     json={"username": "admin", "password": "Admin@123456"}).json()["data"]["accessToken"]
-    raw.close()
-    session = ApiSession(BASE_URL, token)
+def admin_session(admin_token: str) -> ApiSession:
+    """模块级 admin 会话——复用 conftest 会话级 token（P12-04：禁止重登 seed 用户，
+    单会话策略下 relogin 会顶掉 conftest.admin_token 污染后续全部测试文件）。"""
+    session = ApiSession(BASE_URL, admin_token)
     yield session
     session.close()
 
@@ -40,14 +37,16 @@ def test_health_contract(api_client: httpx.Client):
     assert resp.status_code == 200
 
 
-def test_login_contract_shape(api_client: httpx.Client):
-    """LoginResponse 契约: accessToken/tokenType/expiresIn/userId/username/roles。"""
+def test_login_contract_shape(api_client: httpx.Client, create_api_user):
+    """LoginResponse 契约: accessToken/tokenType/expiresIn/userId/username/roles。
+    用工厂用户登录（P12-04：重登 seed admin 会覆盖单会话、踢掉 conftest.admin_token 污染后续文件）。"""
+    user = create_api_user()
     resp = api_client.post("/api/v1/auth/login",
-                           json={"username": "admin", "password": "Admin@123456"})
+                           json={"username": user["username"], "password": user["password"]})
     data = assert_envelope(resp).get("data")
     assert set(["accessToken", "tokenType", "expiresIn", "userId", "username", "roles"]).issubset(data.keys())
     assert data["tokenType"] == "Bearer"
-    assert isinstance(data["roles"], list) and "ADMIN" in data["roles"]
+    assert isinstance(data["roles"], list), "roles 应为数组（新建工厂用户可为空数组）"
 
 
 def test_me_contract(admin_session: ApiSession):

@@ -18,9 +18,9 @@ pytestmark = pytest.mark.regression
 
 
 @pytest.fixture()
-def admin_session() -> ApiSession:
-    session = ApiSession(BASE_URL)
-    session.relogin("admin", "Admin@123456")
+def admin_session(admin_token: str) -> ApiSession:
+    # P12-04: 复用 conftest 会话级 token——禁止重登 seed 用户（单会话互踩）
+    session = ApiSession(BASE_URL, admin_token)
     yield session
     session.close()
 

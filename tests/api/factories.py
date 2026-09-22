@@ -59,7 +59,7 @@ class Factory:
         suffix = suffix or short_suffix()
         resp = self.client.post("/api/v1/orgs", json={
             "name": f"AA 组织 {suffix}", "code": f"AAORG{suffix}", "description": None})
-        assert resp.status_code in (200, 201), f"factory create_org 失败: {resp.status_code} {resp.text}"
+        assert resp.status_code in (200, 201), f"factory create_org 失败: {resp.status_code} {resp.text} | url=/api/v1/orgs"
         org = resp.json()["data"]
         self._orgs.append(org["id"])
         return org
