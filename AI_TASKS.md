@@ -343,6 +343,27 @@
 - **P7-09 ✅**：E2E 严格断言 22 项 ALL PASS（tests/e2e/phase7_workflow_e2e.sh 归档：幂等预清理/逐步硬断言/角色回收）
 - **P7-10 ✅ Gate PASS**：docs/testing/phase7-gate.md；关键测试连续两轮（mvn 264×2 / pytest 60×2 / Vitest 89×2）；Phase 7 正式关闭
 
+## 5.8 Phase 8 — Comment & Attachment（✅ 全部完结并通过 Release Gate，2026-09-22）
+
+- **目标**：建立 Issue 协作层（评论 + MinIO 附件），权限/数据级/ownership 三层校验，文件安全闭环，为 Phase 9 Notification 留稳定接口
+- **P8-01 ✅**：影响分析（MinIO 基础设施复用 compose 现有 bucket；数据字典 §11/§12 命名为准；Issue 校验链模式沿用）
+- **P8-02 ✅**：V12 issue_comments + attachments（FK CASCADE/UNIQUE object_key）+ 实体/Mapper
+- **P8-03 ✅**：CommentService（author 服务端绑定/content 10000 上限/无软删除/跨资源 404）
+- **P8-04 ✅**：CommentController 5 端点（嵌套资源边界 Swagger 同步）
+- **P8-05 ✅**：comment×5 权限种子 + ownership 第三层（仅作者本人，ADMIN 不豁免）
+- **P8-06 ✅**：Attachment 元数据模型（零 BLOB 入库）
+- **P8-07 ✅**：StorageService/MinioConfig（fail-fast bucket 校验；common.storage 不感知业务）
+- **P8-08 ✅**：文件安全策略（白名单 12 类不信任 Content-Type/10MB 可配 413/文件名清洗/objectKey 服务端生成）——ADR-018
+- **P8-09 ✅**：multipart 上传 + MinIO→DB 一致性补偿（insert 失败删对象，补偿失败记 ERROR）
+- **P8-10 ✅**：后端鉴权下载（同步 byte[]，修复 StreamingResponseBody 连接污染真实缺陷；无 presigned/公开 bucket）
+- **P8-11 ✅**：删除顺序 MinIO→DB（对象失败元数据保留）+ MaxUploadSizeExceededException→413
+- **P8-12 ✅**：Java 集成测试 23 个（真实 MySQL+MinIO：一致性双向断言/白名单/穿越/ownership）；mvn 287/287
+- **P8-13 ✅**：Python 黑盒 21 个（真实 HTTP；MinIO 终态=0 断言）；pytest 81/81
+- **P8-14 ✅**：IssueCommentsPanel（列表/创建/编辑/删除/loading/empty/error/权限 UX/重拉）+ Vitest 8
+- **P8-15 ✅**：IssueAttachmentsPanel（上传进度/前端预检/鉴权下载/删除）+ IssuesView 抽屉 + Vitest 8；105/105
+- **P8-16 ✅**：真实文件 E2E 20 断言 ALL PASS ×2（MinIO mc/DB mysql 双侧一致性核验+权限路径+终态=0）
+- **P8-17 ✅ Gate PASS**：docs/testing/phase8-gate.md；ADR-018；关键测试连续两轮（mvn 287×2/pytest 81×2/Vitest 105×2）；**修复真实缺陷 1 个**（StreamingResponseBody keep-alive 污染）；Phase 8 正式关闭
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |

@@ -140,6 +140,21 @@
 - 备选方案: 仅对存在用户计数（放弃：429 泄漏用户存在性）；单独 lock key（放弃：count≥5 判断已等价，少一个键）。
 - 影响: 暴力破解被限制为每 username 15 分钟 5 次；测试/清理需覆盖 auth:fail:* 键（TTL 900s 跨运行残留）；P2-15 起的自动化测试沿用同一限制。
 
+### ADR-018: Comment 与 Attachment（MinIO）设计基线
+
+- 日期: 2026-09-22
+- 状态: Accepted
+- 背景: Phase 8（Master Prompt §5/§13；数据字典 §11/§12）实现 Issue 评论与附件。库内已有表结构定义，文件二进制必须存 MinIO（compose.yaml 既有的 workflowx bucket，不建第二套存储）。
+- 决策:
+  1. **命名以数据字典为准**: 表 `issue_comments`/`attachments`；字段 `file_name`/`file_size`（非 original_filename/size_bytes）；comment 增补 `updated_at`（可编辑语义）。
+  2. **权限 9 项（V12 种子，37→46）**: comment:list/get/create/update/delete + attachment:list/get/upload/delete。数据级=项目成员；**ownership 第三层**: 编辑/删除仅作者/上传者本人，**ADMIN 非 owner 同样 403**（对齐 Phase 4 org 删除仅 OWNER 的先例，Service 数据级不因角色豁免）。
+  3. **文件安全**: 扩展名白名单 12 类（jpg/jpeg/png/gif/webp/pdf/txt/doc/docx/xls/xlsx/zip），不信任 Content-Type（仅记录）；上限 `attachment.max-size-bytes`（默认 10MB，可配）+ Spring multipart 11MB 兜底；超限 413、白名单外/空文件/非法文件名 422；文件名去路径分量/控制字符/限长 120；**objectKey 服务端生成** `issues/{issueId}/{uuid}-{safeName}`（防碰撞+防 path traversal，库内 UNIQUE 兜底）。
+  4. **下载走后端鉴权**: 同步 byte[] 响应（10MB 上限内存可控）+ RFC 5987 文件名编码；**不用 presigned URL、bucket 不公开**。放弃 StreamingResponseBody——实测其异步写出污染 keep-alive 连接（后续请求 Server disconnected）。
+  5. **一致性**: 上传 = MinIO 成功 → insert 元数据，insert 失败补偿删对象（补偿失败记 ERROR 不吞）；删除 = **先删对象后删元数据**（对象删除失败则元数据保留，避免悬空记录）。
+- 理由: ownership 不豁免与既有先例一致且规则最小；白名单 + 服务端 objectKey 是文件上传的最小安全闭环；同步下载在该大小上限下简单可靠。
+- 备选方案: presigned URL（放弃：多一跳鉴权复杂度，暂无性能需求）；独立 comment/attachment 顶层模块包（放弃：作为 Issue 子资源放 issue 包，与 project-member 先例一致）；宽松 Content-Type 检测（放弃：magic number 库引入成本高于白名单收益）。
+- 影响: 系统权限 46 项（RbacConstants 守护同步）；Comment/Attachment 随 Issue FK 级联删除，但 **org 级联删除不回收 MinIO 对象**——测试/清理必须显式走 DELETE API 或按 object_key 清理（E2E 已覆盖终态=0 断言）；下载为同步阻塞读，Phase 14 性能测试若成瓶颈再评估 presigned/流式。
+
 ### ADR-017: Issue Workflow 状态转换矩阵
 
 - 日期: 2026-09-15

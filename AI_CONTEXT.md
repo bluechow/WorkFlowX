@@ -27,7 +27,7 @@
 
 ## 2. 当前阶段
 
-**Phase 7 — Workflow：✅ 全部完结并通过 Release Gate（2026-09-21）**；下一步 Phase 8 — Comment & Attachment（等用户指令）
+**Phase 8 — Comment & Attachment：✅ 全部完结并通过 Release Gate（2026-09-22）**；下一步 Phase 9 — Notification（等用户指令）
 
 - **P3-01 ✅ DONE**：RBAC 设计基线（docs/architecture/rbac.md + ADR-012）+ V3 系统权限种子迁移（14 项 + ADMIN 全量绑定）；五表零结构变更，Phase 2 机制不动
 - **P3-02 ✅ DONE**：rbac 模块领域能力（Entity/4 Mapper/DTO/VO/RbacConstants/三 Service：角色 CRUD+权限绑定、权限 CRUD+用户权限实时解析、用户角色幂等绑定）；新增测试 28 个，mvn 172/172，Phase 2 回归全绿（pytest 28/npm 45/运行时冒烟）
@@ -45,8 +45,9 @@
 - **P5-05 ✅ DONE**：Python project+member 10 用例；pytest 48/48 两轮
 - **Phase 5 ✅ Release Gate PASS**（docs/testing/phase5-gate.md）；本机动态端口范围已纠正（1024-15000 → 49152-65535，根治 8080 被 winnat 排除的间歇故障）
 - **Phase 6 ✅ 全部完结并通过 Release Gate（2026-09-15）**：Issue 模块（V9/V10 迁移+6 端点+领域服务+Python 10 用例+前端 IssuesView+权限双层+数据级项目成员校验）；ADR-016；修复真实 Bug（取消分派 MP null 忽略）；mvn 263/pytest 48/Vitest 84 全绿；Gate 记录 docs/testing/phase6-gate.md
-- **Phase 7 ✅ 全部完结并通过 Release Gate（2026-09-21）**：Workflow 状态机（ADR-017 正式矩阵 6 条流转/CLOSED 唯一终态/REOPENED 回路 + V11 issue:transition 种子系统权限 37 + WorkflowService 状态机收敛 Service 层 + 条件 UPDATE 乐观并发无 version 字段 + Python 12 用例 + 前端 allowedTargets 下拉/权限 gating + E2E 严格断言 22 项归档 tests/e2e/）；mvn 264/pytest 60/Vitest 89 **各连续两轮**全绿；Gate 记录 docs/testing/phase7-gate.md
-- 下一步：**Phase 8 — Comment & Attachment**（评论与附件 MinIO），**等用户指令后执行**
+- **Phase 7 ✅ 全部完结并通过 Release Gate（2026-09-21）**：Workflow 状态机（ADR-017 + V11 issue:transition 权限 37 + WorkflowService 收敛 + 条件 UPDATE 并发 + Python 12 用例 + 前端 allowedTargets + E2E 22 断言归档）；mvn 264/pytest 60/Vitest 89 各连续两轮全绿；docs/testing/phase7-gate.md
+- **Phase 8 ✅ 全部完结并通过 Release Gate（2026-09-22）**：Comment & Attachment（V12 两表+9 权限种子系统权限 46、ADR-018 三层权限/白名单/objectKey 服务端生成、StorageService 真实 MinIO、上传一致性补偿、同步 byte[] 下载修复连接污染真实缺陷、前端评论/附件抽屉面板、E2E 20 断言 MinIO/DB 双侧核验）；mvn 287/pytest 81/Vitest 105 各连续两轮全绿；docs/testing/phase8-gate.md
+- 下一步：**Phase 9 — Notification**（通知），**等用户指令后执行**
 - Phase 2 — Authentication & User 已于 2026-09-06 通过 Release Gate（25 任务全部完结）
 - **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
 - **P2-02 ✅ DONE**：UserMapper（BaseMapper 极简）+ MybatisPlusConfig 分页插件（MySQL；MP 3.5.9+ 已补 mybatis-plus-jsqlparser 依赖）+ UserMapperTest 11 用例（真实 MySQL，SQL 实证 ORDER BY/LIMIT/count 正确）；mvn test 31/31 全绿
@@ -80,8 +81,8 @@
 | project | 项目管理 | ⬜ 未开始（Phase 5，包占位已建） |
 | issue | Issue 管理（编号/类型/分派/状态基础） | ✅ Phase 6 完成 |
 | workflow | Issue 状态机（ADR-017 矩阵/issue:transition/条件 UPDATE 并发） | ✅ Phase 7 完成 |
-| comment | 评论 | ⬜ 未开始（Phase 8） |
-| attachment | 附件（MinIO） | ⬜ 未开始（Phase 8；MinIO 基础设施已就绪） |
+| comment | Issue 评论（author 绑定/ownership 三层/无软删除） | ✅ Phase 8 完成 |
+| attachment | 附件元数据 + MinIO 存储（白名单/objectKey 服务端生成/一致性补偿） | ✅ Phase 8 完成 |
 | notification | 通知 | ⬜ 未开始（Phase 9，包占位已建） |
 | audit | 审计日志 | ⬜ 未开始（Phase 10，包占位已建） |
 | dashboard | 数据统计 | ⬜ 未开始（Phase 10，包占位已建） |
@@ -148,6 +149,7 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-22 | Phase 8 完成：Comment & Attachment 全量（V12+9 权限 46 项+StorageService+文件安全白名单+前端抽屉+E2E 20 断言）；修复 StreamingResponseBody 连接污染真实缺陷；ADR-018；Gate PASS（phase8-gate.md） | Phase 8 收口 |
 | 2026-09-21 | Phase 7 完成：Workflow 状态机（ADR-017 矩阵+V11 issue:transition+WorkflowService+条件 UPDATE 并发+Python 12+前端 allowedTargets+E2E 22 断言归档）；三线 264/60/89 连续两轮全绿；Gate PASS（phase7-gate.md） | Phase 7 收口 |
 | 2026-09-15 | Phase 6 完成：Issue 模块全量（V9/V10+领域+6 端点+Python 10+前端 IssuesView）；修复取消分派 MP null Bug；Gate PASS（phase6-gate.md） | Phase 6 收口 |
 | 2026-09-15 | P5-03~05+Gate 完成：项目前端+V8 成员迁移+31 权限+Python 10 用例；三线 244/48/77 全绿；Gate PASS（phase5-gate.md）；修复 winnat 排除段占用 8080 | Phase 5 收口 |
