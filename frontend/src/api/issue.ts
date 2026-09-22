@@ -57,7 +57,8 @@ export async function listIssues(
   },
 ): Promise<PageVO<IssueVO>> {
   const response = await http.get(`/projects/${projectId}/issues`, { params })
-  return (response.data as PageVO<IssueVO>) ?? { list: [], total: 0, page: 1, size: 20 }
+  // P11 修复: Result 包装取 .data（原实现导致 Issue 列表恒空）
+  return (response.data as { data: PageVO<IssueVO> }).data
 }
 
 export async function getIssue(projectId: number, issueId: number): Promise<IssueVO> {
@@ -138,6 +139,6 @@ export async function assignIssue(
 /** 项目选项（IssuesView 顶部项目切换用，复用 orgs 权限无需 project:list 之外的能力） */
 export async function listProjectOptions(): Promise<ProjectVO[]> {
   const response = await http.get('/projects', { params: { page: 1, size: 100 } })
-  const page = response.data as PageVO<ProjectVO>
+  const page = (response.data as { data: PageVO<ProjectVO> }).data
   return page.list
 }
