@@ -15,6 +15,7 @@ import com.workflowx.issue.entity.IssueType;
 import com.workflowx.issue.mapper.IssueMapper;
 import com.workflowx.issue.service.IssueService;
 import com.workflowx.issue.vo.IssueVO;
+import com.workflowx.project.entity.Project;
 import com.workflowx.project.mapper.ProjectMapper;
 import com.workflowx.project.mapper.ProjectMemberMapper;
 import lombok.RequiredArgsConstructor;
@@ -35,11 +36,12 @@ public class IssueServiceImpl implements IssueService {
     private final IssueMapper issueMapper;
     private final ProjectMapper projectMapper;
     private final ProjectMemberMapper projectMemberMapper;
+    private final com.workflowx.notification.service.NotificationService notificationService;
 
     @Override
     @Transactional
     public IssueVO create(Long projectId, CreateIssueRequest request, Long operatorId) {
-        requireProject(projectId);
+        Project project = requireProject(projectId);
         requireProjectMembership(projectId, operatorId);
 
         if (request.severity() != null && !IssueType.BUG.equals(request.type())) {
@@ -68,6 +70,11 @@ public class IssueServiceImpl implements IssueService {
         issue.setReporterId(operatorId);
         issue.setAssigneeId(request.assigneeId());
         issueMapper.insert(issue);
+        // P9-07: 创建即分派 → 通知 assignee（排除操作者本人；共事务，主业务回滚通知同回滚）
+        if (issue.getAssigneeId() != null && !issue.getAssigneeId().equals(operatorId)) {
+            notificationService.notifyIssueAssigned(project.getKey(), issue.getIssueNo(),
+                    issue.getTitle(), issue.getId(), issue.getAssigneeId(), operatorId);
+        }
         return IssueVO.from(requireIssue(projectId, issue.getId()));
     }
 
@@ -116,6 +123,7 @@ public class IssueServiceImpl implements IssueService {
     public IssueVO update(Long projectId, Long issueId, UpdateIssueRequest request, Long operatorId) {
         Issue issue = requireIssue(projectId, issueId);
         requireProjectMembership(projectId, operatorId);
+        Long previousAssigneeId = issue.getAssigneeId();
 
         if (request.severity() != null && !IssueType.BUG.equals(issue.getType())) {
             throw new BusinessException(400, "severity 仅适用于 BUG 类型");
@@ -150,6 +158,14 @@ public class IssueServiceImpl implements IssueService {
         } else {
             issueMapper.updateById(issue);
         }
+        // P9-07: 变更分派 → 通知新 assignee（取消分派不通知；与旧值相同不重复通知）
+        Long newAssigneeId = issue.getAssigneeId();
+        if (newAssigneeId != null && !newAssigneeId.equals(previousAssigneeId)
+                && !newAssigneeId.equals(operatorId)) {
+            Project project = projectMapper.selectById(issue.getProjectId());
+            notificationService.notifyIssueAssigned(project.getKey(), issue.getIssueNo(),
+                    issue.getTitle(), issueId, newAssigneeId, operatorId);
+        }
         return IssueVO.from(requireIssue(projectId, issueId));
     }
 
@@ -163,10 +179,12 @@ public class IssueServiceImpl implements IssueService {
         return issue;
     }
 
-    private void requireProject(Long projectId) {
-        if (projectMapper.selectById(projectId) == null) {
+    private Project requireProject(Long projectId) {
+        Project project = projectMapper.selectById(projectId);
+        if (project == null) {
             throw new ResourceNotFoundException("project", projectId);
         }
+        return project;
     }
 
     /** 数据级权限（ADR-016）: 操作者必须是项目成员 */

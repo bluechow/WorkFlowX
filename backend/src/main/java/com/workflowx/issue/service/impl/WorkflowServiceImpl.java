@@ -36,6 +36,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     private final IssueMapper issueMapper;
     private final ProjectMemberMapper projectMemberMapper;
+    private final com.workflowx.project.mapper.ProjectMapper projectMapper;
+    private final com.workflowx.notification.service.NotificationService notificationService;
 
     @Override
     public Set<IssueStatus> allowedTargets(IssueStatus from) {
@@ -66,6 +68,20 @@ public class WorkflowServiceImpl implements WorkflowService {
             Issue current = issueMapper.selectById(issueId);
             throw new BusinessException(409, "状态流转冲突: 当前状态为 "
                     + (current == null ? "UNKNOWN" : current.getStatus()) + "，请刷新后重试");
+        }
+        // P9-07: 流转成功 → 通知 assignee + reporter（排除操作者本人，Set 去重；共事务）
+        java.util.Set<Long> recipients = new java.util.LinkedHashSet<>();
+        if (issue.getAssigneeId() != null) {
+            recipients.add(issue.getAssigneeId());
+        }
+        recipients.add(issue.getReporterId());
+        recipients.remove(operatorId);
+        if (!recipients.isEmpty()) {
+            String projectKey = projectMapper.selectById(projectId).getKey();
+            for (Long recipientId : recipients) {
+                notificationService.notifyIssueStatusChanged(projectKey, issue.getIssueNo(),
+                        issue.getTitle(), issueId, toStatus.name(), recipientId, operatorId);
+            }
         }
         return IssueVO.from(issueMapper.selectById(issueId));
     }

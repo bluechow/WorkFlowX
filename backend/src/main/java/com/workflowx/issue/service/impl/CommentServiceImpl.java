@@ -35,16 +35,31 @@ public class CommentServiceImpl implements CommentService {
     private final IssueMapper issueMapper;
     private final ProjectMapper projectMapper;
     private final ProjectMemberMapper projectMemberMapper;
+    private final com.workflowx.notification.service.NotificationService notificationService;
 
     @Override
     public CommentVO create(Long projectId, Long issueId, CreateCommentRequest request, Long operatorId) {
-        requireIssueInProject(projectId, issueId);
+        Issue issue = requireIssueInProject(projectId, issueId);
         requireProjectMembership(projectId, operatorId);
         IssueComment comment = new IssueComment();
         comment.setIssueId(issueId);
         comment.setAuthorId(operatorId);
         comment.setContent(request.content());
         commentMapper.insert(comment);
+        // P9-07: 新评论 → 通知 assignee + reporter（排除评论者本人，Set 去重；共事务）
+        java.util.Set<Long> recipients = new java.util.LinkedHashSet<>();
+        if (issue.getAssigneeId() != null) {
+            recipients.add(issue.getAssigneeId());
+        }
+        recipients.add(issue.getReporterId());
+        recipients.remove(operatorId);
+        if (!recipients.isEmpty()) {
+            String projectKey = projectMapper.selectById(projectId).getKey();
+            for (Long recipientId : recipients) {
+                notificationService.notifyIssueCommented(projectKey, issue.getIssueNo(),
+                        issue.getTitle(), issueId, recipientId, operatorId);
+            }
+        }
         return CommentVO.from(commentMapper.selectById(comment.getId()));
     }
 
