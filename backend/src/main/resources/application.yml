@@ -1,6 +1,11 @@
 spring:
   application:
     name: workflowx-backend
+  servlet:
+    multipart:
+      # 略高于业务上限（attachment.max-size-bytes），超限由 MaxUploadSizeExceededException 统一转 413
+      max-file-size: ${SPRING_MULTIPART_MAX_FILE_SIZE:11MB}
+      max-request-size: ${SPRING_MULTIPART_MAX_REQUEST_SIZE:12MB}
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   jackson:
@@ -27,13 +32,6 @@ management:
     health:
       show-details: never
       show-components: never
-
-spring:
-  servlet:
-    multipart:
-      # 略高于业务上限（attachment.max-size-bytes），超限由 MaxUploadSizeExceededException 统一转 413
-      max-file-size: ${SPRING_MULTIPART_MAX_FILE_SIZE:11MB}
-      max-request-size: ${SPRING_MULTIPART_MAX_REQUEST_SIZE:12MB}
 
 # 附件策略（Phase 8; ADR-018）
 attachment:
