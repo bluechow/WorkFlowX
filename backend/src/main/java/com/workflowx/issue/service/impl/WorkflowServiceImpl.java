@@ -38,6 +38,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     private final ProjectMemberMapper projectMemberMapper;
     private final com.workflowx.project.mapper.ProjectMapper projectMapper;
     private final com.workflowx.notification.service.NotificationService notificationService;
+    private final com.workflowx.audit.service.AuditService auditService;
 
     @Override
     public Set<IssueStatus> allowedTargets(IssueStatus from) {
@@ -69,6 +70,8 @@ public class WorkflowServiceImpl implements WorkflowService {
             throw new BusinessException(409, "状态流转冲突: 当前状态为 "
                     + (current == null ? "UNKNOWN" : current.getStatus()) + "，请刷新后重试");
         }
+        auditService.record("ISSUE", "TRANSITION", "issue:" + issueId,
+                "状态流转 " + fromStatus + " -> " + toStatus, true, operatorId);
         // P9-07: 流转成功 → 通知 assignee + reporter（排除操作者本人，Set 去重；共事务）
         java.util.Set<Long> recipients = new java.util.LinkedHashSet<>();
         if (issue.getAssigneeId() != null) {

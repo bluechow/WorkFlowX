@@ -38,6 +38,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     private final OrganizationMapper organizationMapper;
     private final OrganizationMemberMapper memberMapper;
     private final UserMapper userMapper;
+    private final com.workflowx.audit.service.AuditService auditService;
 
     @Override
     @Transactional
@@ -54,6 +55,8 @@ public class OrganizationServiceImpl implements OrganizationService {
         }
         // 创建者即 OWNER（同事务写入成员关系）
         memberMapper.insert(org.getId(), operatorId, OrgMemberType.OWNER.name());
+        auditService.record("ORG", "CREATE", "org:" + org.getId(),
+                "创建组织 " + org.getCode(), true, operatorId);
         return OrganizationVO.from(requireOrg(org.getId()));
     }
 
@@ -97,6 +100,8 @@ public class OrganizationServiceImpl implements OrganizationService {
         }
         // departments / organization_members 经 FK CASCADE 级联清理
         organizationMapper.deleteById(id);
+        auditService.record("ORG", "DELETE", "org:" + id,
+                "删除组织 " + org.getCode(), true, operatorId);
     }
 
     @Override

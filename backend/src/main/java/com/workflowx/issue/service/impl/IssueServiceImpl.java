@@ -37,6 +37,7 @@ public class IssueServiceImpl implements IssueService {
     private final ProjectMapper projectMapper;
     private final ProjectMemberMapper projectMemberMapper;
     private final com.workflowx.notification.service.NotificationService notificationService;
+    private final com.workflowx.audit.service.AuditService auditService;
 
     @Override
     @Transactional
@@ -70,6 +71,9 @@ public class IssueServiceImpl implements IssueService {
         issue.setReporterId(operatorId);
         issue.setAssigneeId(request.assigneeId());
         issueMapper.insert(issue);
+        auditService.record("ISSUE", "CREATE", "issue:" + issue.getId(),
+                "创建 Issue " + project.getKey() + "-" + issue.getIssueNo() + " " + issue.getTitle(),
+                true, operatorId);
         // P9-07: 创建即分派 → 通知 assignee（排除操作者本人；共事务，主业务回滚通知同回滚）
         if (issue.getAssigneeId() != null && !issue.getAssigneeId().equals(operatorId)) {
             notificationService.notifyIssueAssigned(project.getKey(), issue.getIssueNo(),

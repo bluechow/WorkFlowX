@@ -3,6 +3,9 @@ package com.workflowx.project.mapper;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
@@ -44,4 +47,8 @@ public interface ProjectMemberMapper {
             DELETE FROM project_members WHERE project_id = #{projectId} AND user_id = #{userId}
             """)
     int deleteMember(@Param("projectId") Long projectId, @Param("userId") Long userId);
+
+    /** 用户全部成员项目 id（Dashboard 数据范围用；ADR-020） */
+    @Select("SELECT project_id FROM project_members WHERE user_id = #{userId}")
+    List<Long> findAllProjectIdsByUserId(@org.apache.ibatis.annotations.Param("userId") Long userId);
 }

@@ -44,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthSessionService authSessionService;
     private final com.workflowx.rbac.service.UserRoleService userRoleService;
     private final JwtProperties jwtProperties;
+    private final com.workflowx.audit.service.AuditService auditService;
     private final UserService userService;
     private final LoginAttemptService loginAttemptService;
     private final com.workflowx.rbac.service.PermissionService permissionService;
@@ -58,6 +59,9 @@ public class AuthServiceImpl implements AuthService {
         User user = userMapper.selectOne(
                 new LambdaQueryWrapper<User>().eq(User::getUsername, request.username()));
         if (user == null || !passwordService.matches(request.password(), user.getPasswordHash())) {
+            // P10-04: 登录失败审计——独立事务（业务回滚不抹掉失败事实）；绝不记录密码
+            auditService.recordStandalone("AUTH", "LOGIN_FAIL", "user:" + request.username(),
+                    "登录失败（用户名或密码错误）", false, user == null ? null : user.getId());
             // 统一计数（含不存在的 username）: 防止 429 仅出现在真实用户名上造成账号枚举泄漏（ADR-010）
             long failures = loginAttemptService.recordFailure(request.username());
             if (failures >= loginAttemptService.MAX_ATTEMPTS) {
@@ -84,6 +88,7 @@ public class AuthServiceImpl implements AuthService {
         lastLoginUpdate.setLastLoginAt(LocalDateTime.now());
         userMapper.updateById(lastLoginUpdate);
         log.info("user logged in: userId={}", user.getId());
+        auditService.record("AUTH", "LOGIN", "user:" + user.getId(), "登录成功", true, user.getId());
 
         long expiresIn = jwtProperties.getExpireHours() * 3600L;
         return new LoginResponse(issuance.accessToken(), "Bearer", expiresIn, user.getId(), user.getUsername(), roles);
@@ -94,6 +99,7 @@ public class AuthServiceImpl implements AuthService {
         // 幂等: 会话不存在时 Redis DEL 为空操作，不抛异常；原 Token 因会话缺失在 Filter 层即 401
         authSessionService.deleteSession(userId);
         log.info("user logged out: userId={}", userId);
+        auditService.record("AUTH", "LOGOUT", "user:" + userId, "退出登录", true, userId);
     }
 
     @Override

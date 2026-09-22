@@ -33,6 +33,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     private final ProjectMemberMapper projectMemberMapper;
     private final OrganizationMemberMapper organizationMemberMapper;
     private final UserMapper userMapper;
+    private final com.workflowx.audit.service.AuditService auditService;
 
     @Override
     @Transactional
@@ -58,6 +59,8 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
         } catch (DuplicateKeyException e) {
             throw new BusinessException(409, "用户已是项目成员");
         }
+        auditService.record("PROJECT", "ASSIGN_MEMBER", "project:" + projectId,
+                "项目成员 " + request.userId() + " 角色设为 " + request.role(), true, operatorId);
         return ProjectMemberVO.from(requireMember(projectId, request.userId()));
     }
 

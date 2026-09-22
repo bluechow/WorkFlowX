@@ -35,6 +35,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectMemberMapper projectMemberMapper;
     private final OrganizationMapper organizationMapper;
     private final OrganizationMemberMapper organizationMemberMapper;
+    private final com.workflowx.audit.service.AuditService auditService;
 
     @Override
     @Transactional
@@ -58,6 +59,8 @@ public class ProjectServiceImpl implements ProjectService {
         }
         // 创建者即项目负责人（OWNER），同事务写入成员表（ADR-015）
         projectMemberMapper.insert(project.getId(), operatorId, ProjectMemberRole.OWNER.name());
+        auditService.record("PROJECT", "CREATE", "project:" + project.getId(),
+                "创建项目 " + project.getKey(), true, operatorId);
         return ProjectVO.from(requireProject(project.getId()));
     }
 
@@ -105,6 +108,8 @@ public class ProjectServiceImpl implements ProjectService {
         requireOrgMembership(project.getOrgId(), operatorId);
         project.setStatus(status);
         projectMapper.updateById(project);
+        auditService.record("PROJECT", "STATUS", "project:" + id,
+                "项目状态变更为 " + status, true, operatorId);
         return ProjectVO.from(requireProject(id));
     }
 

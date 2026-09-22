@@ -34,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordService passwordService;
     private final AuthSessionService authSessionService;
+    private final com.workflowx.audit.service.AuditService auditService;
 
     @Override
     public UserVO getById(Long id) {
@@ -77,6 +78,8 @@ public class UserServiceImpl implements UserService {
             // 并发窗口下 DB 唯一约束兜底；仅吞唯一键冲突，其余数据库异常继续上抛
             throw new BusinessException(409, "用户信息与已有记录冲突");
         }
+        auditService.record("USER", "CREATE", "user:" + user.getId(),
+                "创建用户 " + request.username(), true, null);
         // 重新查询以带回 DB 维护的 created_at/updated_at
         return UserVO.from(requireUser(user.getId()));
     }
@@ -115,6 +118,8 @@ public class UserServiceImpl implements UserService {
             authSessionService.deleteSession(targetUserId);
         }
         // 恢复 ACTIVE 不自动创建会话，用户须重新登录
+        auditService.record("USER", "STATUS", "user:" + targetUserId,
+                "用户状态变更为 " + status, true, operatorId);
         return UserVO.from(requireUser(targetUserId));
     }
 

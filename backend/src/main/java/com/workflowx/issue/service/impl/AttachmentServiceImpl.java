@@ -42,6 +42,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     private final ProjectMemberMapper projectMemberMapper;
     private final StorageService storageService;
     private final AttachmentFilePolicy filePolicy;
+    private final com.workflowx.audit.service.AuditService auditService;
 
     @Override
     public AttachmentVO upload(Long projectId, Long issueId, MultipartFile file, Long operatorId) {
@@ -73,6 +74,8 @@ public class AttachmentServiceImpl implements AttachmentService {
             compensateOrphanObject(objectKey, e);
             throw e;
         }
+        auditService.record("ATTACHMENT", "UPLOAD", "issue:" + issueId,
+                "上传附件 " + validated.safeName() + "（" + validated.size() + "B）", true, operatorId);
         return AttachmentVO.from(attachmentMapper.selectById(attachment.getId()));
     }
 
@@ -106,6 +109,8 @@ public class AttachmentServiceImpl implements AttachmentService {
         // 先删对象: 对象删除失败 → 元数据保留（避免库内记录指向已失效文件的悬空语义），异常向上传播
         storageService.delete(attachment.getObjectKey());
         attachmentMapper.deleteById(attachmentId);
+        auditService.record("ATTACHMENT", "DELETE", "issue:" + issueId,
+                "删除附件 " + attachment.getFileName(), true, operatorId);
     }
 
     /** DB insert 失败时补偿删除已上传对象；补偿失败记 ERROR 日志（孤儿对象人工可查），不吞原始异常。 */

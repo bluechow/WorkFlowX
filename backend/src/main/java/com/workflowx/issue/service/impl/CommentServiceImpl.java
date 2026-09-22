@@ -36,6 +36,7 @@ public class CommentServiceImpl implements CommentService {
     private final ProjectMapper projectMapper;
     private final ProjectMemberMapper projectMemberMapper;
     private final com.workflowx.notification.service.NotificationService notificationService;
+    private final com.workflowx.audit.service.AuditService auditService;
 
     @Override
     public CommentVO create(Long projectId, Long issueId, CreateCommentRequest request, Long operatorId) {
@@ -60,6 +61,8 @@ public class CommentServiceImpl implements CommentService {
                         issue.getTitle(), issueId, recipientId, operatorId);
             }
         }
+        auditService.record("COMMENT", "CREATE", "issue:" + issueId,
+                "评论 Issue " + issue.getIssueNo(), true, operatorId);
         return CommentVO.from(commentMapper.selectById(comment.getId()));
     }
 
@@ -100,6 +103,8 @@ public class CommentServiceImpl implements CommentService {
         IssueComment comment = requireCommentInIssue(issueId, commentId);
         requireAuthor(comment, operatorId);
         commentMapper.deleteById(commentId);
+        auditService.record("COMMENT", "DELETE", "issue:" + issueId,
+                "删除评论 " + commentId, true, operatorId);
     }
 
     /** comment 必须属于指定 issue，跨 issue/跨项目访问一律 404（不泄露存在性）。 */
