@@ -18,7 +18,8 @@ export async function listProjects(params?: {
   size?: number
 }): Promise<PageVO<ProjectVO>> {
   const response = await http.get('/projects', { params })
-  return (response.data as PageVO<ProjectVO>) ?? { list: [], total: 0, page: 1, size: 20 }
+  // P11 修复: 同 org.ts，Result 包装取 .data
+  return (response.data as { data: PageVO<ProjectVO> }).data
 }
 
 export async function createProject(payload: CreateProjectPayload): Promise<ProjectVO> {
@@ -53,7 +54,7 @@ export async function updateProjectStatus(
 
 export async function listOrgOptions(): Promise<{ id: number; name: string; code: string }[]> {
   const response = await http.get('/orgs', { params: { page: 1, size: 100 } })
-  const page = response.data as PageVO<OrganizationOption>
+  const page = (response.data as { data: PageVO<OrganizationOption> }).data
   return page.list.map((o) => ({ id: o.id, name: o.name, code: o.code }))
 }
 

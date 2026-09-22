@@ -15,7 +15,8 @@ export async function listOrgs(params?: {
   size?: number
 }): Promise<PageVO<OrganizationVO>> {
   const response = await http.get('/orgs', { params })
-  return (response.data as PageVO<OrganizationVO>) ?? { list: [], total: 0, page: 1, size: 20 }
+  // P11 修复: http 拦截器返回 axios response，Result 包装需取 .data（原实现取 .data 当 PageVO 导致列表恒空）
+  return (response.data as { data: PageVO<OrganizationVO> }).data
 }
 
 export async function createOrg(payload: {
