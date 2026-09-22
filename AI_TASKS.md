@@ -364,6 +364,23 @@
 - **P8-16 ✅**：真实文件 E2E 20 断言 ALL PASS ×2（MinIO mc/DB mysql 双侧一致性核验+权限路径+终态=0）
 - **P8-17 ✅ Gate PASS**：docs/testing/phase8-gate.md；ADR-018；关键测试连续两轮（mvn 287×2/pytest 81×2/Vitest 105×2）；**修复真实缺陷 1 个**（StreamingResponseBody keep-alive 污染）；Phase 8 正式关闭
 
+## 5.9 Phase 9 — Notification（✅ 全部完结并通过 Release Gate，2026-09-22）
+
+- **目标**：真实业务通知能力（3 类型触发/self 资源隔离/已读管理/前端通知中心），不引入 MQ/WebSocket，为 Phase 10 Audit 留 related 关联模式
+- **P9-01 ✅**：影响分析（触发点收敛 4 方法/权限决策 self 资源/§14 transitions 表遗留缺口记录）
+- **P9-02 ✅**：V13 notifications（字典 §13 + read_at/related/created_at 扩展，recipient 无 FK 保留历史）
+- **P9-03 ✅**：NotificationType 3 类（ISSUE_ASSIGNED/STATUS_CHANGED/COMMENTED，正文含业务编号+操作者）
+- **P9-04 ✅**：NotificationService（create/listMy/unreadCount/markRead 幂等/markAllRead 条件 UPDATE）
+- **P9-05 ✅**：4 端点 self 资源 API（无权限码，ADR-019；Swagger 完整）
+- **P9-06 ✅**：ownership 收敛 SQL（跨用户 404 不泄露；无 ADMIN 后门）
+- **P9-07 ✅**：触发接线（create 变更分派/transition/comment，共事务；assign 复用 update 天然单路径）
+- **P9-08 ✅**：收件人 Set 去重排除操作者；insert 失败上抛回滚不吞
+- **P9-09 ✅**：前端通知中心（Header 铃铛 badge/列表/已读/全部已读/跳转含失效兜底/分页/登出重置）+ store + Vitest 15
+- **Java ✅**：12 集成测试（真实 MySQL；数据/隔离/幂等/分页/触发/事务回滚）；mvn 299/299
+- **Python ✅**：8 黑盒用例（真实 HTTP；三触发/筛选/跨用户/分页/401）；pytest 89/89
+- **E2E ✅**：真实浏览器两轮（badge=3→点击已读跳转→全部已读→刷新持久化→切号隔离→二轮新通知 badge=1）
+- **Gate ✅ PASS**：docs/testing/phase9-gate.md；ADR-019；两轮 299/89/120 全绿；终态全零；**无产品缺陷**
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |

@@ -140,6 +140,23 @@
 - 备选方案: 仅对存在用户计数（放弃：429 泄漏用户存在性）；单独 lock key（放弃：count≥5 判断已等价，少一个键）。
 - 影响: 暴力破解被限制为每 username 15 分钟 5 次；测试/清理需覆盖 auth:fail:* 键（TTL 900s 跨运行残留）；P2-15 起的自动化测试沿用同一限制。
 
+### ADR-019: Notification 通知模块设计基线
+
+- 日期: 2026-09-22
+- 状态: Accepted
+- 背景: Phase 9（Master Prompt §5；数据字典 §13）实现站内通知。要求真实业务触发、最小实现、不引入 MQ/WebSocket。
+- 决策:
+  1. **类型最小集 3 类**: ISSUE_ASSIGNED / ISSUE_STATUS_CHANGED / ISSUE_COMMENTED，仅映射既有业务触发点，不预设类型。
+  2. **self 资源，无 notification:* 权限码**: 对齐 /auth/me 先例；Controller 仅要求认证；数据隔离由 Service/SQL 层 recipient ownership 强制（跨用户 404 不泄露存在性）；ADMIN 无全局查看后门。
+  3. **数据模型最小扩展**: 字典 §13 基础上增加 read_at（与 is_read 同步写）、related_type+related_id（跳转必需）、created_at；通知不建 FK（Issue 删除后通知保留历史，跳转失效由前端 projectId=null 兜底）。
+  4. **共事务**: 通知在主业务 @Transactional 内（REQUIRED）——主业务回滚通知同回滚；insert 失败上抛回滚主业务（不吞异常）。无 MQ、无异步投递。
+  5. **已读语义**: 单条幂等（二次已读成功）；全部已读为数据库条件 UPDATE（只影响本人未读），非内存遍历。
+  6. **触发收敛**: 4 个业务方法各一处（create 变更分派/update/transition/comment），assign 端点复用 update 故天然单路径；收件人 Set 去重并排除操作者。
+  7. **列表无 N+1**: 通知正文自包含业务上下文；related Issue 的 projectId 单次 IN 批量解析。
+- 理由: 最小实现满足"真实业务通知"要求；共事务保证"业务成功才产生通知"的强一致语义，失败概率极低（单表 insert）不值得引入异步补偿。
+- 备选方案: MQ 异步投递（放弃：明确禁止且无规模需求）；WebSocket 实时推送（放弃：需求排除）；notification:* 权限码（放弃：self 资源加权限码会造成 ADMIN 权限语义混乱）；通知表建 FK 级联删除（放弃：通知是历史记录，Issue 删除不应抹掉收件历史）。
+- 影响: 系统权限保持 46 项不变；notifications 表由测试 fixture 显式清理（无级联）；后续 Audit（Phase 10）可复用 related_type/related_id 关联模式；实时性留待后续阶段按需求演进。
+
 ### ADR-018: Comment 与 Attachment（MinIO）设计基线
 
 - 日期: 2026-09-22
