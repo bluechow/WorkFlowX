@@ -10,6 +10,8 @@ import {
   transitionIssueStatus,
   updateIssue,
 } from '@/api/issue'
+import IssueCommentsPanel from '@/components/issue/IssueCommentsPanel.vue'
+import IssueAttachmentsPanel from '@/components/issue/IssueAttachmentsPanel.vue'
 import { useAuthStore } from '@/stores/auth'
 import type { IssueStatus, IssueVO, ProjectVO } from '@/types/api'
 
@@ -49,6 +51,15 @@ const form = reactive({
 
 const members = ref<{ userId: number; role: string }[]>([])
 const projectOptions = ref<ProjectVO[]>([])
+
+// P8-14/15: 评论与附件抽屉（点击编号打开，tab 切换）
+const drawerVisible = ref(false)
+const activeIssue = ref<IssueVO | null>(null)
+
+function openPanels(issue: IssueVO) {
+  activeIssue.value = issue
+  drawerVisible.value = true
+}
 
 async function refresh() {
   loading.value = true
@@ -231,7 +242,7 @@ onMounted(async () => {
             v-if="auth.hasPermission('issue:get')"
             link
             type="primary"
-            @click="openEdit(row)"
+            @click="openPanels(row)"
           >
             {{ project?.key ?? '' }}-{{ row.issueNo }}
           </el-button>
@@ -264,6 +275,19 @@ onMounted(async () => {
           <el-tag v-else :type="row.status === 'CLOSED' ? 'info' : 'success'" size="small">
             {{ row.status }}
           </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="80">
+        <template #default="{ row }">
+          <el-button
+            v-if="auth.hasPermission('issue:update')"
+            link
+            type="primary"
+            size="small"
+            @click="openEdit(row)"
+          >
+            编辑
+          </el-button>
         </template>
       </el-table-column>
       <el-table-column label="报告人" width="90">
@@ -332,6 +356,21 @@ onMounted(async () => {
         </el-button>
       </template>
     </el-dialog>
+
+    <el-drawer
+      v-model="drawerVisible"
+      :title="activeIssue ? `${project?.key ?? ''}-${activeIssue.issueNo} ${activeIssue.title}` : ''"
+      size="480px"
+    >
+      <el-tabs v-if="activeIssue" model-value="comments">
+        <el-tab-pane label="评论" name="comments">
+          <IssueCommentsPanel :project-id="projectId" :issue-id="activeIssue.id" />
+        </el-tab-pane>
+        <el-tab-pane label="附件" name="attachments">
+          <IssueAttachmentsPanel :project-id="projectId" :issue-id="activeIssue.id" />
+        </el-tab-pane>
+      </el-tabs>
+    </el-drawer>
   </section>
 </template>
 
