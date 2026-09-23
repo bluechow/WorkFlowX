@@ -61,3 +61,9 @@ logs/
 *.log
 tmp/
 temp/
+
+# JMeter 性能测试产物（Phase 14）
+tests/performance/results/
+tests/performance/data/*.bin
+tests/performance/data/*.tmp
+*.jtl

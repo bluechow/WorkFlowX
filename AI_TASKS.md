@@ -437,6 +437,19 @@
 - **P13-29~31 ✅**：ui-automation.md + phase13-gate.md + 总控同步 + 终态全零
 - **Gate ✅ PASS**：**修复真实产品缺陷 1 个**（ADMIN 刷新后系统菜单消失——fetchMe 不恢复 roles，菜单显隐改权限码驱动）；测试侧修复 5 + 数据清理缺陷 1
 
+## 5.14 Phase 14 — Performance Testing（✅ 全部完结并通过 Release Gate，2026-09-23）
+
+- **目标**：笔记本环境下的相对性能基线/负载/受控压力/瓶颈观察能力（JMeter 5.6.3 真实 HTTP），明确声明不代表生产容量
+- **P14-01~03 ✅**：环境实测（8C16T/16GB/JMeter 5.6.3/HikariCP 默认 10）+ 指标定义 + 资源预算与停止规则
+- **P14-04~06 ✅**：JSR223Sampler(Groovy) 架构（手写 JMX raw body 三连坑后切换）+ prepare_data.py + run-perf.sh（防 JTL 追加）+ analyze_jtl.py
+- **P14-08 ✅**：PERF 命名空间 medium 数据集（2 项目/100 Issue，5.2s）
+- **P14-18~21 ✅**：L0 1 线程 0% 错 85/s → L1 5 线程 311/s → L2 15 线程 354/s 平台 → L3 25/40/60 逐级（P95 173→303→403ms，60 线程吞吐回落=拐点）；**全程 0% 错误率**
+- **P14-22 ✅**：附件独立（32KB 上传 79ms/下载一致/中文文件名/exe 422/3 并发 15 文件/清理）
+- **P14-23~25 ✅**：docker stats 快照 + JTL 分位数聚合；瓶颈第一候选=HikariCP 10 连接（池配置优化建议记录未实施）
+- **P14-27~28 ✅**：两轮性能回归一致（差异<3%）+ 功能回归 mvn 311/pytest 115/Vitest 136/Playwright 20 全绿
+- **P14-29~31 ✅**：performance-testing.md + phase14-gate.md + 终态全零
+- **Gate ✅ PASS**：真实产品缺陷 0；测试侧修复 4（JMX 三连坑+JTL 追加污染）；环境失误 1（误停后端致一轮 pytest 失败→重启重跑）
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |
