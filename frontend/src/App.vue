@@ -10,8 +10,15 @@ const notificationStore = useNotificationStore()
 const router = useRouter()
 
 const displayName = computed(() => auth.currentUser?.nickname || auth.currentUser?.username || auth.username)
-/** 系统管理菜单仅对 ADMIN 展示——纯 UX；后端 authority 才是安全边界（Master Prompt §7） */
-const isAdmin = computed(() => auth.roles.includes('ADMIN'))
+/**
+ * 系统管理菜单显隐：由权限码驱动（P13 修复——原 isAdmin 依赖 login 响应的 roles，
+ * 刷新后 roles 不恢复导致 ADMIN 菜单消失；权限码经 /auth/me/permissions 实时恢复）。
+ * 纯 UX；后端 authority 才是安全边界（Master Prompt §7）。
+ */
+const hasAnySystemMenu = computed(() =>
+  ['org:list', 'project:list', 'user:assign_role', 'role:list', 'permission:list', 'audit:list']
+    .some((code) => auth.hasPermission(code)),
+)
 
 async function handleLogout() {
   await auth.logout()
@@ -25,7 +32,7 @@ async function handleLogout() {
   <el-container class="app">
     <el-header class="app__header">
       <span class="app__brand">WorkFlowX</span>
-      <el-menu v-if="isAdmin" mode="horizontal" router class="app__menu" :ellipsis="false">
+      <el-menu v-if="hasAnySystemMenu" mode="horizontal" router class="app__menu" :ellipsis="false">
         <el-menu-item v-if="auth.hasPermission('org:list')" index="/system/organizations">
           组织管理
         </el-menu-item>

@@ -423,6 +423,20 @@
 - **P12-28 ✅**：两轮 smoke 10/regression 8/full 115 + mvn 311×2 + Vitest 136×2 + lint/build 全绿
 - **Gate ✅ PASS**：docs/testing/api-automation.md + phase12-gate.md；真实产品缺陷 0；测试侧修复 4（重登 seed 会话污染/auth:fail 跨轮累积/清理静默吞/403 无 data 契约）
 
+## 5.13 Phase 13 — UI Automation（✅ 全部完结并通过 Release Gate，2026-09-23）
+
+- **目标**：可长期维护的 Playwright 浏览器自动化体系（Page Object/storageState 认证/数据工厂/分层/诊断），非脚本堆砌
+- **P13-01 ✅**：gap analysis（Playwright 从零；selector 基础 13 个 data-test；P11 手工 E2E 升级为自动化资产）
+- **P13-02~05 ✅**：playwright.config（webServer/trace retain-on-failure）+ auth.setup（storageState 每调用刷新）+ fixtures（adminPage/userPage/publicPage/factory）+ 7 个 Page Objects + ApiFactory（trackOrg 轨迹/多身份清理）
+- **P13-06 ✅**：认证 6 用例（登录（工厂用户）/错密/拦截/回跳/刷新/登出——单会话铁律全场景）
+- **P13-07~20 ✅**：core-modules 8 + notification 2（badge/已读/切换隔离）+ 权限分层 3（user1 隐/admin 显/审计直访提示）+ 404
+- **P13-21 ✅**：诊断（trace/截图/error-context ARIA 快照/HTML report；本轮多次定位全靠快照）
+- **P13-22 ✅**：数据轨迹（trackOrg）+ 多身份清理 + 跨框架 AA% 兜底 + 失败可见化
+- **P13-23~26 ✅**：分层 smoke 8/regression 13/full 3 + 完整业务链（动态 ADMIN UI 登录 15 环节）
+- **P13-27~28 ✅**：两轮 Playwright 20/20 + Vitest 136×2 + mvn 311×2 + pytest 115×2 + lint/build
+- **P13-29~31 ✅**：ui-automation.md + phase13-gate.md + 总控同步 + 终态全零
+- **Gate ✅ PASS**：**修复真实产品缺陷 1 个**（ADMIN 刷新后系统菜单消失——fetchMe 不恢复 roles，菜单显隐改权限码驱动）；测试侧修复 5 + 数据清理缺陷 1
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |

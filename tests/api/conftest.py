@@ -154,6 +154,9 @@ def cleanup(db, redis_client, created_users):
                 "(SELECT id FROM users WHERE username IN ('admin', 'user1'))")
             # 匿名失败审计（LOGIN_FAIL 对不存在用户名 → user_id=NULL）：跨轮无保留价值
             cur.execute("DELETE FROM audit_logs WHERE user_id IS NULL")
+            # Playwright UI 工厂（Phase 13）的 AA* 组织：owner 为动态用户且可能已删，
+            # API 删除不可达——SQL 级联清理（跨框架统一清理兜底，P12-30 精神）
+            cur.execute("DELETE FROM organizations WHERE code LIKE %s", ("AA%",))
             cur.execute(
                 "DELETE FROM user_roles WHERE user_id IN "
                 "(SELECT id FROM users WHERE username LIKE %s)", (USER_PREFIX + "%",))
