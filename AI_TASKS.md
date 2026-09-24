@@ -470,6 +470,23 @@
 - **P15-29~31 ✅**：SECURITY_ 命名空间清理终态全零 + security-testing.md（25 节）+ phase15-gate.md（28 项）
 - **Gate ✅ PASS**：**修复真实产品缺陷 1 个**（空 filename multipart → 500，MissingServletRequestPartException 未映射）+ 产品加固（安全响应头，ADR 记录于 gate）
 
+## 5.16 Phase 16 — Docker & Deployment（✅ 全部完结并通过 Release Gate，2026-09-24）
+
+- **目标**：一键 Docker 化部署（5 服务全栈/Flyway 自动迁移/持久化/备份恢复/冒烟+回归），开发与部署编排分离
+- **P16-01~02 ✅**：环境审计（Docker 29.8.0/Compose v5.5.1）+ 架构（Browser→Nginx→Backend→三存储）
+- **P16-03~05 ✅**：backend Dockerfile（multi-stage Maven→JRE 21 非 root）+ frontend（Node→Nginx alpine）
+- **P16-06~07 ✅**：Nginx SPA try_files + /api 反代（浏览器不直连 backend 容器）
+- **P16-08~12 ✅**：deploy compose 5 服务 + healthcheck service_healthy 依赖链 + named volumes + 安全端口设计
+- **P16-13~14 ✅**：backend health /actuator/health（仅 health 暴露）；环境变量全参数化 prod fail-fast
+- **P16-15~17 ✅**：.env.example（CHANGE_ME）+ .gitignore + service name 网络（禁 localhost）
+- **P16-18~19 ✅**：fresh deployment（独立 project/volumes）约 90s 全 healthy；Flyway V1~V14 全 success；seed admin/user1（dev profile）
+- **P16-22~24 ✅**：持久化 restart/down-up 数据恢复 ✓；Redis 重启登录正常 ✓；MinIO 重启下载一致 ✓
+- **P16-25~26 ✅**：backup.sh（MySQL dump+MinIO docker cp）+ restore.sh（先安全备份再恢复）往返验证 ✓
+- **P16-28~30 ✅**：smoke 15/15×2 + pytest 对 Docker 13 + Playwright docker-deploy 3
+- **P16-33~36 ✅**：资源审查（镜像 541/96.4MB，容器内存正常）+ 安全评审（内部端口不暴露/无 prod secret）+ compose config VALID
+- **P16-38~39 ✅**：deployment.md 23 节 + docker-architecture.md + phase16-gate.md（18 项 checklist）
+- **Gate ✅ PASS**：Product Defects 0；Test Defects 4（thin jar/healthcheck 目标/凭据跨 shell/MSYS 路径——全部修复）；四线回归全绿
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |

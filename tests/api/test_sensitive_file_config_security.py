@@ -122,6 +122,8 @@ def test_upload_path_traversal_variants_rejected_or_sanitized(att_env):
             # 遍历面 = 路径分隔符：清洗后文件名不得含 / 或 \（字面 ".." 无分隔符不构成遍历；
             # URL 编码变体 %2e%2e%2f 原样保留于展示元数据——下载路径由服务端 objectKey 承载）
             assert "/" not in data["fileName"] and "\\" not in data["fileName"],                 f"文件名含路径分隔符: {data['fileName']}"
+            # 清理该附件（MinIO 对象不随 org 级联，必须显式删除）
+            att_env["api_client"].delete(f"{att_env['base']}/{data['id']}", headers=att_env["h"])
 
 
 def test_upload_double_extension_and_mime_mismatch(att_env):
