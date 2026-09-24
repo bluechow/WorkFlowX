@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import http from '@/api/http'
 import { getUserRoles, listRoles, replaceUserRoles } from '@/api/rbac'
+import { listUsers } from '@/api/user'
 import { useAuthStore } from '@/stores/auth'
 import type { PageVO, RoleVO, UserVO } from '@/types/api'
 
@@ -24,11 +24,14 @@ const checkedRoles = ref<string[]>([])
 async function refresh() {
   loading.value = true
   try {
-    // 响应拦截器解包 Result 后，AxiosResponse.data 即 PageVO<UserVO>
-    const response = await http.get('/users', {
-      params: { page: pagener.page, size: pagener.size, keyword: pagener.keyword || undefined },
-    })
-    page.value = (response.data as PageVO<UserVO> | undefined) ?? null
+    // P18 修复: 改用 api/user.ts 的 listUsers（内部正确解包 Result——
+    // 原内联 http.get 把 Result 包装当 PageVO 返回，导致用户列表恒为空）
+    page.value = await listUsers(
+      pagener.keyword || undefined,
+      undefined,
+      pagener.page,
+      pagener.size,
+    )
   } catch (e) {
     ElMessage.error((e as { message?: string }).message ?? '加载用户失败')
   } finally {

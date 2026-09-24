@@ -4,7 +4,7 @@ import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import UserRolesView from '../UserRolesView.vue'
 import { getUserRoles, listRoles, replaceUserRoles } from '@/api/rbac'
-import http from '@/api/http'
+import { listUsers } from '@/api/user'
 import { useAuthStore } from '@/stores/auth'
 
 vi.mock('@/api/rbac', () => ({
@@ -19,22 +19,20 @@ vi.mock('@/api/rbac', () => ({
   listPermissions: vi.fn(),
 }))
 
-// http mock 位于 HTTP boundary：拦截器已解包 Result，AxiosResponse.data 即 PageVO
-vi.mock('@/api/http', async () => {
-  const actual = await vi.importActual<typeof import('@/api/http')>('@/api/http')
-  return { default: { ...actual.default, get: vi.fn() } }
-})
+vi.mock('@/api/user', () => ({
+  listUsers: vi.fn(),
+}))
 
-const mockedHttp = vi.mocked(http.get, true)
 const mocked = {
   listRoles: vi.mocked(listRoles),
   getUserRoles: vi.mocked(getUserRoles),
   replaceUserRoles: vi.mocked(replaceUserRoles),
+  listUsers: vi.mocked(listUsers),
 }
 
 const USERS_PAGE = {
   list: [
-    { id: 2, username: 'user1', email: 'user1@workflowx.local', nickname: '测试用户一', status: 'ACTIVE', lastLoginAt: null, createdAt: '', updatedAt: '' },
+    { id: 2, username: 'user1', email: 'user1@workflowx.local', nickname: '测试用户一', status: 'ACTIVE' as const, lastLoginAt: null, createdAt: '', updatedAt: '' },
   ],
   total: 1,
   page: 1,
@@ -54,7 +52,7 @@ describe('UserRolesView（P3-04）', () => {
     vi.clearAllMocks()
     setActivePinia(createPinia())
     useAuthStore().permissionCodes = ['user:assign_role', 'user:get']
-    mockedHttp.mockResolvedValue({ data: USERS_PAGE } as never)
+    mocked.listUsers.mockResolvedValue(USERS_PAGE)
     mocked.listRoles.mockResolvedValue(ROLES)
   })
 
@@ -85,7 +83,7 @@ describe('UserRolesView（P3-04）', () => {
   })
 
   it('用户加载失败不崩溃', async () => {
-    mockedHttp.mockRejectedValue({ message: 'network error' })
+    mocked.listUsers.mockRejectedValue({ message: 'network error' })
     const wrapper = mountView()
     await flushPromises()
     expect(wrapper.text()).toContain('用户角色管理')
