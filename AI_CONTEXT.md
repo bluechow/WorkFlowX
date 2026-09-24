@@ -27,7 +27,7 @@
 
 ## 2. 当前阶段
 
-**Phase 18 — Final QA：✅ 全部完结并通过 Release Gate（2026-09-25）**；下一步 Phase 19 — Final Delivery（等用户指令）
+**Phase 19 — Final Delivery：✅ 全部完结并通过 Release Gate（2026-09-25）**。**WorkFlowX V1.0.0 正式封版**（v1.0.0 本地 tag）。Phase 0~19 全部完结。
 
 - **P3-01 ✅ DONE**：RBAC 设计基线（docs/architecture/rbac.md + ADR-012）+ V3 系统权限种子迁移（14 项 + ADMIN 全量绑定）；五表零结构变更，Phase 2 机制不动
 - **P3-02 ✅ DONE**：rbac 模块领域能力（Entity/4 Mapper/DTO/VO/RbacConstants/三 Service：角色 CRUD+权限绑定、权限 CRUD+用户权限实时解析、用户角色幂等绑定）；新增测试 28 个，mvn 172/172，Phase 2 回归全绿（pytest 28/npm 45/运行时冒烟）
@@ -56,8 +56,9 @@
 - **Phase 15 ✅ 全部完结并通过 Release Gate（2026-09-24）**：安全测试体系（security suite 47+Playwright 7；修复空 filename multipart 500 缺陷+安全响应头加固）；docs/testing/security-testing.md + phase15-gate.md
 - **Phase 16 ✅ 全部完结并通过 Release Gate（2026-09-24）**：Docker & Deployment（deploy compose+Dockerfile×2+Nginx SPA+备份恢复）；docs/deployment.md + docker-architecture.md
 - **Phase 17 ✅ 全部完结并通过 Release Gate（2026-09-24）**：CI/CD（ci.yml 5 jobs+secrets scan；收敛 9 项数据生命周期缺陷）；docs/ci-cd.md + phase17-gate.md
-- **Phase 18 ✅ 全部完结并通过 Release Gate（2026-09-25）**：Final QA（Feature Matrix 14 模块全 COMPLETE+四线两轮 311/115/136/25+Docker fresh deployment+安全/性能/文档一致性审查；修复 README 过时与 docker-deploy seed 登录缺陷等 5 项）；docs/final-qa.md + phase18-gate.md
-- 下一步：**Phase 19 — Final Delivery**（最终交付），**等用户指令后执行**
+- **Phase 18 ✅ 全部完结并通过 Release Gate（2026-09-25）**：Final QA（Feature Matrix 全 COMPLETE+文档一致性修复）；docs/final-qa.md + phase18-gate.md
+- **Phase 19 ✅ 全部完结并通过 Release Gate（2026-09-25）**：Final Delivery（V1.0.0 封版；architecture/test-matrix/graduation-notes/resume-summary/demo-scenario/future-roadmap 交付文档；workflowx-release 全新部署验证；seed user_roles 恢复+非 seed 角色清理兜底）；docs/testing/phase19-gate.md
+- **V1.0.0 封版完成。后续 V1.1/V1.2/V2.0 见 docs/future-roadmap.md，需按完整 Phase 流程重新立项**
 - Phase 2 — Authentication & User 已于 2026-09-06 通过 Release Gate（25 任务全部完结）
 - **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
 - **P2-02 ✅ DONE**：UserMapper（BaseMapper 极简）+ MybatisPlusConfig 分页插件（MySQL；MP 3.5.9+ 已补 mybatis-plus-jsqlparser 依赖）+ UserMapperTest 11 用例（真实 MySQL，SQL 实证 ORDER BY/LIMIT/count 正确）；mvn test 31/31 全绿
@@ -159,6 +160,7 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-25 | Phase 19 完成：Final Delivery（V1.0.0 封版，v1.0.0 tag；交付文档七份：architecture/test-matrix/graduation-notes/resume-summary/demo-scenario/future-roadmap/deployment 更新；workflowx-release 全新部署验证+smoke 15/15）；phase19-gate.md | Phase 19 收口/V1.0.0 |
 | 2026-09-25 | Phase 18 完成：Final QA（Feature Matrix+四线两轮 311/115/136/25+Docker fresh deployment 复验+文档一致性修复 README/how-to-run-tests）；docs/final-qa.md + phase18-gate.md | Phase 18 收口 |
 | 2026-09-24 | Phase 17 完成：CI/CD（GitHub Actions ci.yml 5 jobs+secrets scan+docs/ci-cd.md）；收敛测试数据生命周期 9 项缺陷；四线各两轮全绿；Gate PASS（phase17-gate.md） | Phase 17 收口 |
 | 2026-09-24 | Phase 16 完成：Docker & Deployment（backend/frontend Dockerfile+deploy compose 5 服务+Nginx SPA+反代+fresh deployment+Flyway+持久化+重启+备份恢复+安全端口评审）；docs/deployment.md + docker-architecture.md | Phase 16 收口 |
