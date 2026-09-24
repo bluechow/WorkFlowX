@@ -1,0 +1,233 @@
+name: CI
+
+# ============================================================
+# WorkFlowX CI（Phase 17）
+# 触发: push/PR → master/main
+# Jobs:
+#   frontend      — lint / Vitest / build
+#   backend       — Maven test（含集成测试，MySQL service + Flyway 自动迁移）
+#   api-ui-e2e    — 真实全栈（infra services + backend jar + vite dev）→ pytest + Playwright
+#   docker-build  — compose config + backend/frontend 镜像构建
+#   security-scan — secrets scan（脚本与本地/Phase 15 一致）
+# 凭据: 全部来自 GitHub Services 默认值/env（仓库不含任何真实 secret）
+# ============================================================
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============ Frontend ============
+  frontend:
+    name: Frontend (lint / Vitest / build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: npm ci
+        working-directory: frontend
+        run: npm ci
+      - name: lint
+        working-directory: frontend
+        run: npm run lint
+      - name: Vitest
+        working-directory: frontend
+        run: npm run test -- --run
+      - name: build
+        working-directory: frontend
+        run: npm run build
+
+  # ============ Backend ============
+  backend:
+    name: Backend (Maven test)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci_root_password
+          MYSQL_DATABASE: workflowx
+          TZ: Asia/Shanghai
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci_root_password --silent"
+          --health-interval=10s --health-timeout=5s --health-retries=12 --health-start-period=30s
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: 等待 MySQL 就绪（明确失败条件，非固定 sleep）
+        run: |
+          for i in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 -P 3307 -uroot -pci_root_password --silent 2>/dev/null; then
+              echo "MySQL ready (attempt $i)"; exit 0
+            fi
+            sleep 2
+          done
+          echo "MySQL not ready after 60s"; exit 1
+      - name: Maven test（Flyway V1~V14 自动迁移 + dev seed）
+        working-directory: backend
+        run: mvn -B test
+      - name: 上传测试报告（失败时）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: backend/target/surefire-reports/
+          retention-days: 7
+
+  # ============ API + UI 端到端（真实全栈） ============
+  api-ui-e2e:
+    name: API & UI E2E (pytest / Playwright)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci_root_password
+          MYSQL_DATABASE: workflowx
+          TZ: Asia/Shanghai
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci_root_password --silent"
+          --health-interval=10s --health-timeout=5s --health-retries=12 --health-start-period=30s
+      redis:
+        image: redis:7.2
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s --health-timeout=5s --health-retries=12
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: ci_minio_password
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd="mc ready local"
+          --health-interval=10s --health-timeout=5s --health-retries=12 --health-start-period=15s
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 安装 Python 依赖
+        run: pip install -r tests/requirements.txt
+
+      # MinIO bucket 初始化（复用 Phase 16 minio-init 方式）
+      - name: MinIO bucket 初始化
+        run: |
+          docker run --rm --network host \
+            -e MC_HOST_local="http://minioadmin:ci_minio_password@localhost:9000" \
+            minio/mc:latest sh -c "mc mb --ignore-existing local/workflowx"
+
+      # 后端构建 + 运行（dev profile: Flyway V1~V14 + dev seed admin/user1）
+      - name: Maven package（跳过测试——测试由 backend job 与本 job e2e 承担）
+        working-directory: backend
+        run: mvn -B package -DskipTests
+      - name: 启动后端（等待 health 就绪）
+        working-directory: backend
+        run: |
+          nohup java -jar target/workflowx-backend-0.1.0-SNAPSHOT.jar \
+            --server.port=8080 > /tmp/backend.log 2>&1 &
+          for i in $(seq 1 60); do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health || true)
+            if [ "$CODE" = "200" ]; then echo "backend ready (attempt $i)"; exit 0; fi
+            sleep 2
+          done
+          echo "backend 未就绪"; tail -100 /tmp/backend.log; exit 1
+
+      # 前端 dev server（Playwright 目标）
+      - name: 启动前端 dev server
+        working-directory: frontend
+        run: |
+          npm ci
+          nohup npm run dev -- --port 5173 --strictPort > /tmp/vite.log 2>&1 &
+          for i in $(seq 1 30); do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5173 || true)
+            if [ "$CODE" = "200" ]; then echo "vite ready (attempt $i)"; exit 0; fi
+            sleep 2
+          done
+          echo "vite 未就绪"; tail -50 /tmp/vite.log; exit 1
+
+      # Playwright 浏览器
+      - name: 安装 Playwright chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: pytest 全量（真实 HTTP → Docker 级全栈）
+        working-directory: tests/api
+        run: python -m pytest -q
+
+      - name: pytest 报告（失败时）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-output
+          path: |
+            /tmp/backend.log
+          retention-days: 7
+
+      - name: Playwright 全量
+        working-directory: frontend
+        run: npx playwright test
+      - name: Playwright 报告（失败时）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/test-results/
+          retention-days: 7
+
+  # ============ Docker ============
+  docker-build:
+    name: Docker (compose config + image build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: compose config 校验
+        run: |
+          cp deploy/.env.example deploy/.env
+          docker compose -f deploy/docker-compose.yml --env-file deploy/.env config --quiet
+      - name: build backend 镜像
+        run: docker build -f backend/Dockerfile -t workflowx/backend:ci .
+      - name: build frontend 镜像
+        run: docker build -f frontend/Dockerfile -t workflowx/frontend:ci frontend
+      - name: 记录镜像大小
+        run: docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep workflowx
+
+  # ============ Security ============
+  security-scan:
+    name: Security (secrets scan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Secrets scan
+        run: bash scripts/ci/secrets-scan.sh

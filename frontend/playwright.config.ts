@@ -20,7 +20,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'test-results/report' }]],
   outputDir: 'test-results/artifacts',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: process.env.PLAYWRIGHT_BASEURL ?? 'http://localhost:5173',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'off',
