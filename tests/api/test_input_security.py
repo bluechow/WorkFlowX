@@ -14,11 +14,13 @@ def _h(token):
     return {"Authorization": f"Bearer {token}"}
 
 
-def _seed_project(api_client, admin_token, unique_suffix):
+def _seed_project(api_client, admin_token, unique_suffix, cleanup_orgs=None):
     h = {"Authorization": f"Bearer {admin_token}"}
     su = unique_suffix.upper()
     org = api_client.post("/api/v1/orgs", headers=h, json={
         "name": f"SECURITY org {su}", "code": f"SECINJ{su}", "description": None}).json()["data"]
+    if cleanup_orgs is not None:
+        cleanup_orgs.append(org["id"])
     project = api_client.post("/api/v1/projects", headers=h, json={
         "name": "SECURITY 注入项目", "key": f"SECINJP{su}", "orgId": org["id"],
         "description": None}).json()["data"]
@@ -44,8 +46,7 @@ def test_sqli_in_search_keyword_no_error_no_bypass(api_client, admin_token, uniq
 
 def test_sqli_in_issue_title_stored_as_literal_text(api_client, admin_token, unique_suffix, cleanup_orgs):
     """SQL payload 作为普通文本入库原样返回（参数化查询防御的行为证据）。"""
-    org, project = _seed_project(api_client, admin_token, unique_suffix)
-    cleanup_orgs.append(org["id"])
+    org, project = _seed_project(api_client, admin_token, unique_suffix, cleanup_orgs)
     evil = "SECURITY ' OR '1'='1 -- 注入探测"
     resp = api_client.post(f"/api/v1/projects/{project['id']}/issues",
                            json={"title": evil, "type": "TASK", "priority": "MEDIUM"},
@@ -62,8 +63,7 @@ def test_sqli_in_issue_title_stored_as_literal_text(api_client, admin_token, uni
 # ===== 负向 fuzz（轻量）=====
 
 def test_issue_create_fuzz_matrix(api_client, admin_token, unique_suffix, cleanup_orgs):
-    org, project = _seed_project(api_client, admin_token, unique_suffix)
-    cleanup_orgs.append(org["id"])
+    org, project = _seed_project(api_client, admin_token, unique_suffix, cleanup_orgs)
     base_path = f"/api/v1/projects/{project['id']}/issues"
     cases = [
         ({"title": None, "type": "TASK"}, (400, 422)),
@@ -115,8 +115,7 @@ def test_user_update_mass_assignment_ignored(api_client, admin_token, create_api
 
 def test_workflow_state_tampering_rejected(api_client, admin_token, unique_suffix, cleanup_orgs):
     """直接 PATCH 状态机（CLOSED→OPEN / OPEN→CLOSED）必须 409。"""
-    org, project = _seed_project(api_client, admin_token, unique_suffix)
-    cleanup_orgs.append(org["id"])
+    org, project = _seed_project(api_client, admin_token, unique_suffix, cleanup_orgs)
     h = _h(admin_token)
     issue = api_client.post(f"/api/v1/projects/{project['id']}/issues", headers=h,
                             json={"title": "SECURITY 篡改目标", "type": "TASK",

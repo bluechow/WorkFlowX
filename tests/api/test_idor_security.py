@@ -17,15 +17,17 @@ def _suffix() -> str:
 
 
 @pytest.fixture()
-def sec_env(api_client, admin_token, create_api_user):
+def sec_env(api_client, admin_token, create_api_user, cleanup_orgs):
     """隔离环境：ORG_A(项目A+issueA+commentA) vs ORG_B(项目B+issueB)；user1 入 A 不入 B。"""
     su = _suffix()
     admin_h = {"Authorization": f"Bearer {admin_token}"}
     member = create_api_user()  # 动态用户（可安全重登）
     org_a = api_client.post("/api/v1/orgs", headers=admin_h, json={
         "name": f"SECURITY org A {su}", "code": f"SECORGA{su}", "description": None}).json()["data"]
+    cleanup_orgs.append(org_a["id"])
     org_b = api_client.post("/api/v1/orgs", headers=admin_h, json={
         "name": f"SECURITY org B {su}", "code": f"SECORGB{su}", "description": None}).json()["data"]
+    cleanup_orgs.append(org_b["id"])
     api_client.post(f"/api/v1/orgs/{org_a['id']}/members", headers=admin_h,
                     json={"userId": member["id"], "role": "MEMBER", "departmentId": None})
     proj_a = api_client.post("/api/v1/projects", headers=admin_h, json={
@@ -56,9 +58,10 @@ def sec_env(api_client, admin_token, create_api_user):
         "member": member, "member_token": member_token,
     }
 
-    # cleanup: org 删除级联；动态用户进 api_test_ 清理通道
-    api_client.delete(f"/api/v1/orgs/{org_a['id']}")
-    api_client.delete(f"/api/v1/orgs/{org_b['id']}")
+    # cleanup: org 删除需 OWNER 身份——用 admin（org 创建者）删除（级联 project/issue/comment）
+    admin_h = {"Authorization": f"Bearer {admin_token}"}
+    api_client.delete(f"/api/v1/orgs/{org_a['id']}", headers=admin_h)
+    api_client.delete(f"/api/v1/orgs/{org_b['id']}", headers=admin_h)
 
 
 def _m(sec_env):
