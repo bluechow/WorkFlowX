@@ -497,6 +497,18 @@
 - **P17-18~24 ✅**：ci-cd.md（15 节）+ phase17-gate.md（25 项）+ Branch Protection 建议文档化
 - **Gate ✅ PASS**：Product Defects 0；Test Defects 9（全修复）；CI Defects 1；git clean
 
+## 5.18 Phase 18 — Final QA（✅ 全部完结并通过 Release Gate，2026-09-25）
+
+- **目标**：交付前系统级最终审查（QA/Reviewer 视角），不新增功能，只修复缺陷
+- **P18-01~02 ✅**：全局审计（git clean、无敏感/临时文件）+ Feature Matrix 14 模块全 COMPLETE
+- **P18-03~14 ✅**：Auth/RBAC/数据级安全/Project/Issue/Workflow/Comment/Attachment/Notification/Audit/Dashboard 复验——全部复用四线自动化全量重跑作为证据
+- **P18-15~18 ✅**：四线回归 Round1+2（mvn 311×2/pytest 115×2/Vitest 136×2/Playwright 25×3 稳定）+ secrets scan PASS + Docker fresh deployment 复验（5 healthy）
+- **P18-19~21 ✅**：持久化 down/up 复验 + Backup/Restore 脚本复核 + CI YAML 校验（GitHub remote not configured 已记录）
+- **P18-22 ✅**：文档一致性——**修复 README（停留 Phase 2 状态）与 how-to-run-tests（过时覆盖说明）**
+- **P18-23 ✅**：毕业设计/简历交付事实核查（演示链路完整、命令与文档一致）
+- **P18-24 ✅**：终态全零（users=2 seed、roles=6、permissions=49、flyway V1~V14 完整）
+- **P18-25~31 ✅**：Gate PASS——Test Defects 3（docker-deploy seed 登录/secrets-scan 性能与白名单）+ Documentation Defects 2（README/how-to-run-tests）+ Product Defects 0
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |
