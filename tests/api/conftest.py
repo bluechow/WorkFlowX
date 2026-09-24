@@ -157,6 +157,12 @@ def cleanup(db, redis_client, created_users):
             # 跨框架兜底（P13/P15/P17）: 清理所有测试组织
             # （pytest cleanup_orgs 漏登记 / Playwright AA* / JMeter 残留——org 级联删 project/issue/comment）
             cur.execute("DELETE FROM organizations")
+            # 非 seed 角色及其绑定兜底（P19：测试创建的角色跨轮残留，影响后续 RBAC 相关验证）
+            cur.execute(
+                "DELETE FROM user_roles WHERE role_id IN (SELECT id FROM roles WHERE code NOT IN ('ADMIN','MEMBER'))")
+            cur.execute(
+                "DELETE FROM role_permissions WHERE role_id IN (SELECT id FROM roles WHERE code NOT IN ('ADMIN','MEMBER'))")
+            cur.execute("DELETE FROM roles WHERE code NOT IN ('ADMIN','MEMBER')")
             cur.execute(
                 "DELETE FROM user_roles WHERE user_id IN "
                 "(SELECT id FROM users WHERE username LIKE %s)", (USER_PREFIX + "%",))

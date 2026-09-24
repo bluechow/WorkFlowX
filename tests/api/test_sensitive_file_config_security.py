@@ -86,19 +86,19 @@ def test_security_headers_present(api_client):
 @pytest.fixture()
 def att_env(api_client, admin_token, unique_suffix):
     su = unique_suffix.upper()
-    org_resp = api_client.post("/api/v1/orgs", headers=_h(admin_token), json={
+    org_resp = api_client.post("/api/v1/orgs", headers={"Authorization": f"Bearer {admin_token}"}, json={
         "name": f"{SEC}org att {su}", "code": f"{SEC}ATT{su}",
         "description": None})
     assert org_resp.status_code in (200, 201), (
         f"org 创建失败: {org_resp.status_code} {org_resp.text[:200]}")
     org = org_resp.json()["data"]
-    proj_resp = api_client.post("/api/v1/projects", headers=_h(admin_token), json={
+    proj_resp = api_client.post("/api/v1/projects", headers={"Authorization": f"Bearer {admin_token}"}, json={
         "name": "SECURITY 附件项目", "key": f"SATTP{su}", "orgId": org["id"],
         "description": None})
     assert proj_resp.status_code in (200, 201), (
         f"project 创建失败: {proj_resp.status_code} {proj_resp.text[:200]}")
     project = proj_resp.json()["data"]
-    issue = api_client.post(f"/api/v1/projects/{project['id']}/issues", headers=_h(admin_token),
+    issue = api_client.post(f"/api/v1/projects/{project['id']}/issues", headers={"Authorization": f"Bearer {admin_token}"},
                             json={"title": f"{SEC} 附件目标", "type": "TASK", "priority": "MEDIUM",
                                   "severity": None, "assigneeId": None}).json()["data"]
     yield {
