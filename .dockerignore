@@ -1,0 +1,21 @@
+# Deployment build context exclusions（Deployment context = repository root）
+.git
+.idea
+.vscode
+logs
+node_modules
+frontend/node_modules
+frontend/dist
+frontend/test-results
+frontend/playwright-report
+frontend/e2e
+tests
+docs
+deploy
+scripts
+*.log
+*.jtl
+.env
+.env.*
+compose.yaml
+Dockerfile

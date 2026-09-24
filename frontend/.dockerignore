@@ -1,0 +1,13 @@
+# Build context = frontend/（Phase 16 镜像精简：不含依赖缓存与本地产物）
+node_modules
+dist
+test-results
+playwright-report
+e2e
+coverage
+*.log
+.git
+.vscode
+.idea
+Dockerfile
+.dockerignore

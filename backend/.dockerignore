@@ -1,0 +1,17 @@
+# Build context 无关文件（Phase 16 镜像精简）
+.git
+.idea
+.vscode
+logs
+node_modules
+frontend
+tests
+docs
+deploy
+scripts
+*.log
+*.md
+.env
+.env.*
+Dockerfile
+.dockerignore
