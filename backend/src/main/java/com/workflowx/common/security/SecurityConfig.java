@@ -55,6 +55,12 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
+                // Phase 15 加固（ADR-021）: API 响应安全头——nosniff 防 MIME 嗅探、
+                // frame DENY 防点击劫持、认证响应 no-store 防敏感业务数据缓存
+                .headers(headers -> headers
+                        .contentTypeOptions(withDefaults -> {})
+                        .frameOptions(frame -> frame.deny())
+                        .cacheControl(cache -> {}))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService, authSessionService, permissionService),
                         UsernamePasswordAuthenticationFilter.class);
         return http.build();

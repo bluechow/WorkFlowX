@@ -450,6 +450,26 @@
 - **P14-29~31 ✅**：performance-testing.md + phase14-gate.md + 终态全零
 - **Gate ✅ PASS**：真实产品缺陷 0；测试侧修复 4（JMX 三连坑+JTL 追加污染）；环境失误 1（误停后端致一轮 pytest 失败→重启重跑）
 
+## 5.15 Phase 15 — Security Testing（✅ 全部完结并通过 Release Gate，2026-09-24）
+
+- **目标**：真实可重复可审计的安全测试体系（认证/会话/JWT/RBAC/IDOR/注入/XSS/文件/敏感信息/配置/审计），OWASP Top 10 对照，零 mock
+- **P15-01 ✅**：全栈安全审计（SecurityConfig/actuator 仅 health/JWT/前端 localStorage/上传/清理）
+- **P15-02~03 ✅**：认证 7 用例（防枚举 401 契约/malformed/阶梯锁定/成功清零/mass assignment）+ 会话 JWT 12 用例（双登录覆盖/篡改/alg=none/伪造签名）
+- **P15-04 ✅**：RBAC 直访 API 403 矩阵（菜单隐藏 ≠ 安全，API 层验证）
+- **P15-05~07 ✅**：IDOR/BOLA 三层隔离（cross-user/org/project；issueId 替换；通知 self 隔离 ADMIN 404）
+- **P15-08~10 ✅**：SQLi 字面存储证据 + fuzz 矩阵 + workflow 篡改 409 + mass assignment 忽略
+- **P15-11 ✅**：XSS 纯文本渲染断言（Playwright：script/img 不注入）
+- **P15-12~14 ✅**：文件安全（穿越 6 变体/双扩展/MIME 伪装/objectKey 服务端生成）
+- **P15-15~16 ✅**：敏感信息负向断言（密码/secret/堆栈）+ 安全事件审计接线验证
+- **P15-17~18 ✅**：actuator 仅 health/Swagger 不绕过认证/错误响应无泄露/422 缺 part（**修复真实产品缺陷：空 filename multipart → 500**）
+- **P15-19~20 ✅**：轻量 fuzz + Playwright 前端安全 7 用例（含单会话覆盖 401 跳转/切号隔离/localStorage 无密码）
+- **P15-21~23 ✅**：安全响应头加固（nosniff/DENY/Cache-Control）+ secrets scan PASS + 依赖扫描 NOT RUN（记录）
+- **P15-24 ✅**：OWASP Top 10 mapping（A01~A10 全覆盖说明；A10 N/A）
+- **P15-25~27 ✅**：pytest security suite 47 用例（security marker）+ Playwright 7 用例；**两轮结果一致**
+- **P15-28 ✅**：全量回归 mvn 311/pytest 115/Vitest 136/Playwright 24/lint/build 全绿
+- **P15-29~31 ✅**：SECURITY_ 命名空间清理终态全零 + security-testing.md（25 节）+ phase15-gate.md（28 项）
+- **Gate ✅ PASS**：**修复真实产品缺陷 1 个**（空 filename multipart → 500，MissingServletRequestPartException 未映射）+ 产品加固（安全响应头，ADR 记录于 gate）
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |

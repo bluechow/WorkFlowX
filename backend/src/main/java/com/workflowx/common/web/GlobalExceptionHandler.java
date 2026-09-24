@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -94,6 +95,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public void handleAccessDenied(AccessDeniedException ex) {
         throw ex;
+    }
+
+    /** multipart 缺失必需 part（Phase 15 安全测试发现：空 filename 的 part 被 Spring 视为缺失）→ 422。 */
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<Result<Void>> handleMissingPart(MissingServletRequestPartException ex) {
+        log.warn("missing multipart part: {}", ex.getRequestPartName());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(Result.of(422, "缺少必需的请求部分: " + ex.getRequestPartName(), null));
     }
 
     /** multipart 超过 Spring 层大小限制（Phase 8; ADR-018）：业务上限由 AttachmentFilePolicy 校验，此处兜底转 413。 */
