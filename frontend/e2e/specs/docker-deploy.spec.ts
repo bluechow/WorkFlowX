@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures/ui'
-import { AppShell, LoginPage, OrganizationsPage, ProjectsPage, IssuesPage, AuditPage } from '../pages'
+import { AppShell, LoginPage } from '../pages'
 
 /**
  * Docker 部署 UI 回归（Phase 16; P16-30）: @security @regression
@@ -17,9 +17,13 @@ test.describe('Docker 部署 UI 回归', () => {
     loginPage = new LoginPage(page)
   })
 
-  test('登录 → 菜单 → 各模块 → 登出（Docker Nginx 链路）', async ({ page }) => {
+  test('登录 → 菜单 → 各模块 → 登出（Docker Nginx 链路）', async ({ page, factory }) => {
+    // P13-06 铁律: 动态 ADMIN 用户（seed admin UI 登录会顶掉 setup storageState，
+    // 导致后续依赖 admin.json 的用例连锁 401）
+    const deployAdmin = await factory.createUser()
+    await factory.addUserRole(deployAdmin.id, 'ADMIN')
     await loginPage.goto()
-    await loginPage.login('admin', 'Admin@123456')
+    await loginPage.login(deployAdmin.username, deployAdmin.password)
     await loginPage.expectDashboard()
     await shell.expectMenuVisibility(
       ['组织管理', '项目管理', '用户管理', '用户角色', '角色管理', '权限管理', '审计日志'], [])

@@ -47,6 +47,9 @@ export class ApiFactory {
       code: `AAORG${suffix}`,
       description: null,
     })
+    if (resp.status() !== 201) {
+      throw new Error(`factory createOrg 失败: ${resp.status()} ${await resp.text()}`)
+    }
     const org = (await resp.json()).data
     this.orgs.push(org.id)
     return org
