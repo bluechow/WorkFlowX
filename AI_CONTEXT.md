@@ -27,7 +27,7 @@
 
 ## 2. 当前阶段
 
-**Phase 16 — Docker & Deployment：✅ 全部完结并通过 Release Gate（2026-09-24）**；下一步 Phase 17 — CI/CD（等用户指令）
+**Phase 17 — CI/CD：✅ 全部完结并通过 Release Gate（2026-09-24）**；下一步 Phase 18 — Final QA（等用户指令）
 
 - **P3-01 ✅ DONE**：RBAC 设计基线（docs/architecture/rbac.md + ADR-012）+ V3 系统权限种子迁移（14 项 + ADMIN 全量绑定）；五表零结构变更，Phase 2 机制不动
 - **P3-02 ✅ DONE**：rbac 模块领域能力（Entity/4 Mapper/DTO/VO/RbacConstants/三 Service：角色 CRUD+权限绑定、权限 CRUD+用户权限实时解析、用户角色幂等绑定）；新增测试 28 个，mvn 172/172，Phase 2 回归全绿（pytest 28/npm 45/运行时冒烟）
@@ -54,8 +54,9 @@
 - **Phase 13 ✅ 全部完结并通过 Release Gate（2026-09-23）**：Playwright UI 自动化（架构+20 用例分层+全链；修复 ADMIN 刷新菜单消失真实缺陷）；四线各两轮全绿；docs/testing/ui-automation.md + phase13-gate.md
 - **Phase 14 ✅ 全部完结并通过 Release Gate（2026-09-23）**：性能测试体系（JMeter JSR223+四级负载+附件独立+资源监控；基线 85/s→平台 354/s→拐点 40 线程；0% 错误率）；docs/testing/performance-testing.md + phase14-gate.md
 - **Phase 15 ✅ 全部完结并通过 Release Gate（2026-09-24）**：安全测试体系（security suite 47+Playwright 7；修复空 filename multipart 500 缺陷+安全响应头加固）；docs/testing/security-testing.md + phase15-gate.md
-- **Phase 16 ✅ 全部完结并通过 Release Gate（2026-09-24）**：Docker & Deployment（deploy compose 5 服务+Dockerfile multi-stage×2+Nginx SPA+fresh deployment Flyway V1~V14+持久化/重启/备份恢复+安全端口设计）；docs/deployment.md + docker-architecture.md
-- 下一步：**Phase 17 — CI/CD**（GitHub Actions 流水线），**等用户指令后执行**
+- **Phase 16 ✅ 全部完结并通过 Release Gate（2026-09-24）**：Docker & Deployment（deploy compose+Dockerfile×2+Nginx SPA+备份恢复）；docs/deployment.md + docker-architecture.md
+- **Phase 17 ✅ 全部完结并通过 Release Gate（2026-09-24）**：CI/CD（.github/workflows/ci.yml 5 jobs=frontend/backend/api-ui-e2e/docker-build/security-scan；MySQL service :3307+Flyway 自动；全栈 pytest+Playwright；secrets scan；docs/ci-cd.md）；Round1 暴露并收敛 9 项测试数据生命周期缺陷；四线各两轮全绿；docs/testing/phase17-gate.md
+- 下一步：**Phase 18 — Final QA**（全面回归验证），**等用户指令后执行**
 - Phase 2 — Authentication & User 已于 2026-09-06 通过 Release Gate（25 任务全部完结）
 - **P2-01 ✅ DONE**：User 实体（映射 V1 真实结构）+ UserStatus 枚举 + UserVO（无密码字段）+ dev 种子迁移 V2（db/seed/dev location 隔离，prod 不执行）+ 测试 16 个（mvn test 20/20 全绿含 P1 回归）
 - **P2-02 ✅ DONE**：UserMapper（BaseMapper 极简）+ MybatisPlusConfig 分页插件（MySQL；MP 3.5.9+ 已补 mybatis-plus-jsqlparser 依赖）+ UserMapperTest 11 用例（真实 MySQL，SQL 实证 ORDER BY/LIMIT/count 正确）；mvn test 31/31 全绿
@@ -157,6 +158,7 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-24 | Phase 17 完成：CI/CD（GitHub Actions ci.yml 5 jobs+secrets scan+docs/ci-cd.md）；收敛测试数据生命周期 9 项缺陷；四线各两轮全绿；Gate PASS（phase17-gate.md） | Phase 17 收口 |
 | 2026-09-24 | Phase 16 完成：Docker & Deployment（backend/frontend Dockerfile+deploy compose 5 服务+Nginx SPA+反代+fresh deployment+Flyway+持久化+重启+备份恢复+安全端口评审）；docs/deployment.md + docker-architecture.md | Phase 16 收口 |
 | 2026-09-24 | Phase 15 完成：安全测试体系（认证/会话/JWT 篡改/RBAC/IDOR 三层隔离/SQLi/XSS/文件穿越/敏感信息/审计/配置/Secrets 扫描/OWASP mapping）；**修复空 filename multipart 500 真实缺陷**+安全响应头加固；47+7 安全用例两轮全绿+四线回归；Gate PASS（phase15-gate.md + security-testing.md） | Phase 15 收口 |
 | 2026-09-23 | Phase 14 完成：性能测试体系（JMeter JSR223 架构+四级负载+附件独立+资源监控+瓶颈分析）；基线 85/s→平台 354/s→拐点 40 线程；全程 0% 错误率；回归 mvn 311/pytest 115/Vitest 136 全绿；Gate PASS（performance-testing.md + phase14-gate.md） | Phase 14 收口 |

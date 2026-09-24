@@ -487,6 +487,16 @@
 - **P16-38~39 ✅**：deployment.md 23 节 + docker-architecture.md + phase16-gate.md（18 项 checklist）
 - **Gate ✅ PASS**：Product Defects 0；Test Defects 4（thin jar/healthcheck 目标/凭据跨 shell/MSYS 路径——全部修复）；四线回归全绿
 
+## 5.17 Phase 17 — CI/CD（✅ 全部完结并通过 Release Gate，2026-09-24）
+
+- **目标**：GitHub Actions 主 CI（push/PR → master·main；5 jobs：frontend/backend/api-ui-e2e/docker/security）
+- **P17-01 ✅**：现状审计（无 workflow/无 Maven wrapper/本地 Node 22·Java 21·Python 3.11·MySQL 3307 依赖矩阵）
+- **P17-02~03 ✅**：.github/workflows/ci.yml（YAML 校验 PASS；5 jobs；concurrency 去重；失败 artifacts）
+- **P17-04 ✅**：Round 1 本地等价验证——暴露并修复 9 个测试侧缺陷（数据生命周期收敛/断言契约对齐/CI 白名单）
+- **P17-05~17 ✅**：两轮 frontend（npm ci/lint/Vitest 136/build）/backend（mvn 311×2）/api-ui-e2e（pytest 115×2/Playwright 24×2）/secrets scan PASS
+- **P17-18~24 ✅**：ci-cd.md（15 节）+ phase17-gate.md（25 项）+ Branch Protection 建议文档化
+- **Gate ✅ PASS**：Product Defects 0；Test Defects 9（全修复）；CI Defects 1；git clean
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |
