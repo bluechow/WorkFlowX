@@ -116,11 +116,15 @@ def test_no_token_returns_401(api_client: httpx.Client, admin_token: str, unique
     assert resp.status_code == 401
 
 
-def test_no_transition_permission_returns_403(api_client: httpx.Client, member_token: str, admin_token: str,
-                                              unique_suffix: str, cleanup_orgs):
+def test_no_transition_permission_returns_403(api_client: httpx.Client, admin_token: str,
+                                              unique_suffix: str, cleanup_orgs, create_api_user):
+    """动态用户（P17 教训：重登 seed user1 会顶掉 session 级 member_token 致后续 401 污染）。"""
     _, project_id, issue_id = _create_org_project_issue(api_client, admin_token, unique_suffix, cleanup_orgs)
+    user = create_api_user()
     resp = api_client.patch(f"/api/v1/projects/{project_id}/issues/{issue_id}/status",
-                            headers=auth_headers(member_token),
+                            headers=auth_headers(api_client.post("/api/v1/auth/login",
+                                json={"username": user["username"], "password": user["password"]}
+                            ).json()["data"]["accessToken"]),
                             json={"fromStatus": "OPEN", "toStatus": "IN_PROGRESS"})
     assert resp.status_code == 403
 
