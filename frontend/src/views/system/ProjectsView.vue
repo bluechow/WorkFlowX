@@ -195,6 +195,15 @@ onMounted(refresh)
             用例库
           </el-button>
           <el-button
+            v-if="auth.hasPermission('testplan:list')"
+            link
+            type="primary"
+            size="small"
+            @click="router.push(`/system/projects/${row.id}/testplans`)"
+          >
+            测试计划
+          </el-button>
+          <el-button
             v-if="auth.hasPermission('project:update')"
             link
             type="primary"
