@@ -519,6 +519,15 @@
 - **P19-27~29 ✅**：终态全零（users=2 seed、roles=2、permissions=49）+ v1.0.0 tag（本地；无 remote 不发布 GitHub Release）
 - **Gate ✅ PASS**：Round1 发现 Test Defect 3（conftest 兜底清空 seed user_roles→恢复并收敛清理范围；非 seed 角色残留→清理兜底；security 用例作用域）——全部修复后 Round2 全绿；phase19-gate.md
 
+## 5.20 Phase 20（V1.1 起步）— 测试用例库（✅ Gate PASS，2026-09-25）
+
+- **目标**：V1.1 首模块——测试用例库（目录树+用例 CRUD），自举管理平台自身 QA 资产
+- **P20-01~02 ✅**：ADR-022 + V15（目录树/用例表/testcase_seq/5 权限 54 项）
+- **P20-03~05 ✅**：双 Service（目录防环+用例行锁编号+数据级）；双 Controller Swagger
+- **P20-06~07 ✅**：Java 集成 13 用例 + pytest 8 用例（Round1 缺陷全修复）
+- **P20-08~09 ✅**：TestCasesView（目录树+表格+CRUD）+ 路由/入口 + Vitest 6 + Playwright 2
+- **P20-10 ✅ Gate PASS**：四线 mvn 324/pytest 123/Vitest 142/Playwright 25 两轮全绿；终态归零；phase20-gate.md
+
 ## 6. Phase 4–19 里程碑概览
 
 | Phase | 名称 | 核心产出 |

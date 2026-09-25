@@ -160,6 +160,7 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-25 | Phase 20（V1.1 起步）完成：测试用例库（V15+ADR-022+目录树+用例 CRUD+54 权限+前端用例库页）；四线 324/123/142/25 两轮全绿；Gate PASS（phase20-gate.md） | Phase 20 收口 |
 | 2026-09-25 | Phase 19 完成：Final Delivery（V1.0.0 封版，v1.0.0 tag；交付文档七份：architecture/test-matrix/graduation-notes/resume-summary/demo-scenario/future-roadmap/deployment 更新；workflowx-release 全新部署验证+smoke 15/15）；phase19-gate.md | Phase 19 收口/V1.0.0 |
 | 2026-09-25 | Phase 18 完成：Final QA（Feature Matrix+四线两轮 311/115/136/25+Docker fresh deployment 复验+文档一致性修复 README/how-to-run-tests）；docs/final-qa.md + phase18-gate.md | Phase 18 收口 |
 | 2026-09-24 | Phase 17 完成：CI/CD（GitHub Actions ci.yml 5 jobs+secrets scan+docs/ci-cd.md）；收敛测试数据生命周期 9 项缺陷；四线各两轮全绿；Gate PASS（phase17-gate.md） | Phase 17 收口 |
