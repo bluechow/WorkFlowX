@@ -41,13 +41,15 @@ interface PermGroup {
   entryCode: string | null
   entryLabel: string
   desc: string
+  /** 除 key 外还归入本组的前缀（如 department:* 归入组织管理） */
+  also?: string[]
 }
 
 const PERM_GROUPS: PermGroup[] = [
   { key: 'user', label: '用户管理', entryCode: 'user:list', entryLabel: '用户管理页面', desc: '用户增删改查、禁用/锁定' },
   { key: 'role', label: '角色管理', entryCode: 'role:list', entryLabel: '角色管理页面', desc: '角色增删改查' },
   { key: 'permission', label: '权限管理', entryCode: 'permission:list', entryLabel: '权限管理页面', desc: '查看系统权限列表' },
-  { key: 'org', label: '组织管理', entryCode: 'org:list', entryLabel: '组织管理页面（含部门/成员）', desc: '组织/部门/组织成员' },
+  { key: 'org', label: '组织管理', entryCode: 'org:list', entryLabel: '组织管理页面（含部门/成员）', desc: '组织/部门/组织成员', also: ['department'] },
   { key: 'project', label: '项目管理', entryCode: 'project:list', entryLabel: '项目管理页面（含 Issue/用例库/测试计划入口）', desc: '项目增删改查、归档/恢复、项目成员' },
   { key: 'issue', label: 'Issue 管理', entryCode: 'issue:list', entryLabel: '项目内 Issue 列表', desc: 'Issue 增删改查、分派、状态流转' },
   { key: 'testcase', label: '用例库', entryCode: 'testcase:list', entryLabel: '项目内测试用例库', desc: '用例目录/用例增删改查' },
@@ -63,7 +65,8 @@ const groupedPermissions = computed(() => {
   const groups: { group: PermGroup; perms: PermissionVO[] }[] = []
   const used = new Set<string>()
   for (const g of PERM_GROUPS) {
-    const perms = permissions.value.filter((p) => p.code.startsWith(g.key + ':'))
+    const prefixes = [g.key, ...(g.also ?? [])]
+    const perms = permissions.value.filter((p) => prefixes.some((k) => p.code.startsWith(k + ':')))
     if (perms.length > 0) {
       groups.push({ group: g, perms })
       perms.forEach((p) => used.add(p.code))
