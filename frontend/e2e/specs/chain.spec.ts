@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures/ui'
-import { LoginPage, AppShell, OrganizationsPage, OrganizationDetailPage, ProjectsPage, IssuesPage, AuditPage } from '../pages'
+import { LoginPage, AppShell, OrganizationsPage, IssuesPage, AuditPage } from '../pages'
 
 /**
  * 完整真实业务链（P13-26）: @full @critical
@@ -13,8 +13,6 @@ test.describe('完整业务链 @full @critical', () => {
     const context = await browser.newContext({ viewport: { width: 1366, height: 800 } })
     const page = await context.newPage()
     const loginPage = new LoginPage(page)
-    const shell = new AppShell(page)
-
     // 1. 登录（UI 真实表单）——动态 ADMIN 用户（P13-06 铁律：不重登 seed）
     const chainAdmin = await factory.createUser()  // 随机后缀（跨轮不冲突）
     await factory.addUserRole(chainAdmin.id, 'ADMIN')
@@ -32,7 +30,6 @@ test.describe('完整业务链 @full @critical', () => {
     if (uiOrgId) factory.trackOrg(uiOrgId)
 
     // 3. 部门 + 用户 + 角色（API 预置——浏览器已验证同款 UI 行为）
-    const detail = new OrganizationDetailPage(page)
     await orgsPage.openDetailByName(`AA 全链组织 ${suffix}`)
     const orgId = Number((page.url().match(/organizations\/(\d+)/) || [])[1])
     expect(orgId).toBeGreaterThan(0)

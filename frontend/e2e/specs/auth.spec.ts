@@ -12,7 +12,7 @@ test.describe('Authentication @smoke @critical', () => {
     loginPage = new LoginPage(publicPage)
   })
 
-  test('正确登录进入 Dashboard @smoke', async ({ publicPage, factory }) => {
+  test('正确登录进入 Dashboard @smoke', async ({ factory }) => {
     // 用工厂用户真实登录（P12-04 铁律：重登 seed admin 会顶掉 setup storageState 会话）
     const user = await factory.createUser()
     await loginPage.goto()
@@ -20,7 +20,7 @@ test.describe('Authentication @smoke @critical', () => {
     await loginPage.expectDashboard()
   })
 
-  test('错误密码 → 统一 401 提示（不泄露存在性）', async ({ publicPage, factory }) => {
+  test('错误密码 → 统一 401 提示（不泄露存在性）', async ({ factory }) => {
     const user = await factory.createUser()
     await loginPage.goto()
     await loginPage.login(user.username, 'WrongPass@999')
@@ -45,7 +45,7 @@ test.describe('Authentication @smoke @critical', () => {
     await expect(adminPage.getByRole('button', { name: '退出登录' }).last()).toBeVisible()
   })
 
-  test('登出 → /login，且保护路由重新拦截', async ({ publicPage, factory }) => {
+  test('登出 → /login，且保护路由重新拦截', async ({ factory }) => {
     // 工厂用户真实 UI 登录→登出（P13-06 铁律：seed 会话仅 setup 登录一次，登出用例不得销毁 seed 会话）
     const user = await factory.createUser()
     await loginPage.goto()

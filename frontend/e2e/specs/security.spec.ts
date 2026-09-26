@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures/ui'
-import { AppShell, AuditPage, IssuesPage, LoginPage } from '../pages'
+import { AppShell, AuditPage, LoginPage } from '../pages'
 
 /**
  * 前端安全（Phase 15; P15-20）: @security @regression

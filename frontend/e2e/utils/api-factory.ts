@@ -1,4 +1,4 @@
-import type { APIRequestContext, Page } from '@playwright/test'
+import type { APIRequestContext } from '@playwright/test'
 
 /**
  * API 数据工厂（P13/Phase 12 思路复用）：

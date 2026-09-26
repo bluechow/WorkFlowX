@@ -7,7 +7,6 @@ import { AppShell, LoginPage } from '../pages'
  */
 test.describe('Notification @regression', () => {
   test('分派 → user1 badge 出现 → 通知中心渲染 → 全部已读归零', async ({
-    adminPage,
     factory,
     userPage,
   }) => {

@@ -7,11 +7,6 @@ import { AppShell, OrganizationsPage, OrganizationDetailPage, ProjectsPage, Issu
  * 特别防回归: Phase 11 修复的列表解析缺陷（org/project/issue 列表必须真实出数）。
  */
 test.describe('核心模块 UI 回归 @regression', () => {
-  let shell: AppShell
-
-  test.beforeEach(({ adminPage }) => {
-    shell = new AppShell(adminPage)
-  })
 
   test('Dashboard 统计卡片与图表渲染（真实聚合数据）', async ({ adminPage, factory }) => {
     const org = await factory.createOrg()
