@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { createTestPlan, deleteTestPlan, listTestPlans, type TestPlanVO } from '@/api/testplan'
 import { useAuthStore } from '@/stores/auth'
+import RowActions from '@/components/RowActions.vue'
 
 /**
  * 测试计划列表（Phase 21 / V1.1）。权限仅 UX；后端 authority + 数据级才是边界。
@@ -129,25 +130,14 @@ onMounted(refresh)
         <el-table-column label="失败" width="80" prop="failed" />
         <el-table-column label="阻塞" width="80" prop="blocked" />
         <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="140" fixed="right">
+        <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              size="small"
-              @click="router.push(`/system/projects/${projectId}/testplans/${row.id}`)"
-            >
-              执行
-            </el-button>
-            <el-button
-              v-if="auth.hasPermission('testplan:delete')"
-              link
-              type="danger"
-              size="small"
-              @click="remove(row)"
-            >
-              删除
-            </el-button>
+            <RowActions
+              :groups="[
+                [{ label: '执行', onClick: () => router.push(`/system/projects/${projectId}/testplans/${row.id}`) }],
+                [{ label: '删除', permission: 'testplan:delete', type: 'danger', onClick: () => remove(row) }],
+              ]"
+            />
           </template>
         </el-table-column>
       </el-table>

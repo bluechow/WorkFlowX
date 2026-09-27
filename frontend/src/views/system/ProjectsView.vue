@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { createProject, listOrgOptions, listProjects, updateProject, updateProjectStatus } from '@/api/project'
 import { useAuthStore } from '@/stores/auth'
+import RowActions from '@/components/RowActions.vue'
 import { PROJECT_STATUS_LABELS, labelOf } from '@/utils/labels'
 import type { ProjectStatus, ProjectVO } from '@/types/api'
 
@@ -176,59 +177,20 @@ onMounted(refresh)
         </template>
       </el-table-column>
       <el-table-column prop="description" label="描述" min-width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="230" fixed="right">
+      <el-table-column label="操作" width="380" fixed="right">
         <template #default="{ row }">
-          <el-button
-            v-if="auth.hasPermission('issue:list')"
-            link
-            type="primary"
-            @click="router.push(`/system/projects/${row.id}/issues`)"
-          >
-            Issue 列表
-          </el-button>
-          <el-button
-            v-if="auth.hasPermission('issue:list')"
-            link
-            type="primary"
-            size="small"
-            @click="router.push(`/system/projects/${row.id}/board`)"
-          >
-            看板
-          </el-button>
-          <el-button
-            v-if="auth.hasPermission('testcase:list')"
-            link
-            type="primary"
-            size="small"
-            @click="router.push(`/system/projects/${row.id}/testcases`)"
-          >
-            用例库
-          </el-button>
-          <el-button
-            v-if="auth.hasPermission('testplan:list')"
-            link
-            type="primary"
-            size="small"
-            @click="router.push(`/system/projects/${row.id}/testplans`)"
-          >
-            测试计划
-          </el-button>
-          <el-button
-            v-if="auth.hasPermission('project:update')"
-            link
-            type="primary"
-            @click="openEdit(row)"
-          >
-            编辑
-          </el-button>
-          <el-button
-            v-if="auth.hasPermission('project:update')"
-            link
-            :type="row.status === 'ACTIVE' ? 'warning' : 'success'"
-            @click="toggleArchive(row)"
-          >
-            {{ row.status === 'ACTIVE' ? '归档' : '恢复' }}
-          </el-button>
+          <RowActions
+            :groups="[
+              [
+                { label: 'Issue 列表', permission: 'issue:list', onClick: () => router.push(`/system/projects/${row.id}/issues`) },
+                { label: '看板', permission: 'issue:list', onClick: () => router.push(`/system/projects/${row.id}/board`) },
+                { label: '用例库', permission: 'testcase:list', onClick: () => router.push(`/system/projects/${row.id}/testcases`) },
+                { label: '测试计划', permission: 'testplan:list', onClick: () => router.push(`/system/projects/${row.id}/testplans`) },
+              ],
+              [{ label: '编辑', permission: 'project:update', onClick: () => openEdit(row) }],
+              [{ label: row.status === 'ACTIVE' ? '归档' : '恢复', permission: 'project:update', type: 'warning', onClick: () => toggleArchive(row) }],
+            ]"
+          />
         </template>
       </el-table-column>
     </el-table>

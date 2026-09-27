@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { createOrg, deleteOrg, listOrgs, updateOrg } from '@/api/org'
 import { useAuthStore } from '@/stores/auth'
+import RowActions from '@/components/RowActions.vue'
 import type { OrganizationVO } from '@/types/api'
 
 /** 组织管理列表（P4-03）：真实 API；删除需二次确认（后端叠加 OWNER 数据级校验）。 */
@@ -139,25 +140,13 @@ onMounted(refresh)
       <el-table-column prop="description" label="描述" min-width="180" show-overflow-tooltip />
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="router.push(`/system/organizations/${row.id}`)">
-            管理
-          </el-button>
-          <el-button
-            v-if="auth.hasPermission('org:update')"
-            link
-            type="primary"
-            @click="openEdit(row)"
-          >
-            编辑
-          </el-button>
-          <el-button
-            v-if="auth.hasPermission('org:delete')"
-            link
-            type="danger"
-            @click="handleDelete(row)"
-          >
-            删除
-          </el-button>
+          <RowActions
+            :groups="[
+              [{ label: '管理', onClick: () => router.push(`/system/organizations/${row.id}`) }],
+              [{ label: '编辑', permission: 'org:update', onClick: () => openEdit(row) }],
+              [{ label: '删除', permission: 'org:delete', type: 'danger', onClick: () => handleDelete(row) }],
+            ]"
+          />
         </template>
       </el-table-column>
     </el-table>

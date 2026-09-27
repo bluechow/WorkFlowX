@@ -10,6 +10,7 @@ import {
   type UserVO,
 } from '@/api/user'
 import { useAuthStore } from '@/stores/auth'
+import RowActions from '@/components/RowActions.vue'
 
 /**
  * 用户管理（P11-02 补齐 G2）：ADMIN 专属页面（后端 user:* authority 强制）。
@@ -212,47 +213,22 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="240">
           <template #default="{ row }">
-            <el-button
-              v-if="auth.hasPermission('user:update')"
-              link
-              type="primary"
-              size="small"
-              @click="openEdit(row)"
-            >
-              编辑
-            </el-button>
-            <template v-if="auth.hasPermission('user:status')">
-              <el-button
-                v-if="row.status === 'ACTIVE' && row.id !== auth.currentUser?.id"
-                link
-                type="danger"
-                size="small"
-                :disabled="statusChanging"
-                @click="changeStatus(row, 'DISABLED')"
-              >
-                禁用
-              </el-button>
-              <el-button
-                v-if="row.status === 'ACTIVE' && row.id !== auth.currentUser?.id"
-                link
-                type="warning"
-                size="small"
-                :disabled="statusChanging"
-                @click="changeStatus(row, 'LOCKED')"
-              >
-                锁定
-              </el-button>
-              <el-button
-                v-if="row.status !== 'ACTIVE'"
-                link
-                type="success"
-                size="small"
-                :disabled="statusChanging"
-                @click="changeStatus(row, 'ACTIVE')"
-              >
-                恢复启用
-              </el-button>
-            </template>
+            <RowActions
+              :groups="[
+                [{ label: '编辑', permission: 'user:update', onClick: () => openEdit(row) }],
+                [
+                  { label: '禁用', permission: 'user:status', type: 'warning', disabled: statusChanging,
+                    hidden: row.status !== 'ACTIVE' || row.id === auth.currentUser?.id,
+                    onClick: () => changeStatus(row, 'DISABLED') },
+                  { label: '锁定', permission: 'user:status', type: 'warning', disabled: statusChanging,
+                    hidden: row.status !== 'ACTIVE' || row.id === auth.currentUser?.id,
+                    onClick: () => changeStatus(row, 'LOCKED') },
+                ],
+                [{ label: '恢复启用', permission: 'user:status', type: 'warning', disabled: statusChanging,
+                   hidden: row.status === 'ACTIVE',
+                   onClick: () => changeStatus(row, 'ACTIVE') }],
+              ]"
+            />
           </template>
         </el-table-column>
       </el-table>

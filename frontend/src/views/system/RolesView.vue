@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import RowActions from '@/components/RowActions.vue'
 import {
   assignRolePermissions,
   createRole,
@@ -227,11 +228,15 @@ onMounted(refresh)
         </template>
       </el-table-column>
       <el-table-column prop="description" label="描述" min-width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="220" fixed="right">
+      <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button v-if="auth.hasPermission('role:assign_permission')" link type="primary" @click="openPermissions(row)">权限</el-button>
-          <el-button v-if="auth.hasPermission('role:update')" link type="primary" @click="openEdit(row)">编辑</el-button>
-          <el-button v-if="auth.hasPermission('role:delete')" link type="danger" :disabled="row.system" @click="handleDelete(row)">删除</el-button>
+          <RowActions
+            :groups="[
+              [{ label: '权限', permission: 'role:assign_permission', onClick: () => openPermissions(row) }],
+              [{ label: '编辑', permission: 'role:update', onClick: () => openEdit(row) }],
+              [{ label: '删除', permission: 'role:delete', type: 'danger', disabled: row.system, onClick: () => handleDelete(row) }],
+            ]"
+          />
         </template>
       </el-table-column>
     </el-table>
