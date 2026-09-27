@@ -41,11 +41,11 @@ class DemoDataSeederTest {
         assertThat(count("SELECT COUNT(*) FROM user_roles ur JOIN users u ON ur.user_id = u.id WHERE u.username LIKE 'demo\\_%'"))
                 .isEqualTo(30);
 
-        // 组织 3 / 部门 5 / 项目 4 / 成员 9+7+8+5=29
+        // 组织 3 / 部门 5 / 项目 4 / 成员 9+7+8+5=29 + demo_admin 每项目 MANAGER +4 = 33
         assertThat(count("SELECT COUNT(*) FROM organizations WHERE code IN ('STARLIGHT','YUNFAN','BLUEWHALE')")).isEqualTo(3);
         assertThat(count("SELECT COUNT(*) FROM departments d JOIN organizations o ON d.org_id = o.id WHERE o.code IN ('STARLIGHT','YUNFAN')")).isEqualTo(5);
         assertThat(count("SELECT COUNT(*) FROM project_members pm JOIN projects p ON pm.project_id = p.id WHERE p.`key` IN ('CAMPUS','SHOP','MBANK','DEVOPS')"))
-                .isEqualTo(29);
+                .isEqualTo(33);
 
         // Issue：48 条；编号 1..n 连续且 issue_seq 同步
         assertThat(issuesBefore).isEqualTo(48);

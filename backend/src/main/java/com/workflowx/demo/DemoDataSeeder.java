@@ -207,6 +207,9 @@ public class DemoDataSeeder {
             projectIds.add(pid);
             projectKeys.add(def[0]);
             addProjectMember(p, pid, owner, "OWNER");
+            // 演示管理员以 MANAGER 身份加入全部项目：既有全部权限又是成员，
+            // 避免"有 authority 无成员资格"导致演示时写操作被数据级 403 拦截
+            addProjectMember(p, pid, demoAdminId, "MANAGER");
             int[] extra = switch (def[0]) {
                     case "CAMPUS" -> new int[]{1, 2, 3, 4, 5, 6, 8, 9};
                     case "SHOP"   -> new int[]{1, 4, 5, 9, 10, 11};
