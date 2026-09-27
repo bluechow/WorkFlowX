@@ -10,8 +10,7 @@ import {
   transitionIssueStatus,
   updateIssue,
 } from '@/api/issue'
-import IssueCommentsPanel from '@/components/issue/IssueCommentsPanel.vue'
-import IssueAttachmentsPanel from '@/components/issue/IssueAttachmentsPanel.vue'
+import IssueDetailDrawer from '@/components/IssueDetailDrawer.vue'
 import { useAuthStore } from '@/stores/auth'
 import {
   ISSUE_PRIORITY_LABELS,
@@ -60,13 +59,20 @@ const form = reactive({
 const members = ref<{ userId: number; role: string }[]>([])
 const projectOptions = ref<ProjectVO[]>([])
 
-// P8-14/15: 评论与附件抽屉（点击编号打开，tab 切换）
+// Phase A-③: 详情抽屉（点击编号打开，聚合信息/流转/评论/附件）
 const drawerVisible = ref(false)
-const activeIssue = ref<IssueVO | null>(null)
+const detailIssue = ref<IssueVO | null>(null)
 
 function openPanels(issue: IssueVO) {
-  activeIssue.value = issue
+  detailIssue.value = issue
   drawerVisible.value = true
+}
+
+/** 抽屉内流转后原位刷新该行 */
+function onDetailUpdated(updated: IssueVO) {
+  detailIssue.value = updated
+  const idx = issues.value.findIndex((i) => i.id === updated.id)
+  if (idx >= 0) issues.value[idx] = updated
 }
 
 async function refresh() {
@@ -402,20 +408,14 @@ onMounted(async () => {
       </template>
     </el-dialog>
 
-    <el-drawer
-      v-model="drawerVisible"
-      :title="activeIssue ? `${project?.key ?? ''}-${activeIssue.issueNo} ${activeIssue.title}` : ''"
-      size="480px"
-    >
-      <el-tabs v-if="activeIssue" model-value="comments">
-        <el-tab-pane label="评论" name="comments">
-          <IssueCommentsPanel :project-id="projectId" :issue-id="activeIssue.id" />
-        </el-tab-pane>
-        <el-tab-pane label="附件" name="attachments">
-          <IssueAttachmentsPanel :project-id="projectId" :issue-id="activeIssue.id" />
-        </el-tab-pane>
-      </el-tabs>
-    </el-drawer>
+    <IssueDetailDrawer
+      v-model:visible="drawerVisible"
+      :project-id="projectId"
+      :project-key="project?.key"
+      :issue="detailIssue"
+      @updated="onDetailUpdated"
+      @edit="openEdit"
+    />
   </section>
 </template>
 

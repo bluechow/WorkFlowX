@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { listIssuesForBoard, listProjectOptions, transitionIssueStatus } from '@/api/issue'
+import IssueDetailDrawer from '@/components/IssueDetailDrawer.vue'
 import { useAuthStore } from '@/stores/auth'
 import {
   ISSUE_PRIORITY_LABELS,
@@ -53,6 +54,20 @@ function allowedTargets(status: IssueStatus): IssueStatus[] {
 }
 
 const dragIssue = ref<IssueVO | null>(null)
+const drawerVisible = ref(false)
+const detailIssue = ref<IssueVO | null>(null)
+
+/** 卡片点击打开详情抽屉（拖拽不会触发 click） */
+function openDetail(issue: IssueVO) {
+  detailIssue.value = issue
+  drawerVisible.value = true
+}
+
+function onDetailUpdated(updated: IssueVO) {
+  detailIssue.value = updated
+  const idx = issues.value.findIndex((i) => i.id === updated.id)
+  if (idx >= 0) issues.value[idx] = updated
+}
 
 function onDragStart(issue: IssueVO, event: DragEvent) {
   if (!auth.hasPermission('issue:transition')) {
@@ -153,6 +168,7 @@ onMounted(async () => {
             :key="issue.id"
             class="board-card"
             :draggable="auth.hasPermission('issue:transition')"
+            @click="openDetail(issue)"
             @dragstart="onDragStart(issue, $event as DragEvent)"
           >
             <div class="board-card__meta">
@@ -173,6 +189,15 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+
+    <!-- Issue 详情抽屉（Phase A-③）：卡片点击后聚合展示 -->
+    <IssueDetailDrawer
+      v-model:visible="drawerVisible"
+      :project-id="projectId"
+      :project-key="project?.key"
+      :issue="detailIssue"
+      @updated="onDetailUpdated"
+    />
   </section>
 </template>
 
