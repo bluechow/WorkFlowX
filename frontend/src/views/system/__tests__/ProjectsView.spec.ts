@@ -44,7 +44,7 @@ describe('ProjectsView（P5-03）', () => {
     const text = wrapper.text()
     expect(text).toContain('WFX')
     expect(text).toContain('主项目')
-    expect(text).toContain('ARCHIVED')
+    expect(text).toContain('已归档')
   })
 
   it('空列表展示空状态', async () => {

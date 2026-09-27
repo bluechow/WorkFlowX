@@ -65,10 +65,11 @@ describe('IssuesView Workflow（P7-08）', () => {
     mocked.listIssues.mockResolvedValue({ list: [OPEN_ISSUE], total: 1, page: 1, size: 10 })
   })
 
-  it('加载并渲染 Issue（OPEN 状态 + 编号）', async () => {
+  it('加载并渲染 Issue（状态列 + 编号；有权限时渲染流转下拉）', async () => {
     const wrapper = mountView()
     await flushPromises()
     expect(wrapper.text()).toContain('目标 Issue')
+    // jsdom 下 el-select 显示原始 value（浏览器中显示中文选项标签），据此断言
     expect(wrapper.text()).toContain('OPEN')
   })
 
@@ -84,7 +85,8 @@ describe('IssuesView Workflow（P7-08）', () => {
     const wrapper = mountView()
     await flushPromises()
     expect(wrapper.findAll('.el-table .el-select').length).toBe(0)
-    expect(wrapper.text()).toContain('OPEN')
+    // 无权限 → 纯中文状态标签（不再渲染下拉）
+    expect(wrapper.text()).toContain('待处理')
   })
 
   it('allowedTargets 镜像 ADR-017 矩阵（合法目标白名单）', () => {

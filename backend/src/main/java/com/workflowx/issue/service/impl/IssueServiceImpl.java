@@ -121,6 +121,16 @@ public class IssueServiceImpl implements IssueService {
         Page<Issue> result = issueMapper.selectPage(new Page<>(query.pageNum(), query.pageSize()), wrapper);
         return PageVO.of(result.convert(IssueVO::from));
     }
+    @Override
+    public java.util.List<IssueVO> listForBoard(Long projectId) {
+        requireProject(projectId);
+        // 看板为全量视图：上限 500 条防御超大项目；组内排序交由前端（状态分列后按活动时间）
+        LambdaQueryWrapper<Issue> wrapper = new LambdaQueryWrapper<Issue>()
+                .eq(Issue::getProjectId, projectId)
+                .orderByDesc(Issue::getUpdatedAt)
+                .last("LIMIT 500");
+        return issueMapper.selectList(wrapper).stream().map(IssueVO::from).toList();
+    }
 
     @Override
     @Transactional

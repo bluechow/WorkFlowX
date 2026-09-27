@@ -64,6 +64,11 @@ const router = createRouter({
       component: () => import('@/views/system/IssuesView.vue'),
     },
     {
+      path: '/system/projects/:projectId/board',
+      name: 'system-project-board',
+      component: () => import('@/views/system/ProjectBoardView.vue'),
+    },
+    {
       path: '/system/users',
       name: 'system-users',
       component: () => import('@/views/system/UsersView.vue'),

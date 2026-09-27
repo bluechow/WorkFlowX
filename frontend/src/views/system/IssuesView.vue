@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   allowedTargets,
@@ -13,6 +13,13 @@ import {
 import IssueCommentsPanel from '@/components/issue/IssueCommentsPanel.vue'
 import IssueAttachmentsPanel from '@/components/issue/IssueAttachmentsPanel.vue'
 import { useAuthStore } from '@/stores/auth'
+import {
+  ISSUE_PRIORITY_LABELS,
+  ISSUE_SEVERITY_LABELS,
+  ISSUE_STATUS_LABELS,
+  ISSUE_TYPE_LABELS,
+  labelOf,
+} from '@/utils/labels'
 import type { IssueStatus, IssueVO, ProjectVO } from '@/types/api'
 
 /**
@@ -21,6 +28,7 @@ import type { IssueStatus, IssueVO, ProjectVO } from '@/types/api'
  */
 const auth = useAuthStore()
 const route = useRoute()
+const router = useRouter()
 
 const projectId = computed(() => Number(route.params.projectId))
 const project = ref<ProjectVO | null>(null)
@@ -166,7 +174,7 @@ async function doTransition(issue: IssueVO, toStatus: IssueStatus) {
   transitioning.value = true
   try {
     await transitionIssueStatus(projectId.value, issue.id, issue.status, toStatus)
-    ElMessage.success(`状态已流转为 ${toStatus}`)
+    ElMessage.success(`状态已流转为 ${ISSUE_STATUS_LABELS[toStatus] ?? toStatus}`)
     await refresh()
   } catch (e) {
     ElMessage.error((e as { message?: string }).message ?? '状态流转失败')
@@ -203,13 +211,16 @@ onMounted(async () => {
   <section class="issues-view">
     <div class="issues-view__toolbar">
       <h2>Issues — {{ project?.name ?? `#${projectId}` }}</h2>
-      <el-button
-        v-if="auth.hasPermission('issue:create')"
-        type="primary"
-        @click="openCreate"
-      >
-        新建 Issue
-      </el-button>
+      <div class="issues-view__actions">
+        <el-button @click="router.push(`/system/projects/${projectId}/board`)">看板视图</el-button>
+        <el-button
+          v-if="auth.hasPermission('issue:create')"
+          type="primary"
+          @click="openCreate"
+        >
+          新建 Issue
+        </el-button>
+      </div>
     </div>
 
     <div class="issues-view__filters">
@@ -221,16 +232,31 @@ onMounted(async () => {
         @keyup.enter="search"
       />
       <el-select v-model="filters.type" clearable placeholder="类型" style="width: 120px" @change="search">
-        <el-option v-for="t in ['BUG', 'TASK', 'FEATURE', 'IMPROVEMENT']" :key="t" :label="t" :value="t" />
+        <el-option
+          v-for="t in ['BUG', 'TASK', 'FEATURE', 'IMPROVEMENT']"
+          :key="t"
+          :label="labelOf(ISSUE_TYPE_LABELS, t)"
+          :value="t"
+        />
       </el-select>
       <el-select v-model="filters.priority" clearable placeholder="优先级" style="width: 110px" @change="search">
-        <el-option v-for="p in ['LOW', 'MEDIUM', 'HIGH', 'URGENT']" :key="p" :label="p" :value="p" />
+        <el-option
+          v-for="p in ['LOW', 'MEDIUM', 'HIGH', 'URGENT']"
+          :key="p"
+          :label="labelOf(ISSUE_PRIORITY_LABELS, p)"
+          :value="p"
+        />
       </el-select>
       <el-select v-model="filters.severity" clearable placeholder="严重程度" style="width: 100px" @change="search">
-        <el-option v-for="s in ['S1', 'S2', 'S3', 'S4']" :key="s" :label="s" :value="s" />
+        <el-option v-for="s in ['S1', 'S2', 'S3', 'S4']" :key="s" :label="labelOf(ISSUE_SEVERITY_LABELS, s)" :value="s" />
       </el-select>
       <el-select v-model="filters.status" clearable placeholder="状态" style="width: 130px" @change="search">
-        <el-option v-for="s in ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'TESTING', 'CLOSED', 'REOPENED']" :key="s" :label="s" :value="s" />
+        <el-option
+          v-for="s in ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'TESTING', 'CLOSED', 'REOPENED']"
+          :key="s"
+          :label="labelOf(ISSUE_STATUS_LABELS, s)"
+          :value="s"
+        />
       </el-select>
       <el-button @click="search">搜索</el-button>
     </div>
@@ -249,11 +275,15 @@ onMounted(async () => {
           <span v-else>{{ project?.key ?? '' }}-{{ row.issueNo }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="type" label="类型" width="110" />
+      <el-table-column label="类型" width="100">
+        <template #default="{ row }">{{ labelOf(ISSUE_TYPE_LABELS, row.type) }}</template>
+      </el-table-column>
       <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
-      <el-table-column prop="priority" label="优先级" width="90" />
-      <el-table-column label="严重程度" width="100">
-        <template #default="{ row }">{{ row.severity ?? '—' }}</template>
+      <el-table-column label="优先级" width="90">
+        <template #default="{ row }">{{ labelOf(ISSUE_PRIORITY_LABELS, row.priority) }}</template>
+      </el-table-column>
+      <el-table-column label="严重程度" width="110">
+        <template #default="{ row }">{{ labelOf(ISSUE_SEVERITY_LABELS, row.severity) }}</template>
       </el-table-column>
       <el-table-column label="状态" width="130">
         <template #default="{ row }">
@@ -268,12 +298,12 @@ onMounted(async () => {
             <el-option
               v-for="t in allowedTargets(row.status)"
               :key="t"
-              :label="t"
+              :label="labelOf(ISSUE_STATUS_LABELS, t)"
               :value="t"
             />
           </el-select>
           <el-tag v-else :type="row.status === 'CLOSED' ? 'info' : 'success'" size="small">
-            {{ row.status }}
+            {{ labelOf(ISSUE_STATUS_LABELS, row.status) }}
           </el-tag>
         </template>
       </el-table-column>
@@ -324,7 +354,12 @@ onMounted(async () => {
       <el-form label-width="90px">
         <el-form-item label="类型">
           <el-select v-model="form.type" :disabled="editingId !== null" style="width: 100%">
-            <el-option v-for="t in ['BUG', 'TASK', 'FEATURE', 'IMPROVEMENT']" :key="t" :label="t" :value="t" />
+            <el-option
+              v-for="t in ['BUG', 'TASK', 'FEATURE', 'IMPROVEMENT']"
+              :key="t"
+              :label="labelOf(ISSUE_TYPE_LABELS, t)"
+              :value="t"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="标题">
@@ -335,12 +370,22 @@ onMounted(async () => {
         </el-form-item>
         <el-form-item label="优先级">
           <el-select v-model="form.priority" style="width: 100%">
-            <el-option v-for="p in ['LOW', 'MEDIUM', 'HIGH', 'URGENT']" :key="p" :label="p" :value="p" />
+            <el-option
+              v-for="p in ['LOW', 'MEDIUM', 'HIGH', 'URGENT']"
+              :key="p"
+              :label="labelOf(ISSUE_PRIORITY_LABELS, p)"
+              :value="p"
+            />
           </el-select>
         </el-form-item>
         <el-form-item v-if="form.type === 'BUG'" label="严重程度">
           <el-select v-model="form.severity" clearable placeholder="仅 BUG" style="width: 100%">
-            <el-option v-for="s in ['S1', 'S2', 'S3', 'S4']" :key="s" :label="s" :value="s" />
+            <el-option
+              v-for="s in ['S1', 'S2', 'S3', 'S4']"
+              :key="s"
+              :label="labelOf(ISSUE_SEVERITY_LABELS, s)"
+              :value="s"
+            />
           </el-select>
         </el-form-item>
         <el-form-item v-if="editingId !== null" label="经办人">
@@ -384,6 +429,10 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+}
+.issues-view__actions {
+  display: flex;
+  gap: 8px;
 }
 .issues-view__filters {
   display: flex;

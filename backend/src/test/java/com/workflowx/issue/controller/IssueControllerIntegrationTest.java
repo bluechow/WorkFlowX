@@ -411,6 +411,40 @@ class IssueControllerIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    // ===== 看板（Phase A-②）=====
+
+    @Test
+    void boardReturnsAllIssuesOfProject() throws Exception {
+        Long orgId = createTestOrg("BRD");
+        Long projectId = createTestProject("BRD", orgId);
+        mockMvc.perform(post("/api/v1/projects/{id}/issues", projectId).header("Authorization", "Bearer " + admin())
+                        .contentType(MediaType.APPLICATION_JSON).content(createBody("CTRL- 看板甲")))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/v1/projects/{id}/issues", projectId).header("Authorization", "Bearer " + admin())
+                        .contentType(MediaType.APPLICATION_JSON).content(createBody("CTRL- 看板乙")))
+                .andExpect(status().isCreated());
+
+        // ADMIN（issue:list authority）→ 200，返回项目内全部 Issue（非分页）
+        MvcResult result = mockMvc.perform(get("/api/v1/projects/{id}/issues/board", projectId)
+                        .header("Authorization", "Bearer " + admin()))
+                .andExpect(status().isOk())
+                .andReturn();
+        var response = objectMapper.readValue(result.getResponse().getContentAsString(), java.util.Map.class);
+        @SuppressWarnings("unchecked")
+        var list = (java.util.List<java.util.Map<String, Object>>) response.get("data");
+        assertEquals(2, list.size());
+
+        // MEMBER user1 无 issue:list authority → 403；未认证 → 401；项目不存在 → 404
+        mockMvc.perform(get("/api/v1/projects/{id}/issues/board", projectId)
+                        .header("Authorization", "Bearer " + member()))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/projects/{id}/issues/board", projectId))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/projects/{id}/issues/board", 999999999L)
+                        .header("Authorization", "Bearer " + admin()))
+                .andExpect(status().isNotFound());
+    }
+
     @Test
     void issueEndpointsShouldReturn404ForCrossProjectAndMissing() throws Exception {
         Long orgId = createTestOrg("N404");

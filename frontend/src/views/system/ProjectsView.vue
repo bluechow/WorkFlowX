@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { createProject, listOrgOptions, listProjects, updateProject, updateProjectStatus } from '@/api/project'
 import { useAuthStore } from '@/stores/auth'
+import { PROJECT_STATUS_LABELS, labelOf } from '@/utils/labels'
 import type { ProjectStatus, ProjectVO } from '@/types/api'
 
 /**
@@ -149,8 +150,8 @@ onMounted(refresh)
         @keyup.enter="search"
       />
       <el-select v-model="statusFilter" clearable placeholder="状态" style="width: 120px" @change="search">
-        <el-option label="ACTIVE" value="ACTIVE" />
-        <el-option label="ARCHIVED" value="ARCHIVED" />
+        <el-option label="进行中" value="ACTIVE" />
+        <el-option label="已归档" value="ARCHIVED" />
       </el-select>
       <el-button @click="search">搜索</el-button>
       <el-button
@@ -170,7 +171,7 @@ onMounted(refresh)
       <el-table-column label="状态" width="100">
         <template #default="{ row }">
           <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'" size="small">
-            {{ row.status }}
+            {{ labelOf(PROJECT_STATUS_LABELS, row.status) }}
           </el-tag>
         </template>
       </el-table-column>
@@ -183,7 +184,16 @@ onMounted(refresh)
             type="primary"
             @click="router.push(`/system/projects/${row.id}/issues`)"
           >
-            Issues
+            Issue 列表
+          </el-button>
+          <el-button
+            v-if="auth.hasPermission('issue:list')"
+            link
+            type="primary"
+            size="small"
+            @click="router.push(`/system/projects/${row.id}/board`)"
+          >
+            看板
           </el-button>
           <el-button
             v-if="auth.hasPermission('testcase:list')"

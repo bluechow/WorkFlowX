@@ -61,6 +61,15 @@ export async function listIssues(
   return (response.data as { data: PageVO<IssueVO> }).data
 }
 
+/** 看板全量列表（Phase A-②）：项目内全部 Issue，按最近活动排序（上限 500） */
+export async function listIssuesForBoard(projectId: number): Promise<IssueVO[]> {
+  const { data } = await http.get<Result<IssueVO[]>>(`/projects/${projectId}/issues/board`)
+  if (!data.data) {
+    return Promise.reject({ code: data.code, message: 'empty board data', traceId: data.traceId })
+  }
+  return data.data
+}
+
 export async function getIssue(projectId: number, issueId: number): Promise<IssueVO> {
   const { data } = await http.get<Result<IssueVO>>(`/projects/${projectId}/issues/${issueId}`)
   if (!data.data) {

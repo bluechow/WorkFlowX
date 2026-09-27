@@ -24,6 +24,9 @@ public interface IssueService {
     /** 分页查询（keyword=标题/描述，issueNo 精确，枚举与人员过滤，稳定排序） */
     PageVO<IssueVO> page(Long projectId, IssuePageQuery query);
 
+    /** 看板查询（Phase A-②）：项目内全部 Issue，按最近活动排序，上限 500 条 */
+    java.util.List<IssueVO> listForBoard(Long projectId);
+
     /** 更新：issueNo/projectId/reporterId 不可变；assignee 变更重新校验项目成员；severity 规则同创建 */
     IssueVO update(Long projectId, Long issueId, UpdateIssueRequest request, Long operatorId);
 

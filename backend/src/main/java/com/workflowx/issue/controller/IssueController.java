@@ -44,6 +44,13 @@ public class IssueController {
         return Result.ok(issueService.page(projectId, query));
     }
 
+    /** 看板全量列表（Phase A-②）：读语义与 page 一致（issue:list authority，不限成员） */
+    @GetMapping("/board")
+    @PreAuthorize("hasAuthority('issue:list')")
+    public Result<java.util.List<IssueVO>> board(@PathVariable Long projectId) {
+        return Result.ok(issueService.listForBoard(projectId));
+    }
+
     @PostMapping
     @PreAuthorize("hasAuthority('issue:create')")
     public ResponseEntity<Result<IssueVO>> create(@PathVariable Long projectId,

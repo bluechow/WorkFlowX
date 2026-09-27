@@ -111,8 +111,8 @@ describe('IssuesView（P6-08）', () => {
     await flushPromises()
     const selects = wrapper.findAll('.el-table .el-select')
     expect(selects.length).toBeGreaterThan(0)
-    // 直接验证渲染了状态下拉（交互由 change 触发）
-    expect(wrapper.text()).toContain('OPEN')
+    // 直接验证渲染了状态下拉（中文状态标签，交互由 change 触发）
+    expect(wrapper.text()).toContain('待处理')
   })
 
   it('updateIssue API 可用（行内编辑对话框复用同一提交路径）', async () => {
