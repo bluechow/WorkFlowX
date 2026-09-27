@@ -104,6 +104,7 @@ services:
         condition: service_completed_successfully
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DEMO_SEED: ${DEMO_SEED:-false}
       # 数据库（dev/prod profile 均读这些变量；容器网络用 service name）
       MYSQL_HOST: mysql
       MYSQL_PORT: "3306"
