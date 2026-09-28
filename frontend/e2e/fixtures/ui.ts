@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { LoginPage } from '../pages/index'
 import { ApiFactory } from '../utils/api-factory'
+import { API_BASE } from '../utils/api-factory'
 
 const AUTH_DIR = path.resolve('test-results/.auth')
 
@@ -45,7 +46,7 @@ export const test = base.extend<WorkerFixtures>({
     await context.close()
   },
   factory: async ({ playwright }, use) => {
-    const request = await playwright.request.newContext({ baseURL: 'http://localhost:8080' })
+    const request = await playwright.request.newContext({ baseURL: API_BASE })
     const factory = new ApiFactory(request)
     await use(factory)
     await factory.cleanup()

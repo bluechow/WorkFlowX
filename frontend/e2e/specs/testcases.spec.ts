@@ -12,6 +12,10 @@ test.describe('测试用例库 @regression', () => {
     await factory.addUserRole(deployAdmin.id, 'ADMIN')
     const org = await factory.createOrg()
     const project = await factory.createProject(org.id)
+    // 用例库读写均要求项目成员（ADR-022 数据级，对齐 chain/notification spec 先例）：
+    // 工厂以 seed admin 建项目（owner=1），须把页面用户拉入组织与项目
+    await factory.addOrgMember(org.id, deployAdmin.id)
+    await factory.addProjectMember(project.id, deployAdmin.id)
 
     const loginPage = new LoginPage(page)
     await loginPage.goto()
@@ -23,14 +27,14 @@ test.describe('测试用例库 @regression', () => {
 
     // 新建根目录
     await page.getByRole('button', { name: '新建根目录' }).click()
-    const dirDialog = page.locator('.el-dialog')
+    const dirDialog = page.locator('.el-dialog:visible')
     await dirDialog.getByPlaceholder('目录名').fill('登录模块')
     await dirDialog.getByRole('button', { name: '保存' }).click()
     await expect(page.getByText('登录模块').first()).toBeVisible()
 
     // 新建用例
     await page.getByRole('button', { name: '新建用例' }).click()
-    const caseDialog = page.locator('.el-dialog')
+    const caseDialog = page.locator('.el-dialog:visible')
     await caseDialog.getByPlaceholder('用例标题').fill('登录成功用例')
     await caseDialog.getByRole('button', { name: '保存' }).click()
     await expect(page.locator('tbody tr', { hasText: '登录成功用例' }).first()).toBeVisible()

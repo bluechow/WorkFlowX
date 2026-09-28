@@ -13,7 +13,7 @@ test.describe('核心模块 UI 回归 @regression', () => {
     const project = await factory.createProject(org.id)
     await factory.createIssue(project.id, { title: 'AA 图表数据' })
     await adminPage.goto('/dashboard')
-    await adminPage.getByRole('button', { name: '加载数据统计' }).click()
+    // Phase A-⑥：统计自动加载
     await expect(adminPage.locator('[data-test="card-projects"]')).toContainText(/\d+/)
     await expect(adminPage.locator('canvas')).toHaveCount(2)
   })

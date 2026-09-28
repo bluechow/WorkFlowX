@@ -126,7 +126,8 @@ export class IssuesPage {
 
   async openIssueDrawer(issueNoLabel: string): Promise<void> {
     await this.page.getByRole('button', { name: issueNoLabel }).first().click()
-    await this.page.getByText('评论', { exact: true }).first().waitFor()
+    // Phase A-③ 抽屉：评论/附件为常显分区（无 tab）
+    await this.page.locator('.el-drawer').getByText('评论', { exact: true }).waitFor()
   }
 
   async expectIssueVisible(title: string): Promise<void> {
@@ -141,7 +142,7 @@ export class IssuesPage {
   }
 
   async gotoAttachmentTab(): Promise<void> {
-    await this.page.getByRole('tab', { name: '附件' }).click()
+    // Phase A-③ 抽屉：附件区常显，等待其上传按钮即可
     await this.page.getByRole('button', { name: '上传附件' }).waitFor({ state: 'visible' })
   }
 
@@ -217,7 +218,8 @@ export class LoginPage {
 
   async expectDashboard(): Promise<void> {
     await expect(this.page).toHaveURL(/\/dashboard/)
-    await expect(this.page.getByRole('heading', { name: 'WorkFlowX Dashboard' })).toBeVisible()
+    // Phase A-⑥ 起首页为问候+统计+待办；问候语含昵称，这里断言稳定副标语
+    await expect(this.page.getByText('今天也要顺利交付')).toBeVisible()
   }
 
   async expectError(message: string): Promise<void> {

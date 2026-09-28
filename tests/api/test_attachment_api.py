@@ -46,11 +46,13 @@ def _delete_attachment(api_client: httpx.Client, token: str, project_id: int,
                              headers=auth_headers(token))
 
 
-def minio_issues_object_count() -> int:
-    """统计 MinIO workflowx/issues/ 下对象数（黑盒外的基础设施终态校验，仅用于清理验证）。"""
+def minio_issue_object_count(issue_id: int) -> int:
+    """统计指定 issue 前缀下的对象数（黑盒外的基础设施终态校验，仅用于清理验证）。
+    Phase A-① 起 MinIO 含演示数据附件，全局 issues/ 计数不再恒为 0，
+    故终态断言收窄到本用例自己的 issues/{issue_id}/ 前缀。"""
     cmd = [WSL, "-d", "Ubuntu", "-u", "root", "--", "docker", "exec", "workflowx-minio", "sh", "-c",
            "mc alias set local http://localhost:9000 minioadmin workflowx_dev_minio >/dev/null 2>&1; "
-           "mc ls --recursive local/workflowx/issues 2>/dev/null | wc -l"]
+           f"mc ls --recursive local/workflowx/issues/{issue_id}/ 2>/dev/null | wc -l"]
     out = subprocess.run(cmd, capture_output=True, text=True, timeout=30).stdout.strip()
     return int(out or "0")
 
@@ -162,5 +164,5 @@ def test_minio_cleanup_terminal_state(api_client, admin_token, unique_suffix, cl
     created = _upload(api_client, admin_token, project_id, issue_id,
                       "p8at-final.txt", b"final").json()["data"]
     assert _delete_attachment(api_client, admin_token, project_id, issue_id, created["id"]).status_code == 200
-    remaining = minio_issues_object_count()
-    assert remaining == 0, f"MinIO issues/ 残留对象 {remaining} 个（应为 0）"
+    remaining = minio_issue_object_count(issue_id)
+    assert remaining == 0, f"MinIO issues/{issue_id}/ 残留对象 {remaining} 个（应为 0）"

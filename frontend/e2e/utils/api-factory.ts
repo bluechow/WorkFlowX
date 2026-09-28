@@ -6,6 +6,9 @@ import type { APIRequestContext } from '@playwright/test'
  - cleanup 级联（org 删除级联 project/issue/comment）
  - 用于 UI 测试的数据准备（setup via API）与 UI 行为验证分层
  */
+/** API 基地址：默认本地开发后端；对部署栈跑 E2E 时用 PLAYWRIGHT_API_BASE 覆盖（如 http://localhost:8081） */
+export const API_BASE = process.env.PLAYWRIGHT_API_BASE ?? 'http://localhost:8080'
+
 export class ApiFactory {
   private token: string
   private orgs: number[] = []
@@ -33,7 +36,7 @@ export class ApiFactory {
 
   private async api(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', url: string, data?: unknown) {
     const token = await this.ensureToken()
-    return this.request.fetch(`http://localhost:8080${url}`, {
+    return this.request.fetch(`${API_BASE}${url}`, {
       method,
       headers: { Authorization: `Bearer ${token}` },
       data,
@@ -137,7 +140,7 @@ export class ApiFactory {
   sessionWith(token: string) {
     return {
       post: (url: string, opts: { json: unknown }) =>
-        this.request.fetch(`http://localhost:8080${url}`, {
+        this.request.fetch(`${API_BASE}${url}`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
           data: opts.json,
@@ -165,7 +168,7 @@ export class ApiFactory {
     })
     const token = (await resp.json()).data.accessToken
     const page = await context.newPage()
-    await page.goto('http://localhost:5173/login')
+    await page.goto(`${process.env.PLAYWRIGHT_BASEURL ?? 'http://localhost:5173'}/login`)
     await page.evaluate((t) => localStorage.setItem('workflowx_access_token', t), token)
   }
 
@@ -180,7 +183,7 @@ export class ApiFactory {
       let deleted = false
       let lastStatus = 0
       for (const identity of await this.identities()) {
-        const resp = await this.request.fetch(`http://localhost:8080/api/v1/orgs/${orgId}`, {
+        const resp = await this.request.fetch(`${API_BASE}/api/v1/orgs/${orgId}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${identity.token}` },
         })

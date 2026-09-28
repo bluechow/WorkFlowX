@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures/ui'
-import { AppShell, AuditPage, LoginPage } from '../pages'
+import { AppShell, AuditPage, IssuesPage, LoginPage } from '../pages'
 
 /**
  * 前端安全（Phase 15; P15-20）: @security @regression
@@ -13,6 +13,7 @@ test.describe('前端安全 @security @regression', () => {
     const org = await factory.createOrg()
     const project = await factory.createProject(org.id)
     await factory.createIssue(project.id, { title: xssTitle })
+    const issuesPage = new IssuesPage(adminPage)
     await issuesPage.goto(project.id)
     // 真实文本节点渲染（非 HTML 注入——无 alert 执行、无注入的 script/img 元素）
     await expect(adminPage.getByText(xssTitle).first()).toBeVisible()

@@ -301,6 +301,12 @@ onMounted(async () => {
             placeholder="流转…"
             @change="(s: IssueStatus) => doTransition(row, s)"
           >
+            <!-- 当前状态以禁用项呈现：收起时显示中文标签而非原始枚举 -->
+            <el-option
+              :label="labelOf(ISSUE_STATUS_LABELS, row.status)"
+              :value="row.status"
+              disabled
+            />
             <el-option
               v-for="t in allowedTargets(row.status)"
               :key="t"

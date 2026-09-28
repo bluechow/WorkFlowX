@@ -20,7 +20,7 @@ test.describe('Authentication @smoke @critical', () => {
     await loginPage.expectDashboard()
   })
 
-  test('错误密码 → 统一 401 提示（不泄露存在性）', async ({ factory }) => {
+  test('错误密码 → 统一 401 提示（不泄露存在性）', async ({ factory, publicPage }) => {
     const user = await factory.createUser()
     await loginPage.goto()
     await loginPage.login(user.username, 'WrongPass@999')
@@ -45,7 +45,7 @@ test.describe('Authentication @smoke @critical', () => {
     await expect(adminPage.getByRole('button', { name: '退出登录' }).last()).toBeVisible()
   })
 
-  test('登出 → /login，且保护路由重新拦截', async ({ factory }) => {
+  test('登出 → /login，且保护路由重新拦截', async ({ factory, publicPage }) => {
     // 工厂用户真实 UI 登录→登出（P13-06 铁律：seed 会话仅 setup 登录一次，登出用例不得销毁 seed 会话）
     const user = await factory.createUser()
     await loginPage.goto()

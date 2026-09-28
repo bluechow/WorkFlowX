@@ -69,8 +69,8 @@ describe('IssuesView Workflow（P7-08）', () => {
     const wrapper = mountView()
     await flushPromises()
     expect(wrapper.text()).toContain('目标 Issue')
-    // jsdom 下 el-select 显示原始 value（浏览器中显示中文选项标签），据此断言
-    expect(wrapper.text()).toContain('OPEN')
+    // 当前状态以禁用选项呈现 → 收起时即显示中文标签
+    expect(wrapper.text()).toContain('待处理')
   })
 
   it('空列表展示空状态', async () => {

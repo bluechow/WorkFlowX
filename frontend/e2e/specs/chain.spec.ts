@@ -60,8 +60,8 @@ test.describe('完整业务链 @full @critical', () => {
     await issuesPage.goto(project.id)
     await issuesPage.expectIssueVisible('AA 全链目标')
 
-    // 8. Workflow（UI 下拉选择合法目标 OPEN→IN_PROGRESS，等待行刷新）
-    await issuesPage.workflowTransition('AA 全链目标', 'OPEN', 'IN_PROGRESS')
+    // 8. Workflow（UI 下拉选择合法目标 待处理→处理中，等待行刷新；Phase A 中文化后标签为中文）
+    await issuesPage.workflowTransition('AA 全链目标', '待处理', '处理中')
 
     // 9. Comment（抽屉内真实发布）
     await issuesPage.openIssueDrawer(`${project.key}-${issue.issueNo}`)
@@ -82,7 +82,7 @@ test.describe('完整业务链 @full @critical', () => {
 
     // 12. Dashboard（统计自洽）
     await page.goto('/dashboard')
-    await page.getByRole('button', { name: '加载数据统计' }).click()
+    // Phase A-⑥：统计自动加载
     await expect(page.locator('[data-test="card-issues"]')).toContainText(/\d+/)
 
     // 13. 登出

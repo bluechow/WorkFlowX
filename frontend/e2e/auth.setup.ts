@@ -8,6 +8,8 @@ import path from 'node:path'
  * state 文件在 test-results/.auth/（.gitignore 已忽略），token 不进 Git。
  */
 const AUTH_DIR = path.resolve('test-results/.auth')
+/** 站点 origin：跟随 PLAYWRIGHT_BASEURL（默认本地开发 5173），保证 storageState 的 localStorage 注入生效 */
+const SITE_ORIGIN = process.env.PLAYWRIGHT_BASEURL ?? 'http://localhost:5173'
 const CREDENTIALS = {
   admin: { username: 'admin', password: 'Admin@123456', file: 'admin.json' },
   user: { username: 'user1', password: 'Member@123456', file: 'user.json' },
@@ -24,7 +26,7 @@ for (const [name, cred] of Object.entries(CREDENTIALS)) {
     })
     if (resp.status() !== 200) {
       throw new Error(
-        `setup 登录失败（${name}）: ${resp.status()}——请确认后端已运行于 :8080`,
+        `setup 登录失败（${name}）: ${resp.status()}——请确认目标站点已运行（${SITE_ORIGIN}）`,
       )
     }
     const { data } = await resp.json()
@@ -35,7 +37,7 @@ for (const [name, cred] of Object.entries(CREDENTIALS)) {
         cookies: [],
         origins: [
           {
-            origin: 'http://localhost:5173',
+            origin: SITE_ORIGIN,
             localStorage: [{ name: 'workflowx_access_token', value: data.accessToken }],
           },
         ],
