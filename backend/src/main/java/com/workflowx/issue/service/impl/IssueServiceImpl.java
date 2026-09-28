@@ -11,6 +11,7 @@ import com.workflowx.issue.dto.IssuePageQuery;
 import com.workflowx.issue.dto.UpdateIssueRequest;
 import com.workflowx.issue.entity.Issue;
 import com.workflowx.issue.entity.IssueSeverity;
+import com.workflowx.issue.entity.IssueStatus;
 import com.workflowx.issue.entity.IssueType;
 import com.workflowx.issue.mapper.IssueMapper;
 import com.workflowx.issue.service.IssueService;
@@ -130,6 +131,37 @@ public class IssueServiceImpl implements IssueService {
                 .orderByDesc(Issue::getUpdatedAt)
                 .last("LIMIT 500");
         return issueMapper.selectList(wrapper).stream().map(IssueVO::from).toList();
+    }
+    @Override
+    public java.util.List<com.workflowx.issue.dto.TodoIssueVO> myTodoIssues(Long userId) {
+        // 待办语义：指派给我且仍需我行动（OPEN/IN_PROGRESS/REOPENED）；RESOLVED 起等待他人
+        LambdaQueryWrapper<Issue> wrapper = new LambdaQueryWrapper<Issue>()
+                .eq(Issue::getAssigneeId, userId)
+                .in(Issue::getStatus, IssueStatus.OPEN, IssueStatus.IN_PROGRESS, IssueStatus.REOPENED)
+                .orderByDesc(Issue::getPriority)
+                .orderByDesc(Issue::getUpdatedAt)
+                .last("LIMIT 20");
+        java.util.List<Issue> issues = issueMapper.selectList(wrapper);
+        if (issues.isEmpty()) {
+            return java.util.List.of();
+        }
+        java.util.Map<Long, com.workflowx.project.entity.Project> projects =
+                projectMapper.selectBatchIds(issues.stream().map(Issue::getProjectId).toList())
+                        .stream()
+                        .collect(java.util.stream.Collectors.toMap(
+                                com.workflowx.project.entity.Project::getId, java.util.function.Function.identity()));
+        return issues.stream()
+                .map(i -> {
+                    com.workflowx.project.entity.Project project = projects.get(i.getProjectId());
+                    return new com.workflowx.issue.dto.TodoIssueVO(
+                            i.getId(), i.getProjectId(),
+                            project == null ? null : project.getKey(),
+                            project == null ? null : project.getName(),
+                            i.getIssueNo(), i.getTitle(), i.getType(), i.getPriority(),
+                            i.getSeverity(), i.getStatus(),
+                            i.getUpdatedAt() == null ? null : i.getUpdatedAt().toString());
+                })
+                .toList();
     }
 
     @Override

@@ -18,6 +18,11 @@ const router = createRouter({
     },
     { path: '/', redirect: '/dashboard' },
     {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('@/views/ProfileView.vue'),
+    },
+    {
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('@/views/DashboardView.vue'),

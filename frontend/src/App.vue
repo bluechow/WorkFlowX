@@ -57,7 +57,9 @@ async function handleLogout() {
       </el-menu>
       <span class="app__spacer" />
       <NotificationBell v-if="auth.isAuthenticated" />
-      <span v-if="auth.isAuthenticated" class="app__user">{{ displayName }}</span>
+      <router-link v-if="auth.isAuthenticated" to="/profile" class="app__user" title="个人中心">
+        {{ displayName }}
+      </router-link>
       <el-button v-if="auth.isAuthenticated" link type="danger" @click="handleLogout">退出登录</el-button>
       <router-link v-else to="/login" class="app__login-link">登录</router-link>
     </el-header>
@@ -88,6 +90,10 @@ async function handleLogout() {
 .app__user {
   color: #606266;
   font-size: 14px;
+  text-decoration: none;
+}
+.app__user:hover {
+  color: #409eff;
 }
 .app__login-link {
   font-size: 14px;

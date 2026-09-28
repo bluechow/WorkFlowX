@@ -29,3 +29,17 @@ export async function fetchMyPermissions(): Promise<string[]> {
   const { data } = await http.get<Result<string[]>>('/auth/me/permissions')
   return data.data ?? []
 }
+
+/** 修改个人资料（Phase A-④）：仅 email/nickname；返回更新后的 UserVO */
+export async function updateProfile(payload: { email: string; nickname?: string | null }): Promise<UserVO> {
+  const { data } = await http.put<Result<UserVO>>('/auth/profile', payload)
+  if (!data.data) {
+    return Promise.reject({ code: data.code, message: 'empty profile data', traceId: data.traceId })
+  }
+  return data.data
+}
+
+/** 修改密码（Phase A-④）：成功后服务端已作废会话，调用方应清理本地态并跳转登录页 */
+export async function changePassword(payload: { oldPassword: string; newPassword: string }): Promise<void> {
+  await http.put<Result<void>>('/auth/password', payload)
+}

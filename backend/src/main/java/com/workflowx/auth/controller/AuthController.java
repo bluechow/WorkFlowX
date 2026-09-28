@@ -50,6 +50,21 @@ public class AuthController {
         return Result.ok(authService.getCurrentUser(principal.userId()));
     }
 
+    /** 修改个人资料（Phase A-④）：仅 email/nickname，self 资源无 authority 要求 */
+    @org.springframework.web.bind.annotation.PutMapping("/profile")
+    public Result<UserVO> updateProfile(@AuthenticationPrincipal JwtPayload principal,
+                                        @Valid @RequestBody com.workflowx.auth.dto.UpdateProfileRequest request) {
+        return Result.ok(authService.updateProfile(principal.userId(), request));
+    }
+
+    /** 修改密码（Phase A-④）：成功后作废当前会话，前端跳转登录页 */
+    @org.springframework.web.bind.annotation.PutMapping("/password")
+    public Result<Void> changePassword(@AuthenticationPrincipal JwtPayload principal,
+                                       @Valid @RequestBody com.workflowx.auth.dto.ChangePasswordRequest request) {
+        authService.changePassword(principal.userId(), request);
+        return Result.ok(null);
+    }
+
     @GetMapping("/me/permissions")
     @SecurityRequirement(name = "bearerAuth")
     public Result<java.util.List<String>> myPermissions(@AuthenticationPrincipal JwtPayload principal) {

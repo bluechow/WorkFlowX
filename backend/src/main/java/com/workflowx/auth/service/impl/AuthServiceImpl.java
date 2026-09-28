@@ -116,4 +116,50 @@ public class AuthServiceImpl implements AuthService {
         // 与 Filter 权限接线同源的实时查询（ADR-012）：收权后前端 UX 即时反映
         return permissionService.findPermissionCodesByUserId(userId);
     }
+
+    @Override
+    @Transactional
+    public UserVO updateProfile(Long userId, com.workflowx.auth.dto.UpdateProfileRequest request) {
+        User user = requireUser(userId);
+        String newEmail = request.email().trim();
+        // email 全局唯一：先查后写（并发窗口由 uk_users_email 兜底 → 409）
+        User sameEmail = userMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User>()
+                        .eq(User::getEmail, newEmail));
+        if (sameEmail != null && !sameEmail.getId().equals(userId)) {
+            throw new BusinessException(400, "该邮箱已被其他账号使用");
+        }
+        user.setEmail(newEmail);
+        user.setNickname(request.nickname());
+        try {
+            userMapper.updateById(user);
+        } catch (org.springframework.dao.DuplicateKeyException e) {
+            throw new BusinessException(409, "该邮箱已被其他账号使用");
+        }
+        auditService.record("AUTH", "UPDATE", "user:" + userId, "修改个人资料", true, userId);
+        return UserVO.from(user);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long userId, com.workflowx.auth.dto.ChangePasswordRequest request) {
+        User user = requireUser(userId);
+        if (!passwordService.matches(request.oldPassword(), user.getPasswordHash())) {
+            // 旧密码错误：与登录失败同语义（不泄露更多信息），不计数（非登录路径）
+            throw new BusinessException(400, "原密码不正确");
+        }
+        user.setPasswordHash(passwordService.encode(request.newPassword()));
+        userMapper.updateById(user);
+        // 改密即作废全部会话（单会话模型即当前会话）：强制以新密码重登
+        authSessionService.deleteSession(userId);
+        auditService.record("AUTH", "UPDATE", "user:" + userId, "修改密码", true, userId);
+    }
+
+    private User requireUser(Long userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new com.workflowx.common.exception.ResourceNotFoundException("user", userId);
+        }
+        return user;
+    }
 }

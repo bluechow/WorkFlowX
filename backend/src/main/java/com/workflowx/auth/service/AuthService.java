@@ -34,4 +34,14 @@ public interface AuthService {
      * 后端 authority 才是安全边界。数据与 Filter 权限接线同源（user→role→permission 实时查询）。
      */
     List<String> getMyPermissions(Long userId);
+
+    /**
+     * 修改个人资料（Phase A-④）：仅 email/nickname；email 全局唯一（冲突 400）。
+     */
+    UserVO updateProfile(Long userId, com.workflowx.auth.dto.UpdateProfileRequest request);
+
+    /**
+     * 修改密码（Phase A-④）：旧密码错误 400；成功后作废当前会话（强制重登）。
+     */
+    void changePassword(Long userId, com.workflowx.auth.dto.ChangePasswordRequest request);
 }

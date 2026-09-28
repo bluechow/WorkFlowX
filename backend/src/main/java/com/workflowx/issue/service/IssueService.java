@@ -27,6 +27,9 @@ public interface IssueService {
     /** 看板查询（Phase A-②）：项目内全部 Issue，按最近活动排序，上限 500 条 */
     java.util.List<IssueVO> listForBoard(Long projectId);
 
+    /** 我的待办（Phase A-④）：跨项目聚合指派给我的未完结 Issue（上限 20，优先级降序） */
+    java.util.List<com.workflowx.issue.dto.TodoIssueVO> myTodoIssues(Long userId);
+
     /** 更新：issueNo/projectId/reporterId 不可变；assignee 变更重新校验项目成员；severity 规则同创建 */
     IssueVO update(Long projectId, Long issueId, UpdateIssueRequest request, Long operatorId);
 
