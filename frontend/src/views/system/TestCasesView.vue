@@ -18,6 +18,13 @@ import {
   type TestCaseVO,
 } from '@/api/testcase'
 import { useAuthStore } from '@/stores/auth'
+import { exportTestCases, importTestCases, type TestCaseImportResult } from '@/api/testcase'
+import {
+  CASE_PRIORITY_LABELS,
+  CASE_STATUS_LABELS,
+  CASE_TYPE_LABELS,
+  labelOf,
+} from '@/utils/labels'
 
 /**
  * 测试用例库（Phase 20）：左侧目录树 + 右侧用例表格。
@@ -275,6 +282,43 @@ async function removeCase(row: TestCaseVO) {
   }
 }
 
+// ===== Excel 导入导出（Phase A-⑦）=====
+const importing = ref(false)
+const importInput = ref<HTMLInputElement | null>(null)
+const importResult = ref<TestCaseImportResult | null>(null)
+const importDialogVisible = ref(false)
+
+async function doExport() {
+  try {
+    await exportTestCases(projectId.value, '用例库')
+    ElMessage.success('导出成功')
+  } catch (e) {
+    ElMessage.error((e as { message?: string }).message ?? '导出失败')
+  }
+}
+
+function pickImportFile() {
+  importInput.value?.click()
+}
+
+async function onImportFile(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  importing.value = true
+  try {
+    importResult.value = await importTestCases(projectId.value, file)
+    importDialogVisible.value = true
+    await refreshDirs()
+    await refreshCases()
+  } catch (e) {
+    ElMessage.error((e as { message?: string }).message ?? '导入失败（请使用导出的模板格式）')
+  } finally {
+    importing.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     await refreshDirs()
@@ -289,13 +333,30 @@ onMounted(async () => {
   <section class="testcases-view">
     <div class="testcases-view__toolbar">
       <h2>测试用例库</h2>
-      <el-button
-        v-if="auth.hasPermission('testcase:create')"
-        type="primary"
-        @click="openCreateCase"
-      >
-        新建用例
-      </el-button>
+      <div class="testcases-view__actions">
+        <el-button @click="doExport">导出 Excel</el-button>
+        <el-button
+          v-if="auth.hasPermission('testcase:create')"
+          :loading="importing"
+          @click="pickImportFile"
+        >
+          导入 Excel
+        </el-button>
+        <el-button
+          v-if="auth.hasPermission('testcase:create')"
+          type="primary"
+          @click="openCreateCase"
+        >
+          新建用例
+        </el-button>
+        <input
+          ref="importInput"
+          type="file"
+          accept=".xlsx"
+          style="display: none"
+          @change="onImportFile"
+        />
+      </div>
     </div>
 
     <el-alert v-if="loadError" type="error" :title="loadError" :closable="false" />
@@ -384,10 +445,10 @@ onMounted(async () => {
             <el-option v-for="s in STATUSES" :key="s" :label="s" :value="s" />
           </el-select>
           <el-select v-model="pager.type" clearable placeholder="类型" style="width: 130px" @change="search">
-            <el-option v-for="t in CASE_TYPES" :key="t" :label="t" :value="t" />
+            <el-option v-for="t in CASE_TYPES" :key="t" :label="labelOf(CASE_TYPE_LABELS, t)" :value="t" />
           </el-select>
           <el-select v-model="pager.priority" clearable placeholder="优先级" style="width: 120px" @change="search">
-            <el-option v-for="p in PRIORITIES" :key="p" :label="p" :value="p" />
+            <el-option v-for="p in PRIORITIES" :key="p" :label="labelOf(CASE_PRIORITY_LABELS, p)" :value="p" />
           </el-select>
           <el-button @click="search">搜索</el-button>
         </div>
@@ -397,12 +458,16 @@ onMounted(async () => {
             <template #default="{ row }">TC-{{ row.testcaseNo }}</template>
           </el-table-column>
           <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
-          <el-table-column prop="type" label="类型" width="120" />
-          <el-table-column prop="priority" label="优先级" width="100" />
+          <el-table-column label="类型" width="100">
+            <template #default="{ row }">{{ labelOf(CASE_TYPE_LABELS, row.type) }}</template>
+          </el-table-column>
+          <el-table-column label="优先级" width="90">
+            <template #default="{ row }">{{ labelOf(CASE_PRIORITY_LABELS, row.priority) }}</template>
+          </el-table-column>
           <el-table-column label="状态" width="110">
             <template #default="{ row }">
               <el-tag :type="row.status === 'ACTIVE' ? 'success' : row.status === 'DRAFT' ? 'info' : 'warning'" size="small">
-                {{ row.status }}
+                {{ labelOf(CASE_STATUS_LABELS, row.status) }}
               </el-tag>
             </template>
           </el-table-column>
@@ -482,12 +547,12 @@ onMounted(async () => {
         </el-form-item>
         <el-form-item label="类型">
           <el-select v-model="caseForm.caseType" style="width: 100%">
-            <el-option v-for="t in CASE_TYPES" :key="t" :label="t" :value="t" />
+            <el-option v-for="t in CASE_TYPES" :key="t" :label="labelOf(CASE_TYPE_LABELS, t)" :value="t" />
           </el-select>
         </el-form-item>
         <el-form-item label="优先级">
           <el-select v-model="caseForm.priority" style="width: 100%">
-            <el-option v-for="p in PRIORITIES" :key="p" :label="p" :value="p" />
+            <el-option v-for="p in PRIORITIES" :key="p" :label="labelOf(CASE_PRIORITY_LABELS, p)" :value="p" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
@@ -508,6 +573,23 @@ onMounted(async () => {
         </el-button>
       </template>
     </el-dialog>
+    <!-- 导入结果：行级失败逐行展示（Phase A-⑦） -->
+    <el-dialog v-model="importDialogVisible" title="导入结果" width="520px">
+      <el-descriptions :column="3" border>
+        <el-descriptions-item label="总行数">{{ importResult?.totalRows ?? 0 }}</el-descriptions-item>
+        <el-descriptions-item label="成功">{{ importResult?.successCount ?? 0 }}</el-descriptions-item>
+        <el-descriptions-item label="失败">{{ importResult?.failureCount ?? 0 }}</el-descriptions-item>
+      </el-descriptions>
+      <template v-if="importResult && importResult.failures.length">
+        <h4 class="testcases-view__fail-title">失败明细</h4>
+        <div v-for="f in importResult.failures" :key="f.rowNumber" class="testcases-view__fail-row">
+          第 {{ f.rowNumber }} 行：{{ f.message }}
+        </div>
+      </template>
+      <template #footer>
+        <el-button type="primary" @click="importDialogVisible = false">知道了</el-button>
+      </template>
+    </el-dialog>
   </section>
 </template>
 
@@ -515,6 +597,19 @@ onMounted(async () => {
 .testcases-view {
   max-width: 1200px;
   margin: 16px auto;
+}
+.testcases-view__actions {
+  display: flex;
+  gap: 8px;
+}
+.testcases-view__fail-title {
+  margin: 12px 0 6px;
+  font-size: 13px;
+}
+.testcases-view__fail-row {
+  color: #f56c6c;
+  font-size: 12px;
+  padding: 3px 0;
 }
 .testcases-view__toolbar {
   display: flex;

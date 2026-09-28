@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { createTestPlan, deleteTestPlan, listTestPlans, type TestPlanVO } from '@/api/testplan'
 import { useAuthStore } from '@/stores/auth'
 import RowActions from '@/components/RowActions.vue'
+import { PLAN_STATUS_LABELS, labelOf } from '@/utils/labels'
 
 /**
  * 测试计划列表（Phase 21 / V1.1）。权限仅 UX；后端 authority + 数据级才是边界。
@@ -122,7 +123,7 @@ onMounted(refresh)
         <el-table-column prop="name" label="计划名称" min-width="200" show-overflow-tooltip />
         <el-table-column label="状态" width="120">
           <template #default="{ row }">
-            <el-tag :type="STATUS_TAG[row.status] ?? 'info'" size="small">{{ row.status }}</el-tag>
+            <el-tag :type="STATUS_TAG[row.status] ?? 'info'" size="small">{{ labelOf(PLAN_STATUS_LABELS, row.status) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="用例数" width="90" prop="total" />
@@ -130,11 +131,14 @@ onMounted(refresh)
         <el-table-column label="失败" width="80" prop="failed" />
         <el-table-column label="阻塞" width="80" prop="blocked" />
         <el-table-column prop="createdAt" label="创建时间" width="170" />
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="190" fixed="right">
           <template #default="{ row }">
             <RowActions
               :groups="[
-                [{ label: '执行', onClick: () => router.push(`/system/projects/${projectId}/testplans/${row.id}`) }],
+                [
+                  { label: '执行', onClick: () => router.push(`/system/projects/${projectId}/testplans/${row.id}`) },
+                  { label: '报告', onClick: () => router.push(`/system/projects/${projectId}/testplans/${row.id}/report`) },
+                ],
                 [{ label: '删除', permission: 'testplan:delete', type: 'danger', onClick: () => remove(row) }],
               ]"
             />

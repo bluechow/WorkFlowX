@@ -14,6 +14,11 @@ import {
 } from '@/api/testplan'
 import { listTestCases, type TestCaseVO } from '@/api/testcase'
 import { useAuthStore } from '@/stores/auth'
+import {
+  CASE_PRIORITY_LABELS,
+  ITEM_RESULT_LABELS,
+  labelOf,
+} from '@/utils/labels'
 
 /**
  * 测试计划执行页（Phase 21 / V1.1）：条目逐条打结果 + 进度统计 + FAIL 关联 Bug。
@@ -77,7 +82,7 @@ async function onExecute(item: TestPlanItemVO, result: ItemResult) {
     }
   } else if (result === 'BLOCKED') {
     try {
-      const { value } = await ElMessageBox.prompt('请输入阻塞原因', `标记 BLOCKED`, {
+      const { value } = await ElMessageBox.prompt('请输入阻塞原因', `标记为阻塞`, {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         inputPlaceholder: '阻塞原因',
@@ -192,7 +197,9 @@ onMounted(refresh)
           <template #default="{ row }">TC-{{ row.testcaseNo ?? '?' }}</template>
         </el-table-column>
         <el-table-column prop="caseTitle" label="用例标题" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="casePriority" label="优先级" width="100" />
+        <el-table-column label="优先级" width="90">
+          <template #default="{ row }">{{ labelOf(CASE_PRIORITY_LABELS, row.casePriority) }}</template>
+        </el-table-column>
         <el-table-column label="执行结果" width="260">
           <template #default="{ row }">
             <span class="plan-detail-view__result">
@@ -200,35 +207,35 @@ onMounted(refresh)
                 :type="row.result === 'PASS' ? 'success' : row.result === 'FAIL' ? 'danger' : row.result === 'BLOCKED' ? 'warning' : 'info'"
                 size="small"
               >
-                {{ row.result }}
+                {{ labelOf(ITEM_RESULT_LABELS, row.result) }}
               </el-tag>
               <template v-if="!isLocked && auth.hasPermission('testplan:update')">
                 <el-button
-                  link
+                  plain
                   type="success"
                   size="small"
                   :disabled="executing === row.id"
                   @click="onExecute(row, 'PASS')"
                 >
-                  PASS
+                  通过
                 </el-button>
                 <el-button
-                  link
+                  plain
                   type="danger"
                   size="small"
                   :disabled="executing === row.id"
                   @click="onExecute(row, 'FAIL')"
                 >
-                  FAIL
+                  失败
                 </el-button>
                 <el-button
-                  link
+                  plain
                   type="warning"
                   size="small"
                   :disabled="executing === row.id"
                   @click="onExecute(row, 'BLOCKED')"
                 >
-                  BLOCKED
+                  阻塞
                 </el-button>
               </template>
             </span>

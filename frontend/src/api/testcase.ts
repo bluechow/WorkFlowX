@@ -136,3 +136,38 @@ export async function updateTestCase(
 export async function deleteTestCase(projectId: number, testcaseId: number): Promise<void> {
   await http.delete<Result<null>>(`/projects/${projectId}/testcases/${testcaseId}`)
 }
+
+/** 导入结果（后端 TestCaseImportResultVO，Phase A-⑦） */
+export interface TestCaseImportResult {
+  totalRows: number
+  successCount: number
+  failureCount: number
+  failures: { rowNumber: number; message: string }[]
+}
+
+/** 导出全部用例为 xlsx（浏览器下载） */
+export async function exportTestCases(projectId: number, projectKey: string): Promise<void> {
+  const resp = await http.get<Blob>(`/projects/${projectId}/testcases/export`, { responseType: 'blob' })
+  const url = URL.createObjectURL(resp.data)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = `${projectKey}-用例库.xlsx`
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(url)
+}
+
+/** 导入用例（xlsx），行级失败不阻断 */
+export async function importTestCases(projectId: number, file: File): Promise<TestCaseImportResult> {
+  const form = new FormData()
+  form.append('file', file)
+  const resp = await http.post<Result<TestCaseImportResult>>(
+    `/projects/${projectId}/testcases/import`, form,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  )
+  if (!resp.data.data) {
+    return Promise.reject({ message: 'empty import result' })
+  }
+  return resp.data.data
+}

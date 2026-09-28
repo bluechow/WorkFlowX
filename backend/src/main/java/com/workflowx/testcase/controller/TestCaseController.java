@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestCaseController {
 
     private final TestCaseService testCaseService;
+    private final com.workflowx.testcase.service.TestCaseExcelService excelService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('testcase:list')")
@@ -44,6 +45,29 @@ public class TestCaseController {
                                            @Valid TestCasePageQuery query,
                                            @AuthenticationPrincipal JwtPayload operator) {
         return Result.ok(testCaseService.page(projectId, query, operator.userId()));
+    }
+
+    /** 导出全部用例为 xlsx（Phase A-⑦；读语义对齐 list，testcase:list） */
+    @GetMapping("/export")
+    @PreAuthorize("hasAuthority('testcase:list')")
+    public org.springframework.http.ResponseEntity<byte[]> export(@PathVariable Long projectId,
+                                                                  @AuthenticationPrincipal JwtPayload operator) {
+        byte[] bytes = excelService.exportProjectCases(projectId, operator.userId());
+        String fileName = java.net.URLEncoder.encode("用例库.xlsx", java.nio.charset.StandardCharsets.UTF_8);
+        return org.springframework.http.ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename*=UTF-8''" + fileName)
+                .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .body(bytes);
+    }
+
+    /** 导入用例（Phase A-⑦）：testcase:create + 项目成员（服务层校验）；行级错误逐行返回 */
+    @PostMapping(value = "/import", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('testcase:create')")
+    public Result<com.workflowx.testcase.dto.TestCaseImportResultVO> importCases(
+            @PathVariable Long projectId,
+            @org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @AuthenticationPrincipal JwtPayload operator) {
+        return Result.ok(excelService.importProjectCases(projectId, file, operator.userId()));
     }
 
     @PostMapping

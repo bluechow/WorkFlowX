@@ -104,6 +104,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/system/projects/:projectId/testplans/:planId/report',
+      name: 'system-project-plan-report',
+      component: () => import('@/views/system/TestPlanReportView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       // P11-03: 未知路由统一兜底 404（不出现空白页）
       path: '/:pathMatch(.*)*',
       name: 'not-found',
