@@ -54,8 +54,9 @@ describe('StatsSection（P10-12）', () => {
     )
     expect(call).toBeTruthy()
     const pie = call![0].series[0].data as Array<{ name: string; value: number }>
-    expect(pie).toContainEqual({ name: 'OPEN', value: 3 })
-    expect(pie).toContainEqual({ name: 'IN_PROGRESS', value: 1 })
+    // 图例走中文映射（Phase A 中文化）
+    expect(pie).toContainEqual({ name: '待处理', value: 3 })
+    expect(pie).toContainEqual({ name: '处理中', value: 1 })
   })
 
   it('趋势图 14 天且末点为今日真实创建数', () => {

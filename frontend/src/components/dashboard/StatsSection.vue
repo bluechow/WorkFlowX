@@ -2,6 +2,7 @@
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import * as echarts from 'echarts'
 import type { DashboardOverview } from '@/api/dashboard'
+import { ISSUE_STATUS_LABELS, labelOf } from '@/utils/labels'
 
 /**
  * 统计区块（P10-12）：指标卡片 + Issue 状态分布（饼图）+ 近 14 天创建趋势（折线）。
@@ -26,7 +27,7 @@ function renderCharts() {
           type: 'pie',
           radius: '62%',
           data: Object.entries(props.overview.issues.byStatus).map(([name, value]) => ({
-            name,
+            name: labelOf(ISSUE_STATUS_LABELS, name),
             value,
           })),
           label: { formatter: '{b}: {c}' },

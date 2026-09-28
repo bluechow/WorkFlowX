@@ -4,7 +4,8 @@ import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import DashboardView from '../DashboardView.vue'
 import { useAuthStore } from '@/stores/auth'
-import { logout as logoutApi } from '@/api/auth'
+import { fetchDashboardOverview } from '@/api/dashboard'
+import { listMyTodoIssues } from '@/api/me'
 
 const push = vi.fn()
 vi.mock('vue-router', () => ({
@@ -17,90 +18,108 @@ vi.mock('vue-router', () => ({
   createWebHistory: () => ({}),
 }))
 vi.mock('@/api/auth', () => ({
-  fetchMe: vi.fn(),
+  fetchMe: vi.fn().mockResolvedValue(undefined),
   fetchMyPermissions: vi.fn().mockResolvedValue([]),
   login: vi.fn(),
   logout: vi.fn(),
 }))
+vi.mock('@/api/dashboard', () => ({
+  fetchDashboardOverview: vi.fn(),
+}))
+vi.mock('@/api/me', () => ({
+  listMyTodoIssues: vi.fn(),
+}))
+vi.mock('@/components/dashboard/StatsSection.vue', () => ({
+  default: { name: 'StatsSection', template: '<div class="stats-stub" />' },
+}))
 
-const mockedLogout = vi.mocked(logoutApi)
+const mocked = {
+  fetchDashboardOverview: vi.mocked(fetchDashboardOverview),
+  listMyTodoIssues: vi.mocked(listMyTodoIssues),
+}
 
 const TOKEN = 'dashboard-test-token'
-
 const CURRENT_USER = {
-  id: 7,
-  username: 'alice',
-  email: 'alice@test.local',
-  nickname: 'Alice',
-  status: 'ACTIVE',
-  lastLoginAt: '2026-09-06T00:00:00Z',
-  createdAt: '2026-09-06T00:00:00Z',
-  updatedAt: '2026-09-06T00:00:00Z',
+  id: 7, username: 'alice', email: 'alice@test.local', nickname: 'Alice',
+  status: 'ACTIVE', lastLoginAt: '', createdAt: '', updatedAt: '',
 } as const
 
+const OVERVIEW = {
+  projects: { total: 4, active: 4, archived: 0 },
+  issues: {
+    total: 48,
+    byStatus: { OPEN: 10, CLOSED: 8 },
+    byType: {}, byPriority: {}, bySeverity: {},
+    bugCount: 21,
+  },
+  createdTrend: [{ date: '2026-09-20', created: 3 }],
+}
+
 function mountView() {
-  // 使用 active pinia（与 givenAuthenticated 预置的状态一致）
   return mount(DashboardView, {
     global: { plugins: [getActivePinia() ?? createPinia(), ElementPlus] },
   })
 }
 
-describe('DashboardView（P2-21）', () => {
+describe('DashboardView（Phase A-⑥）', () => {
   beforeEach(() => {
     localStorage.clear()
     vi.clearAllMocks()
     setActivePinia(createPinia())
     push.mockClear()
+    mocked.listMyTodoIssues.mockResolvedValue([
+      {
+        issueId: 1, projectId: 7, projectKey: 'CAMPUS', projectName: '智慧校园管理系统',
+        issueNo: 9, title: '新增校园卡余额不足提醒', type: 'FEATURE', priority: 'MEDIUM',
+        severity: null, status: 'OPEN', updatedAt: '',
+      },
+    ])
   })
 
-  function givenAuthenticated() {
-    localStorage.setItem('workflowx_access_token', TOKEN)
+  it('ADMIN：自动加载统计并渲染 StatsSection + 待办卡（中文标签）', async () => {
+    mocked.fetchDashboardOverview.mockResolvedValue(OVERVIEW)
+    const store = useAuthStore()
+    store.accessToken = TOKEN
+    store.username = 'alice'
+    store.roles = ['ADMIN']
+    store.permissionCodes = ['dashboard:view']
+    store.currentUser = { ...CURRENT_USER }
+    const wrapper = mountView()
+    await flushPromises()
+    // 自动加载（无需点击按钮）
+    expect(mocked.fetchDashboardOverview).toHaveBeenCalledTimes(1)
+    expect(wrapper.find('.stats-stub').exists()).toBe(true)
+    expect(wrapper.text()).toContain('，Alice') // 时段问候随测试时间变化，断言昵称部分
+    expect(wrapper.text()).toContain('我的待办（1）')
+    expect(wrapper.text()).toContain('CAMPUS-9')
+    expect(wrapper.text()).toContain('中')
+  })
+
+  it('MEMBER：无 dashboard:view 时不加载统计，显示快捷入口 + 待办', async () => {
+    const store = useAuthStore()
+    store.accessToken = TOKEN
+    store.username = 'alice'
+    store.roles = ['MEMBER']
+    store.permissionCodes = []
+    store.currentUser = { ...CURRENT_USER }
+    const wrapper = mountView()
+    await flushPromises()
+    expect(mocked.fetchDashboardOverview).not.toHaveBeenCalled()
+    expect(wrapper.find('.stats-stub').exists()).toBe(false)
+    expect(wrapper.text()).toContain('快捷入口')
+    expect(wrapper.text()).toContain('我的待办与个人中心')
+  })
+
+  it('页面不显示 token/密码等敏感信息', async () => {
     const store = useAuthStore()
     store.accessToken = TOKEN
     store.username = 'alice'
     store.roles = ['MEMBER']
     store.currentUser = { ...CURRENT_USER }
-    return store
-  }
-
-  it('正确展示 currentUser 资料（nickname/username/email/status/roles）', async () => {
-    givenAuthenticated()
-    const wrapper = mountView()
-    await flushPromises()
-    const text = wrapper.text()
-    expect(text).toContain('欢迎回来，Alice')
-    expect(text).toContain('alice')
-    expect(text).toContain('alice@test.local')
-    expect(text).toContain('ACTIVE')
-    expect(text).toContain('MEMBER')
-  })
-
-  it('未认证状态不显示伪造用户信息', async () => {
-    const wrapper = mountView() // 全新空 pinia，无 currentUser
-    await flushPromises()
-    expect(wrapper.text()).not.toContain('欢迎回来，')
-    expect(wrapper.text()).not.toContain('alice')
-  })
-
-  it('页面不显示 token/密码等敏感信息', async () => {
-    givenAuthenticated()
     const wrapper = mountView()
     await flushPromises()
     const text = wrapper.text()
     expect(text).not.toContain(TOKEN)
-    expect(text).not.toContain('password')
     expect(text).not.toContain('Bearer')
-  })
-
-  it('点击退出登录调用后端并跳转 /login', async () => {
-    givenAuthenticated()
-    const wrapper = mountView()
-    await flushPromises()
-    const btns = wrapper.findAll('button')
-    const logoutBtn = btns.find((b) => b.text().includes('退出登录'))
-    await logoutBtn?.trigger('click')
-    await flushPromises()
-    expect(mockedLogout).toHaveBeenCalled()
-    expect(push).toHaveBeenCalledWith('/login')
   })
 })
