@@ -80,6 +80,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/system/sessions',
+      name: 'system-sessions',
+      component: () => import('@/views/system/SessionsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/system/projects/:projectId/testcases',
       name: 'system-project-testcases',
       component: () => import('@/views/system/TestCasesView.vue'),
