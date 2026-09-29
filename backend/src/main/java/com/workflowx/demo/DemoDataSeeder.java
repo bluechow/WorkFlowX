@@ -417,6 +417,13 @@ public class DemoDataSeeder {
             "已验证通过，可关闭。",
     };
 
+    /** FP-7 演示样本：@提及评论（评论文本 + 被提及者演示用户名）→ 同步生成 ISSUE_MENTIONED */
+    private static final String[][] MENTION_SAMPLES = {
+            {"@张伟 请看下这个并发问题，和上次选课的修复方案类似", "demo_u01"},
+            {"@李娜 这里的预期行为需要产品确认一下", "demo_u02"},
+            {"@王强 压测数据已上传，帮忙分析下瓶颈", "demo_u03"},
+    };
+
     private void seedComments() {
         int count = 0;
         for (int p = 0; p < issueIdsByProject.size(); p++) {
@@ -430,6 +437,24 @@ public class DemoDataSeeder {
                             COMMENT_POOL[(i + c) % COMMENT_POOL.length],
                             daysAgo(random.nextInt(20)), daysAgo(random.nextInt(10)));
                     count++;
+                }
+            }
+            // @提及样本（首项目前 3 个 Issue）：真实文本评论 + 被提及者通知（FP-7 演示）
+            if (p == 0) {
+                for (int m = 0; m < MENTION_SAMPLES.length && m < issues.size(); m++) {
+                    long issueId = issues.get(m);
+                    Timestamp mentionTime = daysAgo(3 + m);
+                    jdbc.update("INSERT INTO issue_comments (issue_id, author_id, content, created_at, updated_at) VALUES (?,?,?,?,?)",
+                            issueId, demoPmId, MENTION_SAMPLES[m][0], mentionTime, mentionTime);
+                    Long mentionedId = jdbc.queryForObject(
+                            "SELECT id FROM users WHERE username = ?", Long.class, MENTION_SAMPLES[m][1]);
+                    if (mentionedId != null) {
+                        jdbc.update("INSERT INTO notifications (recipient_id, type, title, content, related_type, related_id, is_read, created_at) VALUES (?, 'ISSUE_MENTIONED', '有人在评论中提到了你', ?, 'ISSUE', ?, 0, ?)",
+                                mentionedId,
+                                String.format("%s-%d %s（由 #%d @你）", projectKeys.get(p), m + 1,
+                                        ISSUES[projectIssueOffset(p) + m][5], demoPmId),
+                                issueId, daysAgo(3 + m));
+                    }
                 }
             }
         }

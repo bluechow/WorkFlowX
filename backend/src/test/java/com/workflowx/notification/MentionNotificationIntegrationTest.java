@@ -84,14 +84,26 @@ class MentionNotificationIntegrationTest {
     @Autowired
     private com.workflowx.common.security.AuthSessionService sessionService;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplateRef;
+
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate() {
+        return jdbcTemplateRef;
+    }
+
     @AfterEach
     void cleanup() {
         orgMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.workflowx.org.entity.Organization>()
                 .likeRight(com.workflowx.org.entity.Organization::getCode, ORG_PREFIX));
         if (mentionedUsername != null) {
-            sessionService.deleteSession(userMapper.selectOne(
+            var mnUser = userMapper.selectOne(
                     new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.workflowx.user.entity.User>()
-                            .eq(com.workflowx.user.entity.User::getUsername, mentionedUsername)).getId());
+                            .eq(com.workflowx.user.entity.User::getUsername, mentionedUsername));
+            if (mnUser != null) {
+                sessionService.deleteSession(mnUser.getId());
+                // 通知为逻辑引用（无 FK）——删用户前先清其通知，防跨运行残留
+                jdbcTemplate().update("DELETE FROM notifications WHERE recipient_id = ?", mnUser.getId());
+            }
             userMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.workflowx.user.entity.User>()
                     .likeRight(com.workflowx.user.entity.User::getUsername, "mn_user"));
         }

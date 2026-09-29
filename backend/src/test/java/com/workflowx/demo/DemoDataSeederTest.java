@@ -71,6 +71,7 @@ class DemoDataSeederTest {
                 SELECT COUNT(*) FROM notifications n JOIN users u ON n.recipient_id = u.id
                 WHERE u.username LIKE 'demo\\_%' AND n.type = 'ISSUE_ASSIGNED'
                 """)).isEqualTo(12);
+        assertThat(count("SELECT COUNT(*) FROM notifications WHERE type = 'ISSUE_MENTIONED'")).isEqualTo(3);
         assertThat(count("SELECT COUNT(*) FROM audit_logs WHERE user_agent = 'demo-seeder/1.0'")).isEqualTo(12);
         assertThat(count("SELECT COUNT(*) FROM attachments WHERE object_key LIKE 'issues/%' AND uploader_id IN (SELECT id FROM users WHERE username = 'demo_pm')"))
                 .isEqualTo(4);
