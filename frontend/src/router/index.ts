@@ -51,7 +51,12 @@ const router = createRouter({
       path: '/projects/:projectId',
       component: () => import('@/views/project/ProjectLayout.vue'),
       children: [
-        { path: '', redirect: (to) => `/projects/${to.params.projectId}/issues` },
+        { path: '', redirect: (to) => `/projects/${to.params.projectId}/overview` },
+        {
+          path: 'overview',
+          name: 'project-overview',
+          component: () => import('@/views/project/ProjectOverviewView.vue'),
+        },
         {
           path: 'issues',
           name: 'project-issues',

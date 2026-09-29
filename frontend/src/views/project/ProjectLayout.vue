@@ -18,6 +18,7 @@ const project = ref<ProjectVO | null>(null)
 
 const tabs = computed(() => {
   const t: { name: string; to: string; match: RegExp }[] = []
+  t.push({ name: '概览', to: `/projects/${projectId.value}/overview`, match: /\/overview$/ })
   if (auth.hasPermission('issue:list')) {
     t.push({ name: '工作项', to: `/projects/${projectId.value}/issues`, match: /\/issues$/ })
     t.push({ name: '看板', to: `/projects/${projectId.value}/board`, match: /\/board$/ })
