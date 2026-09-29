@@ -95,7 +95,7 @@ class CommentServiceIntegrationTest {
         projectId = projectMapper.selectOne(new LambdaQueryWrapper<Project>()
                 .eq(Project::getKey, KEY_PREFIX + "MAIN")).getId();
         IssueVO issue = issueService.create(projectId, new CreateIssueRequest(
-                "P8-承载评论的 Issue", null, IssueType.TASK, IssuePriority.MEDIUM, null, null), ownerId);
+                "P8-承载评论的 Issue", null, IssueType.TASK, IssuePriority.MEDIUM, null, null, null, null), ownerId);
         issueId = issue.id();
     }
 
@@ -176,7 +176,7 @@ class CommentServiceIntegrationTest {
         Long projectB = projectMapper.selectOne(new LambdaQueryWrapper<Project>()
                 .eq(Project::getKey, KEY_PREFIX + "B")).getId();
         IssueVO issueB = issueService.create(projectB, new CreateIssueRequest(
-                "P8-B 项目 Issue", null, IssueType.TASK, null, null, null), otherOwner);
+                "P8-B 项目 Issue", null, IssueType.TASK, null, null, null, null, null), otherOwner);
         // projectA + issueB 拼接 → 404（不泄露存在性）
         assertThrows(ResourceNotFoundException.class,
                 () -> commentService.create(projectId, issueB.id(),
@@ -251,7 +251,7 @@ class CommentServiceIntegrationTest {
     void getShouldRejectCommentFromOtherIssue() {
         CommentVO comment = createComment(ownerId, "跨 Issue");
         IssueVO otherIssue = issueService.create(projectId, new CreateIssueRequest(
-                "P8-另一个 Issue", null, IssueType.TASK, null, null, null), ownerId);
+                "P8-另一个 Issue", null, IssueType.TASK, null, null, null, null, null), ownerId);
         // issueA 路径 + 属于 issueB 的 commentId → 404
         assertThrows(ResourceNotFoundException.class,
                 () -> commentService.getById(projectId, otherIssue.id(), comment.id(), ownerId));

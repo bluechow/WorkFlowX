@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   allowedTargets,
   createIssue,
@@ -11,6 +11,7 @@ import {
   updateIssue,
 } from '@/api/issue'
 import IssueDetailDrawer from '@/components/IssueDetailDrawer.vue'
+import { createLabel, deleteLabel, listLabels, updateLabel, type LabelVO } from '@/api/issue'
 import { useAuthStore } from '@/stores/auth'
 import {
   ISSUE_PRIORITY_LABELS,
@@ -43,6 +44,7 @@ const filters = reactive({
   severity: undefined as undefined | string,
   status: undefined as undefined | string,
   assigneeId: undefined as undefined | number,
+  labelId: undefined as undefined | number,
 })
 
 const dialogVisible = ref(false)
@@ -54,10 +56,76 @@ const form = reactive({
   priority: 'MEDIUM',
   severity: null as null | string,
   assigneeId: null as number | null,
+  dueDate: null as string | null,
+  labelIds: [] as number[],
 })
 
 const members = ref<{ userId: number; role: string }[]>([])
 const projectOptions = ref<ProjectVO[]>([])
+const labels = ref<LabelVO[]>([])
+
+// ===== 标签管理对话框（V17）=====
+const labelDialogVisible = ref(false)
+const labelForm = reactive({ id: null as number | null, name: '', color: '#409EFF' })
+const labelSaving = ref(false)
+
+async function loadLabels() {
+  try {
+    labels.value = await listLabels(projectId.value)
+  } catch {
+    labels.value = []
+  }
+}
+
+function openLabelDialog() {
+  labelForm.id = null
+  labelForm.name = ''
+  labelForm.color = '#409EFF'
+  labelDialogVisible.value = true
+}
+
+function editLabel(label: LabelVO) {
+  labelForm.id = label.id
+  labelForm.name = label.name
+  labelForm.color = label.color
+}
+
+async function submitLabel() {
+  if (!labelForm.name.trim() || labelSaving.value) return
+  labelSaving.value = true
+  try {
+    if (labelForm.id === null) {
+      await createLabel(projectId.value, { name: labelForm.name.trim(), color: labelForm.color })
+      ElMessage.success('标签已创建')
+    } else {
+      await updateLabel(projectId.value, labelForm.id, { name: labelForm.name.trim(), color: labelForm.color })
+      ElMessage.success('标签已更新')
+    }
+    labelForm.id = null
+    labelForm.name = ''
+    await loadLabels()
+  } catch (e) {
+    ElMessage.error((e as { message?: string }).message ?? '保存标签失败')
+  } finally {
+    labelSaving.value = false
+  }
+}
+
+async function removeLabel(label: LabelVO) {
+  try {
+    await ElMessageBox.confirm(`确认删除标签「${label.name}」？工作项上的该标签将一并移除。`, '确认操作',
+      { type: 'warning' })
+  } catch {
+    return
+  }
+  try {
+    await deleteLabel(projectId.value, label.id)
+    ElMessage.success('标签已删除')
+    await loadLabels()
+  } catch (e) {
+    ElMessage.error((e as { message?: string }).message ?? '删除标签失败')
+  }
+}
 
 // Phase A-③: 详情抽屉（点击编号打开，聚合信息/流转/评论/附件）
 const drawerVisible = ref(false)
@@ -75,6 +143,14 @@ function onDetailUpdated(updated: IssueVO) {
   if (idx >= 0) issues.value[idx] = updated
 }
 
+function dueClass(row: IssueVO): string {
+  if (!row.dueDate || row.status === 'CLOSED') return ''
+  const days = Math.ceil((new Date(row.dueDate).getTime() - Date.now()) / 86400000)
+  if (days < 0) return 'issues-view__due--overdue'
+  if (days <= 3) return 'issues-view__due--soon'
+  return ''
+}
+
 async function refresh() {
   loading.value = true
   try {
@@ -85,6 +161,7 @@ async function refresh() {
       severity: filters.severity as never,
       status: filters.status as never,
       assigneeId: filters.assigneeId,
+      labelId: filters.labelId,
       page: pager.page,
       size: pager.size,
     })
@@ -119,7 +196,9 @@ async function openCreate() {
   form.priority = 'MEDIUM'
   form.severity = null
   form.assigneeId = null
-  await loadMembers()
+  form.dueDate = null
+  form.labelIds = []
+  await Promise.all([loadMembers(), loadLabels()])
   dialogVisible.value = true
 }
 
@@ -131,7 +210,9 @@ async function openEdit(issue: IssueVO) {
   form.priority = issue.priority
   form.severity = issue.severity
   form.assigneeId = issue.assigneeId
-  await loadMembers()
+  form.dueDate = issue.dueDate
+  form.labelIds = (issue.labels ?? []).map((l) => l.id)
+  await Promise.all([loadMembers(), loadLabels()])
   dialogVisible.value = true
 }
 
@@ -154,6 +235,8 @@ async function submit() {
         priority: form.priority as never,
         severity: form.type === 'BUG' ? (form.severity as never) : null,
         assigneeId: form.assigneeId ?? null,
+        dueDate: form.dueDate || null,
+        labelIds: form.labelIds,
       })
       ElMessage.success('Issue 已创建')
     } else {
@@ -163,6 +246,9 @@ async function submit() {
         priority: form.priority as never,
         severity: form.type === 'BUG' ? (form.severity as never) : null,
         assigneeId: form.assigneeId ?? null,
+        dueDate: form.dueDate || null,
+        clearDueDate: !form.dueDate,
+        labelIds: form.labelIds,
       })
       ElMessage.success('Issue 已更新')
     }
@@ -209,7 +295,7 @@ onMounted(async () => {
     project.value = null
   }
   await refresh()
-  await loadMembers()
+  await Promise.all([loadMembers(), loadLabels()])
 })
 </script>
 
@@ -219,6 +305,12 @@ onMounted(async () => {
       <h2>Issues — {{ project?.name ?? `#${projectId}` }}</h2>
       <div class="issues-view__actions">
         <el-button @click="router.push(`/projects/${projectId}/board`)">看板视图</el-button>
+        <el-button
+          v-if="auth.hasPermission('issue:update')"
+          @click="openLabelDialog"
+        >
+          标签管理
+        </el-button>
         <el-button
           v-if="auth.hasPermission('issue:create')"
           type="primary"
@@ -264,6 +356,16 @@ onMounted(async () => {
           :value="s"
         />
       </el-select>
+      <el-select
+        v-if="labels.length"
+        v-model="filters.labelId"
+        clearable
+        placeholder="标签"
+        style="width: 130px"
+        @change="search"
+      >
+        <el-option v-for="l in labels" :key="l.id" :label="l.name" :value="l.id" />
+      </el-select>
       <el-button @click="search">搜索</el-button>
     </div>
 
@@ -290,6 +392,25 @@ onMounted(async () => {
       </el-table-column>
       <el-table-column label="严重程度" width="110">
         <template #default="{ row }">{{ labelOf(ISSUE_SEVERITY_LABELS, row.severity) }}</template>
+      </el-table-column>
+      <el-table-column label="标签" width="150">
+        <template #default="{ row }">
+          <el-tag
+            v-for="l in row.labels"
+            :key="l.id"
+            size="small"
+            class="issues-view__label"
+            :color="l.color"
+            style="border: none; color: #fff"
+          >
+            {{ l.name }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="截止日期" width="110">
+        <template #default="{ row }">
+          <span :class="dueClass(row)">{{ row.dueDate ? row.dueDate.slice(0, 10) : '—' }}</span>
+        </template>
       </el-table-column>
       <el-table-column label="状态" width="130">
         <template #default="{ row }">
@@ -405,6 +526,20 @@ onMounted(async () => {
             <el-option v-for="m in members" :key="m.userId" :label="`#${m.userId} ${m.role}`" :value="m.userId" />
           </el-select>
         </el-form-item>
+        <el-form-item label="截止日期">
+          <el-date-picker
+            v-model="form.dueDate"
+            type="datetime"
+            value-format="YYYY-MM-DDTHH:mm:ss"
+            placeholder="选择截止日期"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item v-if="labels.length" label="标签">
+          <el-select v-model="form.labelIds" multiple placeholder="选择标签" style="width: 100%">
+            <el-option v-for="l in labels" :key="l.id" :label="l.name" :value="l.id" />
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -412,6 +547,28 @@ onMounted(async () => {
           保存
         </el-button>
       </template>
+    </el-dialog>
+
+    <!-- 标签管理（V17）-->
+    <el-dialog v-model="labelDialogVisible" title="标签管理" width="480px">
+      <div class="issues-view__label-editor">
+        <el-input v-model="labelForm.name" placeholder="标签名" maxlength="50" style="width: 160px" />
+        <el-color-picker v-model="labelForm.color" />
+        <el-button type="primary" size="small" :loading="labelSaving" @click="submitLabel">
+          {{ labelForm.id === null ? '新增' : '保存修改' }}
+        </el-button>
+        <el-button v-if="labelForm.id !== null" size="small" @click="labelForm.id = null; labelForm.name = ''">
+          取消编辑
+        </el-button>
+      </div>
+      <div v-for="l in labels" :key="l.id" class="issues-view__label-row">
+        <el-tag size="small" :color="l.color" style="border: none; color: #fff">{{ l.name }}</el-tag>
+        <span class="issues-view__label-actions">
+          <el-button link size="small" @click="editLabel(l)">编辑</el-button>
+          <el-button link size="small" type="danger" @click="removeLabel(l)">删除</el-button>
+        </span>
+      </div>
+      <div v-if="labels.length === 0" class="issues-view__label-empty">暂无标签</div>
     </el-dialog>
 
     <IssueDetailDrawer
@@ -439,6 +596,36 @@ onMounted(async () => {
 .issues-view__actions {
   display: flex;
   gap: 8px;
+}
+.issues-view__label {
+  margin-right: 4px;
+}
+.issues-view__due--overdue {
+  color: #f56c6c;
+  font-weight: 600;
+}
+.issues-view__due--soon {
+  color: #e6a23c;
+  font-weight: 600;
+}
+.issues-view__label-editor {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.issues-view__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f2f5;
+}
+.issues-view__label-empty {
+  color: #c0c4cc;
+  font-size: 13px;
+  text-align: center;
+  padding: 12px 0;
 }
 .issues-view__filters {
   display: flex;

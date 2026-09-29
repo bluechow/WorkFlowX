@@ -42,6 +42,9 @@ public class Issue {
     /** 可空；非空时必须为项目成员（Service 层校验） */
     private Long assigneeId;
 
+    /** 截止日期（可空；V17 工作项体系增强） */
+    private LocalDateTime dueDate;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

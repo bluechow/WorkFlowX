@@ -20,5 +20,14 @@ public record UpdateIssueRequest(
 
         IssueSeverity severity,
 
-        Long assigneeId) {
+        Long assigneeId,
+
+        /** 截止日期（可空=不变；clearDueDate=true 时清空；V17） */
+        java.time.LocalDateTime dueDate,
+
+        /** 显式清空截止日期（避免 null 二义性；V17） */
+        Boolean clearDueDate,
+
+        /** 标签 id 集合（null=不变；非空数组=全量替换，含空数组清空；V17） */
+        java.util.List<Long> labelIds) {
 }

@@ -41,6 +41,7 @@ async function handleLogout() {
       <el-menu router class="app__menu" :default-active="$route.path">
         <el-menu-item index="/workspace">工作台</el-menu-item>
         <el-menu-item v-if="auth.hasPermission('project:list')" index="/projects">项目管理</el-menu-item>
+        <el-menu-item v-if="auth.hasPermission('issue:list')" index="/work-items">工作项</el-menu-item>
 
         <template v-if="hasTeamMenu">
           <li class="app__group-title" role="none">组织与团队</li>

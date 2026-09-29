@@ -28,5 +28,11 @@ public record CreateIssueRequest(
         IssueSeverity severity,
 
         /** 可空；必须为项目成员 */
-        Long assigneeId) {
+        Long assigneeId,
+
+        /** 截止日期（可空；V17） */
+        java.time.LocalDateTime dueDate,
+
+        /** 标签 id 集合（可空=不绑定；V17；须属于本项目） */
+        java.util.List<Long> labelIds) {
 }

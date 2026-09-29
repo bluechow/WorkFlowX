@@ -74,6 +74,34 @@ public class IssueController {
         return Result.ok(issueService.update(projectId, issueId, request, operator.userId()));
     }
 
+    /** 关联列表（V17）：双向 + 对端摘要 */
+    @GetMapping("/{issueId}/links")
+    @PreAuthorize("hasAuthority('issue:get')")
+    public Result<java.util.List<com.workflowx.issue.vo.IssueLinkVO>> listLinks(@PathVariable Long projectId,
+                                                                               @PathVariable Long issueId) {
+        return Result.ok(issueService.listLinks(projectId, issueId));
+    }
+
+    /** 建立关联（V17）：同项目/禁自关联/重复 409 */
+    @PostMapping("/{issueId}/links")
+    @PreAuthorize("hasAuthority('issue:update')")
+    public Result<java.util.List<com.workflowx.issue.vo.IssueLinkVO>> link(
+            @PathVariable Long projectId, @PathVariable Long issueId,
+            @jakarta.validation.Valid @RequestBody com.workflowx.issue.dto.CreateIssueLinkRequest request,
+            @AuthenticationPrincipal JwtPayload operator) {
+        return Result.ok(issueService.link(projectId, issueId, request, operator.userId()));
+    }
+
+    /** 解除关联（V17） */
+    @org.springframework.web.bind.annotation.DeleteMapping("/{issueId}/links/{linkId}")
+    @PreAuthorize("hasAuthority('issue:update')")
+    public Result<Void> unlink(@PathVariable Long projectId, @PathVariable Long issueId,
+                               @PathVariable Long linkId,
+                               @AuthenticationPrincipal JwtPayload operator) {
+        issueService.unlink(projectId, issueId, linkId, operator.userId());
+        return Result.ok(null);
+    }
+
     /** 分派/取消分派（P6-05 边界内：assignee 变更，走 issue:assign authority） */
     @PatchMapping("/{issueId}/assignee")
     @PreAuthorize("hasAuthority('issue:assign')")
@@ -84,7 +112,7 @@ public class IssueController {
         // 复用 update 的 assignee 校验链：仅传 assignee 字段（null=清空走 0 哨兵约定之外——
         // 本端点语义为"设置分派"，取消分派传 0）
         UpdateIssueRequest request = new UpdateIssueRequest(null, null, null, null,
-                assigneeId == null ? 0L : assigneeId);
+                assigneeId == null ? 0L : assigneeId, null, null, null);
         return Result.ok(issueService.update(projectId, issueId, request, operator.userId()));
     }
 

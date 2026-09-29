@@ -27,12 +27,12 @@ const mocked = {
 }
 
 const ISSUES: import('@/types/api').IssueVO[] = [
-  { id: 1, projectId: 7, issueNo: 1, title: '登录崩溃', description: 'd', type: 'BUG', priority: 'URGENT', severity: 'S1', status: 'OPEN', reporterId: 1, assigneeId: null, createdAt: '', updatedAt: '2026-09-20T10:00:00' },
-  { id: 2, projectId: 7, issueNo: 2, title: '写文档', description: null, type: 'TASK', priority: 'LOW', severity: null, status: 'RESOLVED', reporterId: 1, assigneeId: 3, createdAt: '', updatedAt: '2026-09-21T10:00:00' },
+  { id: 1, projectId: 7, issueNo: 1, title: '登录崩溃', description: 'd', type: 'BUG', priority: 'URGENT', severity: 'S1', status: 'OPEN', reporterId: 1, assigneeId: null, createdAt: '', updatedAt: '2026-09-20T10:00:00', dueDate: null, labels: [] },
+  { id: 2, projectId: 7, issueNo: 2, title: '写文档', description: null, type: 'TASK', priority: 'LOW', severity: null, status: 'RESOLVED', reporterId: 1, assigneeId: 3, createdAt: '', updatedAt: '2026-09-21T10:00:00', dueDate: null, labels: [] },
 ]
 
 const PROJECTS = [
-  { id: 7, orgId: 5, key: 'WFX', name: '看板演示项目', description: '', status: 'ACTIVE', ownerId: 1, createdAt: '', updatedAt: '' },
+  { id: 7, orgId: 5, key: 'WFX', name: '看板演示项目', description: '', status: 'ACTIVE', ownerId: 1, createdAt: '', updatedAt: '', dueDate: null, labels: [] },
 ]
 
 const mountView = () =>

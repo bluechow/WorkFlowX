@@ -28,6 +28,9 @@
 | 审计日志 | 12 | LOGIN/CREATE 样例（user_agent=demo-seeder/1.0，便于识别） |
 | 用例库 | 36 用例 / 10 目录 | CAMPUS 14、SHOP 12、MBANK 10 |
 | 测试计划 | 2 | MBANK V2.3 回归（RUNNING：5 PASS/3 FAIL/1 BLOCKED/1 PENDING，FAIL 关联 Bug）；智慧校园冒烟（COMPLETED：3 PASS/1 FAIL 关联 Bug） |
+| 标签（V17） | 16 | 每项目 4 个语义化标签（核心链路/体验优化/技术债/安全），每条工作项 1~2 个 |
+| 截止日期（V17） | ~30 | 未完结工作项的 2/3 带截止（18:00），约 1/4 已逾期（界面红色警示） |
+| 关联（V17） | 8 | 每项目 2 条（第 1 条 BLOCKS 第 2 条 + 第 3 条 RELATES 第 4 条） |
 
 一致性保证：Issue/用例编号连续且与 `issue_seq`/`testcase_seq` 计数器同步；
 assignee 均为项目成员；测试计划 FAIL 项关联同项目 Bug（满足服务层约束）。

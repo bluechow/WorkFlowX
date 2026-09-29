@@ -106,7 +106,7 @@ class AttachmentServiceIntegrationTest {
         projectId = projectMapper.selectOne(new LambdaQueryWrapper<Project>()
                 .eq(Project::getKey, KEY_PREFIX + "MAIN")).getId();
         IssueVO issue = issueService.create(projectId, new CreateIssueRequest(
-                "P8-承载附件的 Issue", null, IssueType.TASK, IssuePriority.MEDIUM, null, null), ownerId);
+                "P8-承载附件的 Issue", null, IssueType.TASK, IssuePriority.MEDIUM, null, null, null, null), ownerId);
         issueId = issue.id();
     }
 

@@ -272,7 +272,7 @@ class ProfilePasswordTodoIntegrationTest {
     private Long createIssue(Long projectId, String title,
                              IssueStatus status, Long assigneeId, Long reporterId) {
         var vo = issueService.create(projectId, new com.workflowx.issue.dto.CreateIssueRequest(
-                title, null, IssueType.BUG, IssuePriority.MEDIUM, IssueSeverity.S3, assigneeId), reporterId);
+                title, null, IssueType.BUG, IssuePriority.MEDIUM, IssueSeverity.S3, assigneeId, null, null), reporterId);
         if (status != IssueStatus.OPEN) {
             Issue issue = issueMapper.selectById(vo.id());
             issue.setStatus(status);

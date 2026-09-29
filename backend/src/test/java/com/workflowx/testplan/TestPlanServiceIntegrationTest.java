@@ -262,9 +262,7 @@ class TestPlanServiceIntegrationTest {
                 .eq(Organization::getCode, ORG_PREFIX + "MAIN")).getId();
         organizationService.addMember(orgId, new AddOrganizationMemberRequest(memberId, "MEMBER", null));
         projectMemberService.addMember(projectId, new AddProjectMemberRequest(memberId, "MEMBER"), ownerId);
-        IssueVO issue = issueService.create(projectId, new com.workflowx.issue.dto.CreateIssueRequest(
-                "P21 缺陷", "描述", IssueType.BUG, IssuePriority.HIGH,
-                null, memberId), ownerId);
+        IssueVO issue = issueService.create(projectId, new com.workflowx.issue.dto.CreateIssueRequest("P21 缺陷", "描述", IssueType.BUG, IssuePriority.HIGH, null, memberId, null, null), ownerId);
 
         TestPlanVO plan = createPlan("P21 关联Bug");
         addAllCases(plan.id());

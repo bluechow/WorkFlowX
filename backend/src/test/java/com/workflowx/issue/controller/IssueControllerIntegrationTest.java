@@ -174,7 +174,7 @@ class IssueControllerIntegrationTest {
         return objectMapper.writeValueAsString(new CreateIssueRequest(
                 title, "CTRL- 描述", com.workflowx.issue.entity.IssueType.BUG,
                 com.workflowx.issue.entity.IssuePriority.HIGH,
-                com.workflowx.issue.entity.IssueSeverity.S2, null));
+                com.workflowx.issue.entity.IssueSeverity.S2, null, null, null));
     }
 
     // ===== 权限矩阵 =====
@@ -253,7 +253,7 @@ class IssueControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new CreateIssueRequest(
                                 "CTRL-分派", null, com.workflowx.issue.entity.IssueType.TASK,
-                                com.workflowx.issue.entity.IssuePriority.MEDIUM, null, orgMemberOnly))))
+                                com.workflowx.issue.entity.IssuePriority.MEDIUM, null, orgMemberOnly, null, null))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400));
         // 成为项目成员 → 201
@@ -263,7 +263,7 @@ class IssueControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new CreateIssueRequest(
                                 "CTRL-分派OK", null, com.workflowx.issue.entity.IssueType.TASK,
-                                com.workflowx.issue.entity.IssuePriority.MEDIUM, null, orgMemberOnly))))
+                                com.workflowx.issue.entity.IssuePriority.MEDIUM, null, orgMemberOnly, null, null))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.assigneeId").value(orgMemberOnly.intValue()));
     }
@@ -310,8 +310,7 @@ class IssueControllerIntegrationTest {
         MvcResult putResult = mockMvc.perform(put("/api/v1/projects/{id}/issues/{iid}", projectId, issueId)
                         .header("Authorization", "Bearer " + admin())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.workflowx.issue.dto.UpdateIssueRequest(
-                                "CTRL-流程-改", null, com.workflowx.issue.entity.IssuePriority.URGENT, null, null))))
+                        .content(objectMapper.writeValueAsString(new com.workflowx.issue.dto.UpdateIssueRequest("CTRL-流程-改", null, com.workflowx.issue.entity.IssuePriority.URGENT, null, null, null, null, null))))
                 .andReturn();
         java.nio.file.Files.writeString(java.nio.file.Path.of("target", "p7_debug.txt"),
                 "PUT_STATUS=" + putResult.getResponse().getStatus() + " PUT_BODY="
@@ -319,8 +318,7 @@ class IssueControllerIntegrationTest {
         mockMvc.perform(put("/api/v1/projects/{id}/issues/{iid}", projectId, issueId)
                         .header("Authorization", "Bearer " + admin())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.workflowx.issue.dto.UpdateIssueRequest(
-                                "CTRL-流程-改", null, com.workflowx.issue.entity.IssuePriority.URGENT, null, null))))
+                        .content(objectMapper.writeValueAsString(new com.workflowx.issue.dto.UpdateIssueRequest("CTRL-流程-改", null, com.workflowx.issue.entity.IssuePriority.URGENT, null, null, null, null, null))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.title").value("CTRL-流程-改"))
                 .andExpect(jsonPath("$.data.issueNo").value(((Number) beforeData.get("issueNo")).longValue()))
@@ -402,8 +400,7 @@ class IssueControllerIntegrationTest {
         mockMvc.perform(put("/api/v1/projects/{id}/issues/{iid}", projectId, issueId)
                         .header("Authorization", "Bearer " + member())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.workflowx.issue.dto.UpdateIssueRequest(
-                                "越权更新", null, null, null, null))))
+                        .content(objectMapper.writeValueAsString(new com.workflowx.issue.dto.UpdateIssueRequest("越权更新", null, null, null, null, null, null, null))))
                 .andExpect(status().isForbidden());
 
         // 清理: 移除角色与绑定

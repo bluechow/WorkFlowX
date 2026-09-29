@@ -1,0 +1,28 @@
+import { chromium } from '@playwright/test'
+const browser = await chromium.launch()
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+await page.goto('http://localhost:8081/login')
+await page.getByPlaceholder(/用户名|username/i).fill('demo_admin')
+await page.getByPlaceholder(/密码|password/i).fill('Demo@123456')
+await page.getByRole('button', { name: /登\s*录|登录/ }).click()
+await page.waitForURL(/workspace/, { timeout: 20000 })
+// 全局工作项（待我处理视图）
+await page.goto('http://localhost:8081/work-items')
+await page.waitForTimeout(2000)
+const scopes = await page.locator('.work-items__scope').allInnerTexts()
+await page.getByRole('button', { name: '待我处理' }).click()
+await page.waitForTimeout(1500)
+await page.screenshot({ path: 'D:/codex协同项目/wfx-fp1-workitems.png' })
+// 项目内列表：标签/截止列
+await page.goto('http://localhost:8081/projects')
+await page.getByRole('button', { name: 'Issue 列表' }).first().click()
+await page.waitForTimeout(2000)
+await page.screenshot({ path: 'D:/codex协同项目/wfx-fp1-issues.png' })
+// 抽屉：标签/截止/关联
+await page.locator('.work-items__no, tbody tr').first().locator('button').first().click().catch(()=>{})
+await page.locator('tbody tr').first().locator('button').first().click()
+await page.waitForTimeout(1500)
+await page.screenshot({ path: 'D:/codex协同项目/wfx-fp1-drawer.png' })
+console.log('scopes:', scopes.join('|'))
+console.log('done')
+await browser.close()

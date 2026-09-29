@@ -175,7 +175,7 @@ class DashboardServiceIntegrationTest {
     // ===== helpers =====
 
     private CreateIssueRequest req(String title, IssueType type, IssueSeverity severity, IssuePriority priority) {
-        return new CreateIssueRequest(title, null, type, priority, severity, null);
+        return new CreateIssueRequest(title, null, type, priority, severity, null, null, null);
     }
 
     private Long createOrgProject(Long ownerId, String suffix) {

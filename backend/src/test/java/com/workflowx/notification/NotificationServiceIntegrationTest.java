@@ -223,16 +223,15 @@ class NotificationServiceIntegrationTest {
         Long assignee = createTestUser("assignee");
         Long projectId = createOrgProjectWithMembers(ownerId, assignee);
         // 创建即分派（owner 操作，assignee 收通知；owner 不自通知）
-        IssueVO issue = issueService.create(projectId, new CreateIssueRequest(
-                TITLE_PREFIX + "-分派", null, IssueType.TASK, null, null, assignee), ownerId);
+        IssueVO issue = issueService.create(projectId, new CreateIssueRequest(TITLE_PREFIX + "-分派", null, IssueType.TASK, null, null, assignee, null, null), ownerId);
         assertEquals(1L, notificationService.listMy(assignee, null, 1, 10).total());
         assertEquals(0L, notificationService.listMy(ownerId, null, 1, 10).total());
         // 变更分派给 owner（owner 是操作者 → 不通知）
         issueService.update(projectId, issue.id(),
-                new UpdateIssueRequest(null, null, null, null, 0L), ownerId);
+                new UpdateIssueRequest(null, null, null, null, 0L, null, null, null), ownerId);
         // 重新分派 assignee（先取消=0，再设回 assignee → assignee 收到第二条）
         issueService.update(projectId, issue.id(),
-                new UpdateIssueRequest(null, null, null, null, assignee), ownerId);
+                new UpdateIssueRequest(null, null, null, null, assignee, null, null, null), ownerId);
         assertEquals(2L, notificationService.listMy(assignee, null, 1, 10).total(),
                 "创建分派 + 重新分派各一条");
     }
@@ -242,8 +241,7 @@ class NotificationServiceIntegrationTest {
         Long ownerId = createTestUser("owner2");
         Long assignee = createTestUser("assignee2");
         Long projectId = createOrgProjectWithMembers(ownerId, assignee);
-        IssueVO issue = issueService.create(projectId, new CreateIssueRequest(
-                TITLE_PREFIX + "-流转", null, IssueType.TASK, null, null, assignee), ownerId);
+        IssueVO issue = issueService.create(projectId, new CreateIssueRequest(TITLE_PREFIX + "-流转", null, IssueType.TASK, null, null, assignee, null, null), ownerId);
         long beforeAssignee = notificationService.listMy(assignee, null, 1, 50).total();
         // owner 流转（owner=reporter）→ assignee 收到状态通知；owner 是操作者不收
         workflowService.transition(projectId, issue.id(), IssueStatus.OPEN, IssueStatus.IN_PROGRESS, ownerId);
@@ -259,8 +257,7 @@ class NotificationServiceIntegrationTest {
         Long ownerId = createTestUser("owner3");
         Long assignee = createTestUser("assignee3");
         Long projectId = createOrgProjectWithMembers(ownerId, assignee);
-        issueService.create(projectId, new CreateIssueRequest(
-                TITLE_PREFIX + "-评论", null, IssueType.TASK, null, null, assignee), ownerId);
+        issueService.create(projectId, new CreateIssueRequest(TITLE_PREFIX + "-评论", null, IssueType.TASK, null, null, assignee, null, null), ownerId);
         // owner（=reporter）评论 → assignee 收通知，owner 不收
         commentService.create(projectId, issueIdOf(projectId),
                 new CreateCommentRequest(TITLE_PREFIX + "-评论内容"), ownerId);
@@ -279,8 +276,7 @@ class NotificationServiceIntegrationTest {
         Long projectId = createOrgProjectWithMembers(ownerId, assignee);
         // 非项目成员作为 assignee → create 失败（同事务内通知尚未产生；验证主链完整性）
         Long outsider = createTestUser("outsider4");
-        assertThrows(Exception.class, () -> issueService.create(projectId, new CreateIssueRequest(
-                TITLE_PREFIX + "-失败", null, IssueType.TASK, null, null, outsider), ownerId));
+        assertThrows(Exception.class, () -> issueService.create(projectId, new CreateIssueRequest(TITLE_PREFIX + "-失败", null, IssueType.TASK, null, null, outsider, null, null), ownerId));
         assertEquals(0L, notificationService.listMy(outsider, null, 1, 10).total(),
                 "主业务失败不产生通知");
         assertEquals(0L, notificationService.listMy(ownerId, null, 1, 10).total());
@@ -303,8 +299,7 @@ class NotificationServiceIntegrationTest {
     }
 
     private Long issueIdOf(Long projectId) {
-        var page = issueService.page(projectId, new com.workflowx.issue.dto.IssuePageQuery(
-                TITLE_PREFIX + "-评论", null, null, null, null, null, null, null, 1, 10));
+        var page = issueService.page(projectId, new com.workflowx.issue.dto.IssuePageQuery(TITLE_PREFIX + "-评论", null, null, null, null, null, null, null, null, null, null, 1, 10));
         return page.list().get(0).id();
     }
 

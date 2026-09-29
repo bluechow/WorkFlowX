@@ -116,6 +116,15 @@ export type IssuePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
 export type IssueSeverity = 'S1' | 'S2' | 'S3' | 'S4'
 export type IssueStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'TESTING' | 'CLOSED' | 'REOPENED'
 
+/** 标签（V17） */
+export interface LabelVO {
+  id: number
+  projectId: number
+  name: string
+  color: string
+  createdAt: string
+}
+
 export interface IssueVO {
   id: number
   projectId: number
@@ -128,8 +137,10 @@ export interface IssueVO {
   status: IssueStatus
   reporterId: number
   assigneeId: number | null
+  dueDate: string | null
   createdAt: string
   updatedAt: string
+  labels: LabelVO[]
 }
 
 /** 项目状态（后端 ProjectStatus，V6） */

@@ -39,6 +39,9 @@ public class IssueServiceImpl implements IssueService {
     private final ProjectMemberMapper projectMemberMapper;
     private final com.workflowx.notification.service.NotificationService notificationService;
     private final com.workflowx.audit.service.AuditService auditService;
+    private final com.workflowx.issue.mapper.LabelMapper labelMapper;
+    private final com.workflowx.issue.mapper.IssueLabelMapper issueLabelMapper;
+    private final com.workflowx.issue.mapper.IssueLinkMapper issueLinkMapper;
 
     @Override
     @Transactional
@@ -71,7 +74,11 @@ public class IssueServiceImpl implements IssueService {
         issue.setStatus(com.workflowx.issue.entity.IssueStatus.OPEN);
         issue.setReporterId(operatorId);
         issue.setAssigneeId(request.assigneeId());
+        issue.setDueDate(request.dueDate());
         issueMapper.insert(issue);
+        if (request.labelIds() != null && !request.labelIds().isEmpty()) {
+            replaceLabels(projectId, issue.getId(), request.labelIds());
+        }
         auditService.record("ISSUE", "CREATE", "issue:" + issue.getId(),
                 "创建 Issue " + project.getKey() + "-" + issue.getIssueNo() + " " + issue.getTitle(),
                 true, operatorId);
@@ -80,12 +87,15 @@ public class IssueServiceImpl implements IssueService {
             notificationService.notifyIssueAssigned(project.getKey(), issue.getIssueNo(),
                     issue.getTitle(), issue.getId(), issue.getAssigneeId(), operatorId);
         }
-        return IssueVO.from(requireIssue(projectId, issue.getId()));
+        return IssueVO.from(requireIssue(projectId, issue.getId()),
+                labelsOf(java.util.List.of(issue.getId())).getOrDefault(issue.getId(), java.util.List.of()));
     }
 
     @Override
     public IssueVO getById(Long projectId, Long issueId) {
-        return IssueVO.from(requireIssue(projectId, issueId));
+        Issue issue = requireIssue(projectId, issueId);
+        return IssueVO.from(issue,
+                labelsOf(java.util.List.of(issue.getId())).getOrDefault(issue.getId(), java.util.List.of()));
     }
 
     @Override
@@ -118,9 +128,21 @@ public class IssueServiceImpl implements IssueService {
         if (query.assigneeId() != null) {
             wrapper.eq(Issue::getAssigneeId, query.assigneeId());
         }
+        if (query.labelId() != null) {
+            // 子查询过滤（labelId 为 Long 类型化参数，无注入面）
+            wrapper.inSql(Issue::getId,
+                    "SELECT issue_id FROM issue_labels WHERE label_id = " + query.labelId());
+        }
+        if (query.dueAfter() != null) {
+            wrapper.ge(Issue::getDueDate, query.dueAfter().atStartOfDay());
+        }
+        if (query.dueBefore() != null) {
+            wrapper.lt(Issue::getDueDate, query.dueBefore().plusDays(1).atStartOfDay());
+        }
         wrapper.orderByDesc(Issue::getCreatedAt).orderByDesc(Issue::getId);
         Page<Issue> result = issueMapper.selectPage(new Page<>(query.pageNum(), query.pageSize()), wrapper);
-        return PageVO.of(result.convert(IssueVO::from));
+        return PageVO.of(result.convert(i -> IssueVO.from(i,
+                labelsOf(java.util.List.of(i.getId())).getOrDefault(i.getId(), java.util.List.of()))));
     }
     @Override
     public java.util.List<IssueVO> listForBoard(Long projectId) {
@@ -130,7 +152,11 @@ public class IssueServiceImpl implements IssueService {
                 .eq(Issue::getProjectId, projectId)
                 .orderByDesc(Issue::getUpdatedAt)
                 .last("LIMIT 500");
-        return issueMapper.selectList(wrapper).stream().map(IssueVO::from).toList();
+        var issues = issueMapper.selectList(wrapper);
+        var labelMap = labelsOf(issues.stream().map(Issue::getId).toList());
+        return issues.stream()
+                .map(i -> IssueVO.from(i, labelMap.getOrDefault(i.getId(), java.util.List.of())))
+                .toList();
     }
     @Override
     public java.util.List<com.workflowx.issue.dto.TodoIssueVO> myTodoIssues(Long userId) {
@@ -195,6 +221,20 @@ public class IssueServiceImpl implements IssueService {
         if (request.assigneeId() != null) {
             issue.setAssigneeId(clearAssignee ? null : request.assigneeId());
         }
+        // V17 截止日期: null=不变；非空=设置；clearDueDate=true=清空（显式语义避免 null 二义）
+        if (Boolean.TRUE.equals(request.clearDueDate())) {
+            issue.setDueDate(null);
+            issueMapper.update(null,
+                    new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Issue>()
+                            .eq(Issue::getId, issueId)
+                            .set(Issue::getDueDate, null));
+        } else if (request.dueDate() != null) {
+            issue.setDueDate(request.dueDate());
+        }
+        // V17 标签: null=不变；非空数组（含空）=全量替换
+        if (request.labelIds() != null) {
+            replaceLabels(projectId, issueId, request.labelIds());
+        }
         if (clearAssignee) {
             // MP updateById 默认忽略 null 字段——显式 set null 才能写库
             issueMapper.update(null,
@@ -212,7 +252,9 @@ public class IssueServiceImpl implements IssueService {
             notificationService.notifyIssueAssigned(project.getKey(), issue.getIssueNo(),
                     issue.getTitle(), issueId, newAssigneeId, operatorId);
         }
-        return IssueVO.from(requireIssue(projectId, issueId));
+        Issue fresh = requireIssue(projectId, issueId);
+        return IssueVO.from(fresh,
+                labelsOf(java.util.List.of(fresh.getId())).getOrDefault(fresh.getId(), java.util.List.of()));
     }
 
 
@@ -223,6 +265,173 @@ public class IssueServiceImpl implements IssueService {
             throw new ResourceNotFoundException("issue", issueId);
         }
         return issue;
+    }
+
+    @Override
+    public com.workflowx.common.web.PageVO<com.workflowx.issue.vo.WorkItemVO> pageMyWorkItems(
+            Long userId, com.workflowx.issue.dto.WorkItemPageQuery query) {
+        // 视图语义：all=全部可见 / assigned=指派给我 / todo=待我处理（同待办口径）/ created=我创建
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Issue> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Issue>();
+        String scope = query.scope() == null ? "all" : query.scope();
+        switch (scope) {
+            case "assigned" -> wrapper.eq(Issue::getAssigneeId, userId);
+            case "todo" -> {
+                wrapper.eq(Issue::getAssigneeId, userId);
+                wrapper.in(Issue::getStatus, IssueStatus.OPEN, IssueStatus.IN_PROGRESS, IssueStatus.REOPENED);
+            }
+            case "created" -> wrapper.eq(Issue::getReporterId, userId);
+            default -> { /* all */ }
+        }
+        if (query.keyword() != null && !query.keyword().isBlank()) {
+            wrapper.and(w -> w.like(Issue::getTitle, query.keyword())
+                    .or().like(Issue::getDescription, query.keyword()));
+        }
+        if (query.type() != null) {
+            wrapper.eq(Issue::getType, query.type());
+        }
+        if (query.priority() != null) {
+            wrapper.eq(Issue::getPriority, query.priority());
+        }
+        if (query.status() != null) {
+            wrapper.eq(Issue::getStatus, query.status());
+        }
+        wrapper.orderByDesc(Issue::getUpdatedAt).orderByDesc(Issue::getId);
+        Page<Issue> page = issueMapper.selectPage(new Page<>(query.pageNum(), query.pageSize()), wrapper);
+        var projects = page.getRecords().isEmpty()
+                ? java.util.Map.<Long, com.workflowx.project.entity.Project>of()
+                : projectMapper.selectBatchIds(page.getRecords().stream().map(Issue::getProjectId).distinct().toList())
+                        .stream().collect(java.util.stream.Collectors.toMap(
+                                com.workflowx.project.entity.Project::getId, pr -> pr));
+        return PageVO.of(page.convert(i -> com.workflowx.issue.vo.WorkItemVO.of(i,
+                projects.containsKey(i.getProjectId()) ? projects.get(i.getProjectId()).getKey() : null,
+                projects.containsKey(i.getProjectId()) ? projects.get(i.getProjectId()).getName() : null)));
+    }
+
+    // ===== V17 工作项增强：标签 / 关联 =====
+
+    /** 批量取标签（issueId → LabelVO 列表），两次查询避免 N+1 */
+    private java.util.Map<Long, java.util.List<com.workflowx.issue.vo.LabelVO>> labelsOf(java.util.List<Long> issueIds) {
+        if (issueIds.isEmpty()) {
+            return java.util.Map.of();
+        }
+        var bindings = issueLabelMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.workflowx.issue.entity.IssueLabel>()
+                        .in(com.workflowx.issue.entity.IssueLabel::getIssueId, issueIds));
+        if (bindings.isEmpty()) {
+            return java.util.Map.of();
+        }
+        var labelIds = bindings.stream().map(com.workflowx.issue.entity.IssueLabel::getLabelId).distinct().toList();
+        var labels = labelMapper.selectBatchIds(labelIds).stream()
+                .collect(java.util.stream.Collectors.toMap(com.workflowx.issue.entity.Label::getId, l -> l));
+        java.util.Map<Long, java.util.List<com.workflowx.issue.vo.LabelVO>> map = new java.util.HashMap<>();
+        for (var b : bindings) {
+            var label = labels.get(b.getLabelId());
+            if (label != null) {
+                map.computeIfAbsent(b.getIssueId(), k -> new java.util.ArrayList<>())
+                        .add(com.workflowx.issue.vo.LabelVO.from(label));
+            }
+        }
+        return map;
+    }
+
+    /** 全量替换工作项标签：先清后绑；标签须属于本项目（跨项目 404） */
+    private void replaceLabels(Long projectId, Long issueId, java.util.List<Long> labelIds) {
+        issueLabelMapper.delete(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.workflowx.issue.entity.IssueLabel>()
+                        .eq(com.workflowx.issue.entity.IssueLabel::getIssueId, issueId));
+        if (labelIds == null || labelIds.isEmpty()) {
+            return;
+        }
+        for (Long labelId : labelIds.stream().distinct().toList()) {
+            var label = labelMapper.selectById(labelId);
+            if (label == null || !label.getProjectId().equals(projectId)) {
+                throw new com.workflowx.common.exception.ResourceNotFoundException("label", labelId);
+            }
+            var binding = new com.workflowx.issue.entity.IssueLabel();
+            binding.setIssueId(issueId);
+            binding.setLabelId(labelId);
+            issueLabelMapper.insert(binding);
+        }
+    }
+
+    @Override
+    public java.util.List<com.workflowx.issue.vo.IssueLinkVO> listLinks(Long projectId, Long issueId) {
+        Issue issue = requireIssue(projectId, issueId);
+        java.util.List<com.workflowx.issue.vo.IssueLinkVO> result = new java.util.ArrayList<>();
+        var outgoing = issueLinkMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.workflowx.issue.entity.IssueLink>()
+                        .eq(com.workflowx.issue.entity.IssueLink::getSourceIssueId, issue.getId()));
+        var incoming = issueLinkMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.workflowx.issue.entity.IssueLink>()
+                        .eq(com.workflowx.issue.entity.IssueLink::getTargetIssueId, issue.getId()));
+        appendLinkViews(result, outgoing, true);
+        appendLinkViews(result, incoming, false);
+        return result;
+    }
+
+    @Override
+    public java.util.List<com.workflowx.issue.vo.IssueLinkVO> link(Long projectId, Long issueId,
+            com.workflowx.issue.dto.CreateIssueLinkRequest request, Long operatorId) {
+        Issue source = requireIssue(projectId, issueId);
+        requireProjectMembership(projectId, operatorId);
+        if (request.targetIssueId().equals(source.getId())) {
+            throw new BusinessException(400, "不能与自身建立关联");
+        }
+        Issue target = requireIssue(projectId, request.targetIssueId());
+        var type = request.linkType() == com.workflowx.issue.dto.CreateIssueLinkRequest.IssueLinkType.BLOCKS
+                ? com.workflowx.issue.entity.IssueLink.LinkType.BLOCKS
+                : com.workflowx.issue.entity.IssueLink.LinkType.RELATES;
+        var existing = issueLinkMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.workflowx.issue.entity.IssueLink>()
+                        .eq(com.workflowx.issue.entity.IssueLink::getSourceIssueId, source.getId())
+                        .eq(com.workflowx.issue.entity.IssueLink::getTargetIssueId, target.getId())
+                        .eq(com.workflowx.issue.entity.IssueLink::getLinkType, type));
+        if (existing != null) {
+            throw new BusinessException(409, "两个工作项之间已存在该类型的关联");
+        }
+        var linkRow = new com.workflowx.issue.entity.IssueLink();
+        linkRow.setSourceIssueId(source.getId());
+        linkRow.setTargetIssueId(target.getId());
+        linkRow.setLinkType(type);
+        linkRow.setCreatedBy(operatorId);
+        issueLinkMapper.insert(linkRow);
+        auditService.record("ISSUE", "LINK",
+                "issue:" + source.getId(), "关联 " + source.getIssueNo() + " → " + target.getIssueNo()
+                        + "（" + type.name() + "）", true, operatorId);
+        return listLinks(projectId, issueId);
+    }
+
+    @Override
+    public void unlink(Long projectId, Long issueId, Long linkId, Long operatorId) {
+        requireIssue(projectId, issueId);
+        requireProjectMembership(projectId, operatorId);
+        var linkRow = issueLinkMapper.selectById(linkId);
+        if (linkRow == null || (!linkRow.getSourceIssueId().equals(issueId)
+                && !linkRow.getTargetIssueId().equals(issueId))) {
+            throw new com.workflowx.common.exception.ResourceNotFoundException("issue_link", linkId);
+        }
+        // 任一端的工作项成员均可解除（协作语义）；两端同项目已由创建约束保证
+        issueLinkMapper.deleteById(linkId);
+        auditService.record("ISSUE", "UNLINK", "issue:" + issueId, "解除关联 #" + linkId, true, operatorId);
+    }
+
+    private void appendLinkViews(java.util.List<com.workflowx.issue.vo.IssueLinkVO> sink,
+            java.util.List<com.workflowx.issue.entity.IssueLink> links, boolean outgoing) {
+        if (links.isEmpty()) {
+            return;
+        }
+        var otherIds = links.stream()
+                .map(l -> outgoing ? l.getTargetIssueId() : l.getSourceIssueId()).distinct().toList();
+        var others = issueMapper.selectBatchIds(otherIds).stream()
+                .collect(java.util.stream.Collectors.toMap(Issue::getId, i -> i));
+        for (var l : links) {
+            var other = others.get(outgoing ? l.getTargetIssueId() : l.getSourceIssueId());
+            if (other != null) {
+                sink.add(outgoing ? com.workflowx.issue.vo.IssueLinkVO.outgoing(l, other)
+                        : com.workflowx.issue.vo.IssueLinkVO.incoming(l, other));
+            }
+        }
     }
 
     private Project requireProject(Long projectId) {

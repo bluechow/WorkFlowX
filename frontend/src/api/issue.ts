@@ -7,22 +7,27 @@ export type IssuePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
 export type IssueSeverity = 'S1' | 'S2' | 'S3' | 'S4'
 export type IssueStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'TESTING' | 'CLOSED' | 'REOPENED'
 
-/** Issue 视图对象（后端 IssueVO，P6-02） */
-export interface IssueVO {
-  id: number
-  projectId: number
-  issueNo: number
-  title: string
-  description: string | null
-  type: IssueType
-  priority: IssuePriority
-  severity: IssueSeverity | null
-  status: IssueStatus
-  reporterId: number
-  assigneeId: number | null
-  createdAt: string
-  updatedAt: string
+import type { LabelVO as CanonicalLabelVO } from '@/types/api'
+
+export type LabelVO = CanonicalLabelVO
+export type { IssueVO } from '@/types/api'
+
+/** 本模块内部沿用的 IssueVO 引用（与全局类型同源） */
+type IssueVO = import('@/types/api').IssueVO
+
+/** 工作项关联（V17） */
+export interface IssueLinkVO {
+  linkId: number
+  otherIssueId: number
+  otherIssueNo: number
+  otherTitle: string
+  otherType: string
+  otherStatus: string
+  linkType: 'RELATES' | 'BLOCKS'
+  direction: 'OUTGOING' | 'INCOMING'
 }
+
+
 
 export interface CreateIssuePayload {
   title: string
@@ -31,6 +36,8 @@ export interface CreateIssuePayload {
   priority?: IssuePriority
   severity?: IssueSeverity | null
   assigneeId?: number | null
+  dueDate?: string | null
+  labelIds?: number[]
 }
 
 export interface UpdateIssuePayload {
@@ -39,6 +46,9 @@ export interface UpdateIssuePayload {
   priority?: IssuePriority
   severity?: IssueSeverity | null
   assigneeId?: number | null
+  dueDate?: string | null
+  clearDueDate?: boolean
+  labelIds?: number[]
 }
 
 export async function listIssues(
@@ -52,6 +62,9 @@ export async function listIssues(
     status?: IssueStatus
     reporterId?: number
     assigneeId?: number
+    labelId?: number
+    dueAfter?: string
+    dueBefore?: string
     page?: number
     size?: number
   },
@@ -150,4 +163,102 @@ export async function listProjectOptions(): Promise<ProjectVO[]> {
   const response = await http.get('/projects', { params: { page: 1, size: 100 } })
   const page = (response.data as { data: PageVO<ProjectVO> }).data
   return page.list
+}
+
+// ===== 标签（V17）=====
+
+export async function listLabels(projectId: number): Promise<LabelVO[]> {
+  const { data } = await http.get<Result<LabelVO[]>>(`/projects/${projectId}/labels`)
+  return data.data ?? []
+}
+
+export async function createLabel(
+  projectId: number,
+  payload: { name: string; color?: string },
+): Promise<LabelVO> {
+  const { data } = await http.post<Result<LabelVO>>(`/projects/${projectId}/labels`, payload)
+  if (!data.data) {
+    return Promise.reject({ message: 'empty label data' })
+  }
+  return data.data
+}
+
+export async function updateLabel(
+  projectId: number,
+  labelId: number,
+  payload: { name: string; color?: string },
+): Promise<LabelVO> {
+  const { data } = await http.put<Result<LabelVO>>(`/projects/${projectId}/labels/${labelId}`, payload)
+  if (!data.data) {
+    return Promise.reject({ message: 'empty label data' })
+  }
+  return data.data
+}
+
+export async function deleteLabel(projectId: number, labelId: number): Promise<void> {
+  await http.delete<Result<void>>(`/projects/${projectId}/labels/${labelId}`)
+}
+
+// ===== 工作项关联（V17）=====
+
+export async function listIssueLinks(projectId: number, issueId: number): Promise<IssueLinkVO[]> {
+  const { data } = await http.get<Result<IssueLinkVO[]>>(`/projects/${projectId}/issues/${issueId}/links`)
+  return data.data ?? []
+}
+
+export async function createIssueLink(
+  projectId: number,
+  issueId: number,
+  payload: { targetIssueId: number; linkType: 'RELATES' | 'BLOCKS' },
+): Promise<IssueLinkVO[]> {
+  const { data } = await http.post<Result<IssueLinkVO[]>>(
+    `/projects/${projectId}/issues/${issueId}/links`, payload)
+  return data.data ?? []
+}
+
+export async function deleteIssueLink(
+  projectId: number,
+  issueId: number,
+  linkId: number,
+): Promise<void> {
+  await http.delete<Result<void>>(`/projects/${projectId}/issues/${issueId}/links/${linkId}`)
+}
+
+// ===== 全局工作项（V17）=====
+
+export interface WorkItemVO {
+  id: number
+  projectId: number
+  projectKey: string | null
+  projectName: string | null
+  issueNo: number
+  title: string
+  type: IssueType
+  priority: IssuePriority
+  severity: IssueSeverity | null
+  status: IssueStatus
+  reporterId: number
+  assigneeId: number | null
+  dueDate: string | null
+  updatedAt: string
+}
+
+export type WorkItemScope = 'all' | 'assigned' | 'todo' | 'created'
+
+export async function listMyWorkItems(
+  params: {
+    scope?: WorkItemScope
+    keyword?: string
+    type?: IssueType
+    priority?: IssuePriority
+    status?: IssueStatus
+    page?: number
+    size?: number
+  },
+): Promise<PageVO<WorkItemVO>> {
+  const { data } = await http.get<Result<PageVO<WorkItemVO>>>('/me/work-items', { params })
+  if (!data.data) {
+    return Promise.reject({ message: 'empty work items' })
+  }
+  return data.data
 }

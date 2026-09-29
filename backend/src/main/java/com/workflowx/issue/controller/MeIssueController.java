@@ -31,4 +31,14 @@ public class MeIssueController {
     public Result<List<TodoIssueVO>> myTodoIssues(@AuthenticationPrincipal JwtPayload principal) {
         return Result.ok(issueService.myTodoIssues(principal.userId()));
     }
+
+    /** 全局工作项视图（V17）：scope=all/assigned/todo/created；读语义=issue:list authority */
+    @Operation(summary = "全局工作项分页（全部/我的/待我处理/我创建的）")
+    @GetMapping("/work-items")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('issue:list')")
+    public Result<com.workflowx.common.web.PageVO<com.workflowx.issue.vo.WorkItemVO>> myWorkItems(
+            @AuthenticationPrincipal JwtPayload principal,
+            @jakarta.validation.Valid com.workflowx.issue.dto.WorkItemPageQuery query) {
+        return Result.ok(issueService.pageMyWorkItems(principal.userId(), query));
+    }
 }

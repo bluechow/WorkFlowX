@@ -118,7 +118,7 @@ class WorkflowConcurrencyTest {
         var created = issueService.create(projectId, new CreateIssueRequest(
                 "P7-并发目标", "并发竞争测试", com.workflowx.issue.entity.IssueType.BUG,
                 com.workflowx.issue.entity.IssuePriority.HIGH,
-                com.workflowx.issue.entity.IssueSeverity.S1, null), ownerId);
+                com.workflowx.issue.entity.IssueSeverity.S1, null, null, null), ownerId);
         Long issueId = created.id();
 
         int threads = 8;

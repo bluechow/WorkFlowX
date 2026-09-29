@@ -28,6 +28,16 @@ public record IssuePageQuery(
 
         Long assigneeId,
 
+        /** 标签筛选（V17） */
+        Long labelId,
+
+        /** 截止日期范围（含当日；V17） */
+        @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+        java.time.LocalDate dueAfter,
+
+        @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+        java.time.LocalDate dueBefore,
+
         @Min(value = 1, message = "page 最小为 1") Integer page,
 
         @Min(value = 1, message = "size 最小为 1")

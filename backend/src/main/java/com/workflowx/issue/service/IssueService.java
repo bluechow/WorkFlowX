@@ -27,6 +27,20 @@ public interface IssueService {
     /** 看板查询（Phase A-②）：项目内全部 Issue，按最近活动排序，上限 500 条 */
     java.util.List<IssueVO> listForBoard(Long projectId);
 
+    /** 关联列表（V17）：含双向（OUTGOING/INCOMING）与对端摘要 */
+    java.util.List<com.workflowx.issue.vo.IssueLinkVO> listLinks(Long projectId, Long issueId);
+
+    /** 建立关联（V17）：同项目、禁自关联、重复 409；返回最新关联列表 */
+    java.util.List<com.workflowx.issue.vo.IssueLinkVO> link(Long projectId, Long issueId,
+            com.workflowx.issue.dto.CreateIssueLinkRequest request, Long operatorId);
+
+    /** 解除关联（V17）：任一端成员可解除 */
+    void unlink(Long projectId, Long issueId, Long linkId, Long operatorId);
+
+    /** 全局工作项分页（V17）：跨项目视图（all/assigned/todo/created），携带项目标识 */
+    com.workflowx.common.web.PageVO<com.workflowx.issue.vo.WorkItemVO> pageMyWorkItems(
+            Long userId, com.workflowx.issue.dto.WorkItemPageQuery query);
+
     /** 我的待办（Phase A-④）：跨项目聚合指派给我的未完结 Issue（上限 20，优先级降序） */
     java.util.List<com.workflowx.issue.dto.TodoIssueVO> myTodoIssues(Long userId);
 

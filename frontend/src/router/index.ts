@@ -35,6 +35,11 @@ const router = createRouter({
       name: 'profile',
       component: () => import('@/views/ProfileView.vue'),
     },
+    {
+      path: '/work-items',
+      name: 'work-items',
+      component: () => import('@/views/WorkItemsView.vue'),
+    },
 
     // ===== 项目空间（页签壳 + 子页） =====
     {

@@ -246,7 +246,7 @@ class AuditServiceIntegrationTest {
 
         // issue create / transition / comment
         IssueVO issue = issueService.create(projectId, new CreateIssueRequest(
-                "P10AT-审计目标", null, IssueType.TASK, null, null, memberId), ownerId);
+                "P10AT-审计目标", null, IssueType.TASK, null, null, memberId, null, null), ownerId);
         assertEquals(1, countBy("ISSUE", "CREATE", "issue:" + issue.id()));
         workflowService.transition(projectId, issue.id(), IssueStatus.OPEN, IssueStatus.IN_PROGRESS, ownerId);
         assertEquals(1, countBy("ISSUE", "TRANSITION", "issue:" + issue.id()));

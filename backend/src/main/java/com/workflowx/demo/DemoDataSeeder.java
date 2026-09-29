@@ -83,6 +83,7 @@ public class DemoDataSeeder {
         seedOrganizations();
         seedProjects();
         seedIssues();
+        seedWorkItemEnhancements();
         seedComments();
         seedNotifications();
         seedAuditLogs();
@@ -323,6 +324,57 @@ public class DemoDataSeeder {
         for (int p = 0; p < projectIds.size(); p++) {
             jdbc.update("UPDATE projects SET issue_seq = ? WHERE id = ?", seq[p], projectIds.get(p));
         }
+    }
+
+    // ==================== V17 工作项增强：标签 / 截止日期 / 关联 ====================
+
+    /** 每项目一组语义化标签（名称, 颜色） */
+    private static final String[][] LABEL_DEFS = {
+            {"核心链路", "#F56C6C"}, {"体验优化", "#E6A23C"}, {"技术债", "#909399"}, {"安全", "#8B5CF6"},
+    };
+
+    private void seedWorkItemEnhancements() {
+        // 标签
+        long[][] labelIds = new long[projectIds.size()][LABEL_DEFS.length];
+        for (int p = 0; p < projectIds.size(); p++) {
+            for (int l = 0; l < LABEL_DEFS.length; l++) {
+                labelIds[p][l] = insert("INSERT INTO labels (project_id, name, color, created_by, created_at, updated_at) VALUES (?,?,?,?,?,?)",
+                        projectIds.get(p), LABEL_DEFS[l][0], LABEL_DEFS[l][1], demoPmId, daysAgo(28), daysAgo(28));
+            }
+        }
+        // 打标 + 截止日期：每项目的 issue 按下标规则绑定；未完结项给截止日期（近 60 天分布，部分逾期）
+        for (int p = 0; p < projectIds.size(); p++) {
+            List<Long> issues = issueIdsByProject.get(p);
+            for (int i = 0; i < issues.size(); i++) {
+                long issueId = issues.get(i);
+                // 标签：每条至少 1 个，按类型加语义标签
+                int labelIdx = i % LABEL_DEFS.length;
+                insertIssueLabel(issueId, labelIds[p][labelIdx]);
+                if (i % 3 == 0) insertIssueLabel(issueId, labelIds[p][(labelIdx + 1) % LABEL_DEFS.length]);
+                // 截止：未完结（非 CLOSED/RESOLVED）的 2/3 给截止日期；前 1/4 逾期制造看板红色警示
+                String status = ISSUES[projectIssueOffset(p) + i][3];
+                boolean open = !"CLOSED".equals(status) && !"RESOLVED".equals(status);
+                if (open && i % 3 != 2) {
+                    int offsetDays = (i % 4 == 0) ? -(2 + i % 5) : (3 + i * 2);
+                    jdbc.update("UPDATE issues SET due_date = ? WHERE id = ?",
+                            Timestamp.valueOf(LocalDateTime.now().plusDays(offsetDays).withHour(18).withMinute(0)), issueId);
+                }
+            }
+        }
+        // 关联：每项目第 1 条 BLOCKS 第 2 条（典型"阻塞"故事）；第 3 条 RELATES 第 4 条
+        for (int p = 0; p < projectIds.size(); p++) {
+            List<Long> issues = issueIdsByProject.get(p);
+            if (issues.size() >= 4) {
+                jdbc.update("INSERT INTO issue_links (source_issue_id, target_issue_id, link_type, created_by, created_at) VALUES (?,?,?,?,?)",
+                        issues.get(0), issues.get(1), "BLOCKS", demoPmId, daysAgo(12));
+                jdbc.update("INSERT INTO issue_links (source_issue_id, target_issue_id, link_type, created_by, created_at) VALUES (?,?,?,?,?)",
+                        issues.get(2), issues.get(3), "RELATES", demoPmId, daysAgo(10));
+            }
+        }
+    }
+
+    private void insertIssueLabel(long issueId, long labelId) {
+        jdbc.update("INSERT INTO issue_labels (issue_id, label_id) VALUES (?,?)", issueId, labelId);
     }
 
     // ==================== 评论 / 通知 / 审计 ====================

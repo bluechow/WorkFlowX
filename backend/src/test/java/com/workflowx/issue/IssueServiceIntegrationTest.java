@@ -122,7 +122,7 @@ class IssueServiceIntegrationTest {
 
     private CreateIssueRequest createRequest(String title) {
         return new CreateIssueRequest(title, "P6- 描述", IssueType.BUG,
-                IssuePriority.HIGH, IssueSeverity.S2, null);
+                IssuePriority.HIGH, IssueSeverity.S2, null, null, null);
     }
 
     private void addProjectMember(Long projectId, Long userId) {
@@ -177,7 +177,7 @@ class IssueServiceIntegrationTest {
         // 组织成员但非项目成员 → 400
         BusinessException ex400 = assertThrows(BusinessException.class, () -> issueService.create(
                 projectId, new CreateIssueRequest("P6-分派", null, IssueType.TASK,
-                        IssuePriority.MEDIUM, null, orgMemberOnly), ownerId));
+                        IssuePriority.MEDIUM, null, orgMemberOnly, null, null), ownerId));
         assertEquals(400, ex400.getStatus(), "assignee 须为项目成员（组织成员不够）");
 
         // 加入项目成员后成功
@@ -185,7 +185,7 @@ class IssueServiceIntegrationTest {
                 new com.workflowx.project.dto.AddProjectMemberRequest(orgMemberOnly, "MEMBER"), ownerId);
         IssueVO created = issueService.create(projectId,
                 new CreateIssueRequest("P6-分派成功", null, IssueType.TASK,
-                        IssuePriority.MEDIUM, null, orgMemberOnly), ownerId);
+                        IssuePriority.MEDIUM, null, orgMemberOnly, null, null), ownerId);
         assertEquals(orgMemberOnly, created.assigneeId());
     }
 
@@ -194,7 +194,7 @@ class IssueServiceIntegrationTest {
         Long ownerId = createOrgAndProject("SEV");
         BusinessException ex = assertThrows(BusinessException.class, () -> issueService.create(
                 projectIdFor("SEV"), new CreateIssueRequest("P6-非Bug带severity", null,
-                        IssueType.TASK, IssuePriority.MEDIUM, IssueSeverity.S1, null), ownerId));
+                        IssueType.TASK, IssuePriority.MEDIUM, IssueSeverity.S1, null, null, null), ownerId));
         assertEquals(400, ex.getStatus());
     }
 
@@ -206,7 +206,7 @@ class IssueServiceIntegrationTest {
         Long projectId = projectIdFor("UPD");
         IssueVO created = issueService.create(projectId, createRequest("P6-原标题"), ownerId);
         IssueVO updated = issueService.update(projectId, created.id(),
-                new UpdateIssueRequest("P6-新标题", "新描述", IssuePriority.URGENT, IssueSeverity.S1, null), ownerId);
+                new UpdateIssueRequest("P6-新标题", "新描述", IssuePriority.URGENT, IssueSeverity.S1, null, null, null, null), ownerId);
         assertEquals("P6-新标题", updated.title());
         assertEquals(IssuePriority.URGENT, updated.priority());
         assertEquals(created.issueNo(), updated.issueNo(), "issue_no 不可变");
@@ -228,7 +228,7 @@ class IssueServiceIntegrationTest {
         // member 移出项目后重新分派 → 400
         projectMemberService.removeMember(projectId, member, ownerId);
         BusinessException ex = assertThrows(BusinessException.class, () -> issueService.update(
-                projectId, issue.id(), new UpdateIssueRequest(null, null, null, null, member), ownerId));
+                projectId, issue.id(), new UpdateIssueRequest(null, null, null, null, member, null, null, null), ownerId));
         assertEquals(400, ex.getStatus(), "assignee 变更须重新校验项目成员身份");
     }
 
@@ -239,7 +239,7 @@ class IssueServiceIntegrationTest {
         Long outsider = createTestUser("updn");
         IssueVO created = issueService.create(projectId, createRequest("P6-越权"), ownerId);
         assertThrows(ForbiddenException.class, () -> issueService.update(
-                projectId, created.id(), new UpdateIssueRequest("x", null, null, null, null), outsider));
+                projectId, created.id(), new UpdateIssueRequest("x", null, null, null, null, null, null, null), outsider));
     }
 
     @Test
@@ -260,7 +260,7 @@ class IssueServiceIntegrationTest {
         assertThrows(ResourceNotFoundException.class,
                 () -> issueService.getById(projectIdB, created.id()));
         assertThrows(ResourceNotFoundException.class, () -> issueService.update(
-                projectIdB, created.id(), new UpdateIssueRequest("x", null, null, null, null), ownerId));
+                projectIdB, created.id(), new UpdateIssueRequest("x", null, null, null, null, null, null, null), ownerId));
     }
 
     // ===== 状态（P6-05） =====
@@ -307,9 +307,9 @@ class IssueServiceIntegrationTest {
                 new com.workflowx.project.dto.AddProjectMemberRequest(member, "MEMBER"), ownerId);
 
         IssueVO bug = issueService.create(projectId, new CreateIssueRequest(
-                "P6-登录崩溃", "紧急修复", IssueType.BUG, IssuePriority.URGENT, IssueSeverity.S1, member), ownerId);
+                "P6-登录崩溃", "紧急修复", IssueType.BUG, IssuePriority.URGENT, IssueSeverity.S1, member, null, null), ownerId);
         IssueVO task = issueService.create(projectId, new CreateIssueRequest(
-                "P6-写文档", null, IssueType.TASK, IssuePriority.LOW, null, null), ownerId);
+                "P6-写文档", null, IssueType.TASK, IssuePriority.LOW, null, null, null, null), ownerId);
         workflowService.transition(projectId, task.id(),
                 IssueStatus.OPEN, IssueStatus.IN_PROGRESS, ownerId);
         workflowService.transition(projectId, task.id(),
@@ -317,31 +317,31 @@ class IssueServiceIntegrationTest {
 
         // keyword（标题/描述）
         assertEquals(1, issueService.page(projectId,
-                new IssuePageQuery("崩溃", null, null, null, null, null, null, null, 1, 10)).total());
+                new IssuePageQuery("崩溃", null, null, null, null, null, null, null, null, null, null, 1, 10)).total());
         // issueNo 精确
         assertEquals(bug.id(), issueService.page(projectId,
-                new IssuePageQuery(null, bug.issueNo(), null, null, null, null, null, null, 1, 10))
+                new IssuePageQuery(null, bug.issueNo(), null, null, null, null, null, null, null, null, null, 1, 10))
                 .list().get(0).id());
         // type / priority / severity / status
         assertEquals(1, issueService.page(projectId,
-                new IssuePageQuery(null, null, IssueType.BUG, null, null, null, null, null, 1, 10)).total());
+                new IssuePageQuery(null, null, IssueType.BUG, null, null, null, null, null, null, null, null, 1, 10)).total());
         assertEquals(1, issueService.page(projectId,
-                new IssuePageQuery(null, null, null, IssuePriority.URGENT, null, null, null, null, 1, 10)).total());
+                new IssuePageQuery(null, null, null, IssuePriority.URGENT, null, null, null, null, null, null, null, 1, 10)).total());
         assertEquals(1, issueService.page(projectId,
-                new IssuePageQuery(null, null, null, null, IssueSeverity.S1, null, null, null, 1, 10)).total());
+                new IssuePageQuery(null, null, null, null, IssueSeverity.S1, null, null, null, null, null, null, 1, 10)).total());
         assertEquals(1, issueService.page(projectId,
-                new IssuePageQuery(null, null, null, null, null, IssueStatus.RESOLVED, null, null, 1, 10)).total());
+                new IssuePageQuery(null, null, null, null, null, IssueStatus.RESOLVED, null, null, null, null, null, 1, 10)).total());
         // reporter / assignee
         assertEquals(2, issueService.page(projectId,
-                new IssuePageQuery(null, null, null, null, null, null, ownerId, null, 1, 10)).total());
+                new IssuePageQuery(null, null, null, null, null, null, ownerId, null, null, null, null, 1, 10)).total());
         assertEquals(1, issueService.page(projectId,
-                new IssuePageQuery(null, null, null, null, null, null, null, member, 1, 10)).total());
+                new IssuePageQuery(null, null, null, null, null, null, null, member, null, null, null, 1, 10)).total());
         // 组合: type=BUG + assignee=member
         assertEquals(1, issueService.page(projectId,
-                new IssuePageQuery(null, null, IssueType.BUG, null, null, null, null, member, 1, 10)).total());
+                new IssuePageQuery(null, null, IssueType.BUG, null, null, null, null, member, null, null, null, 1, 10)).total());
         // 分页 size=1
         PageVO<IssueVO> sized = issueService.page(projectId,
-                new IssuePageQuery(null, null, null, null, null, null, null, null, 1, 1));
+                new IssuePageQuery(null, null, null, null, null, null, null, null, null, null, null, 1, 1));
         assertEquals(2, sized.total());
         assertEquals(1, sized.list().size());
         // 项目隔离: 其他项目查不到
@@ -351,10 +351,10 @@ class IssueServiceIntegrationTest {
         projectService.create(new CreateProjectRequest(
                 "PG2 项目", KEY_PREFIX + "PG2", orgIdFor("PG2"), null), ownerId2);
         assertEquals(0, issueService.page(projectIdFor("PG2"),
-                new IssuePageQuery("崩溃", null, null, null, null, null, null, null, 1, 10)).total());
+                new IssuePageQuery("崩溃", null, null, null, null, null, null, null, null, null, null, 1, 10)).total());
         // 稳定排序: created_at DESC, id DESC
         PageVO<IssueVO> page = issueService.page(projectId,
-                new IssuePageQuery(null, null, null, null, null, null, null, null, 1, 10));
+                new IssuePageQuery(null, null, null, null, null, null, null, null, null, null, null, 1, 10));
         assertTrue(page.list().get(0).id() > page.list().get(1).id(), "稳定排序 created_at DESC, id DESC");
     }
 }

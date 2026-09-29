@@ -82,6 +82,18 @@ class DemoDataSeederTest {
                 .isEqualTo(10);
         assertThat(count("SELECT testcase_seq FROM projects WHERE `key` = 'SHOP'")).isEqualTo(12);
 
+        // V17：标签 4/项目×4、issue_labels 绑定、截止日期（含逾期）、关联 2/项目
+        assertThat(count("SELECT COUNT(*) FROM labels l JOIN projects p ON l.project_id = p.id WHERE p.`key` IN ('CAMPUS','SHOP','MBANK','DEVOPS')"))
+                .isEqualTo(16);
+        assertThat(count("SELECT COUNT(*) FROM issue_labels il JOIN issues i ON il.issue_id = i.id JOIN projects p ON i.project_id = p.id WHERE p.`key` IN ('CAMPUS','SHOP','MBANK','DEVOPS')"))
+                .isGreaterThan(40);
+        assertThat(count("SELECT COUNT(*) FROM issues i JOIN projects p ON i.project_id = p.id WHERE p.`key` IN ('CAMPUS','SHOP','MBANK','DEVOPS') AND i.due_date IS NOT NULL"))
+                .isGreaterThan(10);
+        assertThat(count("SELECT COUNT(*) FROM issues i JOIN projects p ON i.project_id = p.id WHERE p.`key` IN ('CAMPUS','SHOP','MBANK','DEVOPS') AND i.due_date < NOW()"))
+                .isGreaterThan(3);
+        assertThat(count("SELECT COUNT(*) FROM issue_links il JOIN issues i ON il.source_issue_id = i.id JOIN projects p ON i.project_id = p.id WHERE p.`key` IN ('CAMPUS','SHOP','MBANK','DEVOPS')"))
+                .isEqualTo(8);
+
         // 计划：2 个（RUNNING 10 项 / COMPLETED 4 项），FAIL 项必须关联同项目 Bug
         assertThat(count("SELECT COUNT(*) FROM test_plans WHERE name IN ('MBANK V2.3 版本回归测试','智慧校园 V1.0 冒烟测试')")).isEqualTo(2);
         assertThat(count("SELECT COUNT(*) FROM test_plan_items tpi JOIN test_plans tp ON tpi.plan_id = tp.id WHERE tp.name = 'MBANK V2.3 版本回归测试'"))

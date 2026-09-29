@@ -24,14 +24,21 @@ public record IssueVO(
         IssueStatus status,
         Long reporterId,
         Long assigneeId,
+        LocalDateTime dueDate,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt) {
+        LocalDateTime updatedAt,
+        java.util.List<com.workflowx.issue.vo.LabelVO> labels) {
 
     public static IssueVO from(Issue issue) {
+        return from(issue, java.util.List.of());
+    }
+
+    /** 服务层装配标签后调用（V17） */
+    public static IssueVO from(Issue issue, java.util.List<LabelVO> labels) {
         return new IssueVO(issue.getId(), issue.getProjectId(), issue.getIssueNo(),
                 issue.getTitle(), issue.getDescription(),
                 issue.getType(), issue.getPriority(), issue.getSeverity(), issue.getStatus(),
-                issue.getReporterId(), issue.getAssigneeId(),
-                issue.getCreatedAt(), issue.getUpdatedAt());
+                issue.getReporterId(), issue.getAssigneeId(), issue.getDueDate(),
+                issue.getCreatedAt(), issue.getUpdatedAt(), labels);
     }
 }
