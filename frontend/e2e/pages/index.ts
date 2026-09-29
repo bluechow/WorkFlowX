@@ -43,14 +43,14 @@ export class OrganizationsPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/system/organizations')
+    await this.page.goto('/organizations')
     await this.page.getByRole('heading', { name: '组织管理' }).waitFor()
   }
 
   async openDetailByName(name: string): Promise<void> {
     const row = this.page.locator('tbody tr', { hasText: name }).first()
     await row.getByRole('button', { name: '管理' }).click()
-    await this.page.waitForURL(/\/system\/organizations\/\d+/)
+    await this.page.waitForURL(/\/organizations\/\d+/)
   }
 
   async expectOrgVisible(name: string): Promise<void> {
@@ -102,7 +102,7 @@ export class ProjectsPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/system/projects')
+    await this.page.goto('/projects')
     await this.page.getByRole('heading', { name: '项目管理' }).waitFor()
   }
 
@@ -120,7 +120,7 @@ export class IssuesPage {
   }
 
   async goto(projectId: number): Promise<void> {
-    await this.page.goto(`/system/projects/${projectId}/issues`)
+    await this.page.goto(`/projects/${projectId}/issues`)
     await this.page.getByRole('heading', { name: /Issues —/ }).waitFor()
   }
 
@@ -184,7 +184,7 @@ export class AuditPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/system/audit')
+    await this.page.goto('/audit')
     await this.page.getByRole('heading', { name: '审计日志' }).waitFor()
   }
 

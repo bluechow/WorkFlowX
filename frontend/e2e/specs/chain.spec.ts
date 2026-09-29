@@ -23,7 +23,7 @@ test.describe('完整业务链 @full @critical', () => {
     // 2. 组织（UI 新建对话框）
     const suffix = Date.now().toString(36).toUpperCase()
     const orgsPage = new OrganizationsPage(page)
-    await page.goto('/system/organizations')
+    await page.goto('/organizations')
     await orgsPage.createOrgViaDialog(`AA 全链组织 ${suffix}`, `AACHAIN${suffix}`)
     // 登记 UI 创建的组织进清理轨迹（URL 提取 id）
     const uiOrgId = Number((page.url().match(/organizations\/(\d+)/) || [])[1])
@@ -75,7 +75,7 @@ test.describe('完整业务链 @full @critical', () => {
 
     // 11. Audit（admin 核对 TRANSITION 事实）
     console.log('PROBE-B pre-audit token=', await page.evaluate(() => (localStorage.getItem('workflowx_access_token') || '').slice(0, 20)), 'url-before=', await page.url())
-    await page.goto('/system/audit')
+    await page.goto('/audit')
     console.log('PROBE-C audit url=', await page.url())
     const auditPage = new AuditPage(page)
     await auditPage.expectFactVisible(`issue:${issue.id}`)
