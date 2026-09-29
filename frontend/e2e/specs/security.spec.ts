@@ -29,7 +29,7 @@ test.describe('前端安全 @security @regression', () => {
   })
 
   test('ADMIN 刷新后系统菜单保持（P13 缺陷防回归——权限码驱动）', async ({ adminPage }) => {
-    await adminPage.goto('/dashboard')
+    await adminPage.goto('/workspace')
     await adminPage.reload()
     const shell = new AppShell(adminPage)
     await shell.expectMenuVisibility(
@@ -72,7 +72,7 @@ test.describe('前端安全 @security @regression', () => {
   })
 
   test('localStorage 不存密码，仅存 token', async ({ adminPage }) => {
-    await adminPage.goto('/dashboard')
+    await adminPage.goto('/workspace')
     const stored = await adminPage.evaluate(() => JSON.stringify(localStorage))
     expect(stored).not.toContain('Admin@123456')
     expect(stored).not.toContain('Member@123456')

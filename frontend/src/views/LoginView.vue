@@ -37,7 +37,7 @@ async function handleLogin() {
   submitting.value = true
   try {
     await auth.login({ ...form })
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/workspace'
     await router.push(redirect)
   } catch (e) {
     const err = e as ApiError

@@ -218,7 +218,7 @@ onMounted(async () => {
     <div class="issues-view__toolbar">
       <h2>Issues — {{ project?.name ?? `#${projectId}` }}</h2>
       <div class="issues-view__actions">
-        <el-button @click="router.push(`/system/projects/${projectId}/board`)">看板视图</el-button>
+        <el-button @click="router.push(`/projects/${projectId}/board`)">看板视图</el-button>
         <el-button
           v-if="auth.hasPermission('issue:create')"
           type="primary"

@@ -33,15 +33,15 @@ test.describe('Authentication @smoke @critical', () => {
     await expect(publicPage).toHaveURL(/\/login\?redirect=/)
   })
 
-  test('已登录访问 /login → 回 /dashboard', async ({ adminPage }) => {
+  test('已登录访问 /login → 回工作台', async ({ adminPage }) => {
     await adminPage.goto('/login')
-    await expect(adminPage).toHaveURL(/\/dashboard/)
+    await expect(adminPage).toHaveURL(/\/workspace/)
   })
 
   test('刷新后保持登录', async ({ adminPage }) => {
-    await adminPage.goto('/dashboard')
+    await adminPage.goto('/workspace')
     await adminPage.reload()
-    await expect(adminPage).toHaveURL(/\/dashboard/)
+    await expect(adminPage).toHaveURL(/\/workspace/)
     await expect(adminPage.getByRole('button', { name: '退出登录' }).last()).toBeVisible()
   })
 

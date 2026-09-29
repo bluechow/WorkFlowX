@@ -62,7 +62,7 @@ async function loadTodos() {
 }
 
 function goProject(projectId: number) {
-  router.push(`/system/projects/${projectId}/board`)
+  router.push(`/projects/${projectId}/board`)
 }
 
 onMounted(async () => {

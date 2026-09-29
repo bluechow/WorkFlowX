@@ -81,7 +81,7 @@ test.describe('完整业务链 @full @critical', () => {
     await auditPage.expectFactVisible(`issue:${issue.id}`)
 
     // 12. Dashboard（统计自洽）
-    await page.goto('/dashboard')
+    await page.goto('/workspace')
     // Phase A-⑥：统计自动加载
     await expect(page.locator('[data-test="card-issues"]')).toContainText(/\d+/)
 

@@ -142,7 +142,7 @@ onMounted(refresh)
         <template #default="{ row }">
           <RowActions
             :groups="[
-              [{ label: '管理', onClick: () => router.push(`/system/organizations/${row.id}`) }],
+              [{ label: '管理', onClick: () => router.push(`/organizations/${row.id}`) }],
               [{ label: '编辑', permission: 'org:update', onClick: () => openEdit(row) }],
               [{ label: '删除', permission: 'org:delete', type: 'danger', onClick: () => handleDelete(row) }],
             ]"

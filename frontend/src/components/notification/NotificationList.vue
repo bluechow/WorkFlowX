@@ -27,7 +27,7 @@ async function onNotificationClick(notification: NotificationVO) {
     }
   }
   if (notification.projectId) {
-    router.push(`/system/projects/${notification.projectId}/issues`)
+    router.push(`/projects/${notification.projectId}/issues`)
   }
 }
 

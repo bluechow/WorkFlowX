@@ -217,7 +217,8 @@ export class LoginPage {
   }
 
   async expectDashboard(): Promise<void> {
-    await expect(this.page).toHaveURL(/\/dashboard/)
+    // FP-0：首页从 /dashboard 迁至 /workspace（旧路径 redirect 兼容）
+    await expect(this.page).toHaveURL(/\/workspace/)
     // Phase A-⑥ 起首页为问候+统计+待办；问候语含昵称，这里断言稳定副标语
     await expect(this.page.getByText('今天也要顺利交付')).toBeVisible()
   }

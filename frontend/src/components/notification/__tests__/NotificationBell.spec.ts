@@ -45,7 +45,7 @@ const note = (overrides: Partial<NotificationVO> = {}): NotificationVO => ({
 function makeRouter(): Router {
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/system/projects/:projectId/issues', component: { template: '<div/>' } }],
+    routes: [{ path: '/projects/:projectId/issues', component: { template: '<div/>' } }],
   })
   router.push('/')
   return router
@@ -127,7 +127,7 @@ describe('NotificationList 面板（P9-09）', () => {
     await wrapper.find('[data-test="notification-item"]').trigger('click')
     await flushPromises()
     expect(mocked.markNotificationRead).toHaveBeenCalledWith(31)
-    expect(router.currentRoute.value.path).toBe('/system/projects/7/issues')
+    expect(router.currentRoute.value.path).toBe('/projects/7/issues')
   })
 
   it('projectId 缺失（Issue 已删）: 仅标记已读不跳转', async () => {

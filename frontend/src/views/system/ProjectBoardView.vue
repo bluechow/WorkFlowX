@@ -139,7 +139,7 @@ onMounted(async () => {
         <el-button
           v-if="auth.hasPermission('issue:list')"
           tag="router-link"
-          :to="`/system/projects/${projectId}/issues`"
+          :to="`/projects/${projectId}/issues`"
         >
           列表视图
         </el-button>

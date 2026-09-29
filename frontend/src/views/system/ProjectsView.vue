@@ -182,10 +182,10 @@ onMounted(refresh)
           <RowActions
             :groups="[
               [
-                { label: 'Issue 列表', permission: 'issue:list', onClick: () => router.push(`/system/projects/${row.id}/issues`) },
-                { label: '看板', permission: 'issue:list', onClick: () => router.push(`/system/projects/${row.id}/board`) },
-                { label: '用例库', permission: 'testcase:list', onClick: () => router.push(`/system/projects/${row.id}/testcases`) },
-                { label: '测试计划', permission: 'testplan:list', onClick: () => router.push(`/system/projects/${row.id}/testplans`) },
+                { label: 'Issue 列表', permission: 'issue:list', onClick: () => router.push(`/projects/${row.id}/issues`) },
+                { label: '看板', permission: 'issue:list', onClick: () => router.push(`/projects/${row.id}/board`) },
+                { label: '用例库', permission: 'testcase:list', onClick: () => router.push(`/projects/${row.id}/testcases`) },
+                { label: '测试计划', permission: 'testplan:list', onClick: () => router.push(`/projects/${row.id}/testplans`) },
               ],
               [{ label: '编辑', permission: 'project:update', onClick: () => openEdit(row) }],
               [{ label: row.status === 'ACTIVE' ? '归档' : '恢复', permission: 'project:update', type: 'warning', onClick: () => toggleArchive(row) }],

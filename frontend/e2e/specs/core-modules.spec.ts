@@ -12,7 +12,7 @@ test.describe('核心模块 UI 回归 @regression', () => {
     const org = await factory.createOrg()
     const project = await factory.createProject(org.id)
     await factory.createIssue(project.id, { title: 'AA 图表数据' })
-    await adminPage.goto('/dashboard')
+    await adminPage.goto('/workspace')
     // Phase A-⑥：统计自动加载
     await expect(adminPage.locator('[data-test="card-projects"]')).toContainText(/\d+/)
     await expect(adminPage.locator('canvas')).toHaveCount(2)
@@ -64,7 +64,7 @@ test.describe('核心模块 UI 回归 @regression', () => {
 test.describe('权限渲染与隔离 @regression @permission', () => {
   test('user1: 系统菜单全部隐藏', async ({ userPage }) => {
     const shell = new AppShell(userPage)
-    await userPage.goto('/dashboard')
+    await userPage.goto('/workspace')
     await shell.expectMenuVisibility(
       [],
       ['组织管理', '项目管理', '用户管理', '用户角色', '角色管理', '权限管理', '审计日志'],
@@ -73,7 +73,7 @@ test.describe('权限渲染与隔离 @regression @permission', () => {
 
   test('admin: 7 项系统菜单可见', async ({ adminPage }) => {
     const shell = new AppShell(adminPage)
-    await adminPage.goto('/dashboard')
+    await adminPage.goto('/workspace')
     await shell.expectMenuVisibility(
       ['组织管理', '项目管理', '用户管理', '用户角色', '角色管理', '权限管理', '审计日志'],
       [],
@@ -93,6 +93,6 @@ test.describe('404 @regression', () => {
     await adminPage.goto('/definitely/not/a/page')
     await expect(adminPage.getByText('页面不存在或已被移动')).toBeVisible()
     await adminPage.getByRole('button', { name: '返回首页' }).click()
-    await expect(adminPage).toHaveURL(/\/dashboard/)
+    await expect(adminPage).toHaveURL(/\/workspace/)
   })
 })

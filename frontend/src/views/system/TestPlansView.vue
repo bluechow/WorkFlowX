@@ -64,7 +64,7 @@ async function submitCreate() {
     const created = await createTestPlan(projectId.value, planName.value.trim())
     ElMessage.success('测试计划已创建')
     dialogVisible.value = false
-    router.push(`/system/projects/${projectId.value}/testplans/${created.id}`)
+    router.push(`/projects/${projectId.value}/testplans/${created.id}`)
   } catch (e) {
     ElMessage.error((e as { message?: string }).message ?? '创建失败')
   } finally {
@@ -136,8 +136,8 @@ onMounted(refresh)
             <RowActions
               :groups="[
                 [
-                  { label: '执行', onClick: () => router.push(`/system/projects/${projectId}/testplans/${row.id}`) },
-                  { label: '报告', onClick: () => router.push(`/system/projects/${projectId}/testplans/${row.id}/report`) },
+                  { label: '执行', onClick: () => router.push(`/projects/${projectId}/testplans/${row.id}`) },
+                  { label: '报告', onClick: () => router.push(`/projects/${projectId}/testplans/${row.id}/report`) },
                 ],
                 [{ label: '删除', permission: 'testplan:delete', type: 'danger', onClick: () => remove(row) }],
               ]"

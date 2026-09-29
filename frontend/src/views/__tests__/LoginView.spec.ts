@@ -79,11 +79,11 @@ describe('LoginView（P2-21）', () => {
     expect(push).not.toHaveBeenCalled()
   })
 
-  it('登录成功默认跳转 /dashboard', async () => {
+  it('登录成功默认跳转 /workspace', async () => {
     mockedLogin.mockResolvedValue(LOGIN_OK)
     const wrapper = mountView()
     await submitForm(wrapper, 'alice', 'MockOnly-Not-A-Real-Credential')
-    expect(push).toHaveBeenCalledWith('/dashboard')
+    expect(push).toHaveBeenCalledWith('/workspace')
     expect(localStorage.getItem('workflowx_access_token')).toBe('view-token')
   })
 
@@ -114,7 +114,7 @@ describe('LoginView（P2-21）', () => {
     expect(mockedLogin).toHaveBeenCalledTimes(1)
     deferred.resolve?.(LOGIN_OK)
     await flushPromises()
-    expect(push).toHaveBeenCalledWith('/dashboard')
+    expect(push).toHaveBeenCalledWith('/workspace')
   })
 
   it('API 失败后停留登录页且可再次提交', async () => {
@@ -124,7 +124,7 @@ describe('LoginView（P2-21）', () => {
     await submitForm(wrapper, 'alice', 'WrongPass@1')
     expect(wrapper.text()).toContain('用户名或密码错误')
     await submitForm(wrapper, 'alice', 'MockOnly-Not-A-Real-Credential')
-    expect(push).toHaveBeenCalledWith('/dashboard')
+    expect(push).toHaveBeenCalledWith('/workspace')
   })
 
   it('登录成功后页面不显示 token 明文', async () => {

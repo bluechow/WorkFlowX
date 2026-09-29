@@ -19,7 +19,7 @@ test.describe('Notification @regression', () => {
 
     // user1 浏览器: badge 可见
     const shell = new AppShell(userPage)
-    await userPage.goto('/dashboard')
+    await userPage.goto('/workspace')
     await expect(userPage.locator('.el-badge__content').first()).toBeVisible({ timeout: 15_000 })
 
     // 打开通知中心
@@ -43,7 +43,7 @@ test.describe('Notification @regression', () => {
     const shellFactory = new AppShell(publicPage)
     await shellFactory.logout()
     // user1（独立 storageState 会话）登录态完好、状态独立
-    await userPage.goto('/dashboard')
+    await userPage.goto('/workspace')
     await expect(userPage.getByRole('button', { name: '退出登录' }).last()).toBeVisible()
     const shell = new AppShell(userPage)
     await shell.expectMenuVisibility([], ['审计日志'])

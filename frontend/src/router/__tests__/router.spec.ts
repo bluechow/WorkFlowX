@@ -52,10 +52,10 @@ describe('router guard（P2-21）', () => {
     expect(router.currentRoute.value.path).toBe('/login')
   })
 
-  it('未登录访问 /dashboard → 重定向 /login 并携带 redirect 参数', async () => {
-    await router.push('/dashboard')
+  it('未登录访问 /workspace → 重定向 /login 并携带 redirect 参数', async () => {
+    await router.push('/workspace')
     expect(router.currentRoute.value.path).toBe('/login')
-    expect(router.currentRoute.value.query.redirect).toBe('/dashboard')
+    expect(router.currentRoute.value.query.redirect).toBe('/workspace')
   })
 
   it('未登录访问 /health 公开路由放行', async () => {
@@ -66,9 +66,9 @@ describe('router guard（P2-21）', () => {
   it('token 存在但 currentUser 缺失 → 调用 /me 确认（成功后放行）', async () => {
     givenToken('valid-token')
     mockedFetchMe.mockResolvedValue(ME)
-    await router.push('/dashboard')
+    await router.push('/workspace')
     expect(mockedFetchMe).toHaveBeenCalledTimes(1)
-    expect(router.currentRoute.value.path).toBe('/dashboard')
+    expect(router.currentRoute.value.path).toBe('/workspace')
     // /me 成功后 currentUser 填充
     const store = useAuthStore()
     expect(store.currentUser?.username).toBe('alice')
@@ -77,16 +77,16 @@ describe('router guard（P2-21）', () => {
   it('已认证（currentUser 就绪）再次导航不重复调用 /me', async () => {
     givenToken('valid-token')
     mockedFetchMe.mockResolvedValue(ME)
-    await router.push('/dashboard')
+    await router.push('/workspace')
     expect(mockedFetchMe).toHaveBeenCalledTimes(1)
-    await router.push('/dashboard')
+    await router.push('/workspace')
     expect(mockedFetchMe).toHaveBeenCalledTimes(1)
   })
 
   it('token 存在但 /me 401（伪造/过期/被覆盖）→ 清理并回登录页', async () => {
     givenToken('forged-invalid-token')
     mockedFetchMe.mockRejectedValue({ code: 401, message: 'authentication required' })
-    await router.push('/dashboard')
+    await router.push('/workspace')
     expect(router.currentRoute.value.path).toBe('/login')
     expect(router.currentRoute.value.query.reason).toBe('401')
     // 认证状态被清理（token 存在 ≠ 有效）
@@ -95,18 +95,18 @@ describe('router guard（P2-21）', () => {
     expect(localStorage.getItem('workflowx_access_token')).toBeNull()
   })
 
-  it('已登录访问 /login → 重定向 /dashboard', async () => {
+  it('已登录访问 /login → 重定向 /workspace', async () => {
     givenToken('valid-token')
     mockedFetchMe.mockResolvedValue(ME)
-    await router.push('/dashboard')
+    await router.push('/workspace')
     await router.push('/login')
-    expect(router.currentRoute.value.path).toBe('/dashboard')
+    expect(router.currentRoute.value.path).toBe('/workspace')
   })
 
   it('redirect 查询参数在守卫重定向时正确保留', async () => {
     givenToken('forged-token')
     mockedFetchMe.mockRejectedValue({ code: 401, message: 'authentication required' })
-    await router.push('/dashboard?tab=1')
+    await router.push('/workspace?tab=1')
     expect(router.currentRoute.value.query.reason).toBe('401')
   })
 })
