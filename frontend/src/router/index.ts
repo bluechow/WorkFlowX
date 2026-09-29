@@ -28,7 +28,7 @@ const router = createRouter({
     {
       path: '/workspace',
       name: 'workspace',
-      component: () => import('@/views/DashboardView.vue'),
+      component: () => import('@/views/WorkspaceView.vue'),
     },
     {
       path: '/profile',
