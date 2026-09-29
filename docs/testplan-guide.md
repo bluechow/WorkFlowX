@@ -1,5 +1,7 @@
 # WorkFlowX 测试计划执行操作手册
 
+> 版本注记：v2.0.0 Final Edition 起计划页位于项目空间「计划」页签（里程碑），测试计划在「测试」页签。
+
 ## 前置
 
 - Docker 部署运行中（或开发模式 backend:8080 + frontend:5173）
