@@ -1,6 +1,9 @@
 # WorkFlowX
 
-企业级项目协作与工单管理平台 —— 面向中小型团队的项目管理、Issue 管理、团队协作、权限控制、通知、审计和数据统计。
+**企业项目协作与工作项管理平台**（Enterprise Project Collaboration & Work Item Management Platform）
+—— 面向中小型团队的组织管理、项目协作、工作项管理、看板推进、轻量计划、活动流、数据分析与审计。
+
+> 当前版本：**v2.0.0 Final Edition**（定版蓝图见 [docs/final-product-blueprint.md](docs/final-product-blueprint.md)，已封版）
 
 > 本项目同时是一个测试学习平台：每一个业务功能都考虑如何测试、如何自动化、如何回归（详见 [AI_MASTER_PROMPT.md](AI_MASTER_PROMPT.md) §40）。
 
