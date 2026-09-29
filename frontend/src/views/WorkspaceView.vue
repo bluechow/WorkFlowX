@@ -135,8 +135,8 @@ onMounted(async () => {
           <template #header><span class="ws__h">我加入的项目</span></template>
           <div v-for="p in myProjects" :key="p.id" class="ws__project" @click="goProject(p.id)">
             <span class="ws__project-key">{{ p.key }}</span>
-            <span class="ws__project-name">{{ p.name }}</span>
-            <el-tag size="small" type="info">{{ p.myRole === 'OWNER' ? '负责人' : p.myRole === 'MANAGER' ? '管理者' : '成员' }}</el-tag>
+            <span class="ws__project-name" :title="p.name">{{ p.name }}</span>
+            <el-tag size="small" type="info" class="ws__project-role">{{ p.myRole === 'OWNER' ? '负责人' : p.myRole === 'MANAGER' ? '管理者' : '成员' }}</el-tag>
           </div>
           <div v-if="myProjects.length === 0" class="ws__empty">尚未加入任何项目</div>
         </el-card>
@@ -222,8 +222,23 @@ onMounted(async () => {
   font-size: 13px;
 }
 .ws__project:hover { background: #f5f7fa; }
-.ws__project-key { color: #409eff; font-weight: 600; flex: none; width: 70px; }
-.ws__project-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws__project-key {
+  color: #409eff;
+  font-weight: 600;
+  flex: none;
+  width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ws__project-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ws__project-role { flex: none; }
 .ws__todo { padding: 9px 4px; border-bottom: 1px solid #f0f2f5; cursor: pointer; }
 .ws__todo:hover { background: #f5f7fa; }
 .ws__todo-meta { display: flex; gap: 6px; align-items: center; margin-bottom: 3px; }

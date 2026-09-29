@@ -18,6 +18,9 @@ const displayName = computed(() => auth.currentUser?.nickname || auth.currentUse
  * 核心区：工作台/项目管理（工作项 FP-1、数据分析 FP-7 接入）；
  * 管理区：组织与团队、系统管理（仅相关权限可见）。
  */
+/** 管理分组默认展开（用户可点击收起） */
+const defaultOpeneds = ['team', 'system']
+
 const hasTeamMenu = computed(() =>
   ['org:list', 'user:list', 'user:assign_role', 'role:list', 'permission:list']
     .some((code) => auth.hasPermission(code)),
@@ -38,29 +41,33 @@ async function handleLogout() {
   <el-container class="app">
     <!-- 侧边导航 -->
     <el-aside v-if="auth.isAuthenticated" width="208px" class="app__aside">
-      <div class="app__brand" @click="router.push('/workspace')">WorkFlowX</div>
-      <el-menu router class="app__menu" :default-active="$route.path">
+      <div class="app__brand" @click="router.push('/workspace')">
+        <img src="/favicon.svg" alt="WorkFlowX" class="app__logo" />
+        <span>WorkFlowX</span>
+      </div>
+      <el-menu router class="app__menu" :default-active="$route.path" :default-openeds="defaultOpeneds">
+        <!-- 核心业务区：常驻平铺 -->
         <el-menu-item index="/workspace">工作台</el-menu-item>
         <el-menu-item v-if="auth.hasPermission('project:list')" index="/projects">项目管理</el-menu-item>
         <el-menu-item v-if="auth.hasPermission('issue:list')" index="/work-items">工作项</el-menu-item>
         <el-menu-item v-if="auth.hasPermission('dashboard:view')" index="/analytics">数据分析</el-menu-item>
 
-        <template v-if="hasTeamMenu">
-          <li class="app__group-title" role="none">组织与团队</li>
+        <!-- 管理区：可折叠分组（收起只显示大类） -->
+        <el-sub-menu v-if="hasTeamMenu" index="team">
+          <template #title>组织与团队</template>
           <el-menu-item v-if="auth.hasPermission('org:list')" index="/organizations">组织管理</el-menu-item>
           <el-menu-item v-if="auth.hasPermission('user:list')" index="/users">用户管理</el-menu-item>
           <el-menu-item v-if="auth.hasPermission('user:assign_role')" index="/user-roles">用户角色</el-menu-item>
           <el-menu-item v-if="auth.hasPermission('role:list')" index="/roles">角色管理</el-menu-item>
           <el-menu-item v-if="auth.hasPermission('permission:list')" index="/permissions">权限管理</el-menu-item>
-        </template>
+        </el-sub-menu>
 
-        <template v-if="hasSystemMenu">
-          <li class="app__group-title" role="none">系统管理</li>
+        <el-sub-menu v-if="hasSystemMenu" index="system">
+          <template #title>系统管理</template>
           <el-menu-item v-if="auth.hasPermission('user:status')" index="/sessions">在线会话</el-menu-item>
           <el-menu-item v-if="auth.hasPermission('audit:list')" index="/audit">审计日志</el-menu-item>
-        </template>
+        </el-sub-menu>
 
-        <li class="app__group-title" role="none">个人</li>
         <el-menu-item index="/profile">个人中心</el-menu-item>
       </el-menu>
     </el-aside>
@@ -95,6 +102,9 @@ async function handleLogout() {
   background: #fff;
 }
 .app__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 18px;
   font-weight: 700;
   padding: 18px 20px 12px;
@@ -102,16 +112,14 @@ async function handleLogout() {
   color: #409eff;
   letter-spacing: 0.5px;
 }
+.app__logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+}
 .app__menu {
   border-right: none;
   flex: 1;
-}
-.app__group-title {
-  list-style: none;
-  padding: 14px 20px 4px;
-  font-size: 12px;
-  color: #909399;
-  line-height: 1.4;
 }
 .app__header {
   display: flex;
