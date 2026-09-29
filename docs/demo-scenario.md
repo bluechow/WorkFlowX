@@ -1,5 +1,7 @@
 # 演示路径（5~10 分钟）
 
+> 版本注记：v2.0.0 起演示入口为 /workspace（工作台）与项目空间页签（概览/工作项/看板/计划/动态/测试）；演示数据已含标签/截止/关联/里程碑/活动/@提及样本。
+
 > 全程真实系统演示；前置：deploy 全栈已启动（`docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d`），访问 `http://localhost:${FRONTEND_PORT}`。
 
 ## 演示脚本
