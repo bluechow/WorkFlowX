@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
 import NotificationBell from '@/components/notification/NotificationBell.vue'
+import GlobalSearch from '@/components/GlobalSearch.vue'
 
 const auth = useAuthStore()
 const notificationStore = useNotificationStore()
@@ -66,6 +67,7 @@ async function handleLogout() {
     <!-- 顶栏 + 主内容 -->
     <el-container>
       <el-header class="app__header">
+        <GlobalSearch v-if="auth.isAuthenticated" />
         <span class="app__spacer" />
         <NotificationBell v-if="auth.isAuthenticated" />
         <router-link v-if="auth.isAuthenticated" to="/profile" class="app__user" title="个人中心">
