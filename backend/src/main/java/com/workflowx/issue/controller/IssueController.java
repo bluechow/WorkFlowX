@@ -111,8 +111,7 @@ public class IssueController {
         Long assigneeId = body == null ? null : body.assigneeId();
         // 复用 update 的 assignee 校验链：仅传 assignee 字段（null=清空走 0 哨兵约定之外——
         // 本端点语义为"设置分派"，取消分派传 0）
-        UpdateIssueRequest request = new UpdateIssueRequest(null, null, null, null,
-                assigneeId == null ? 0L : assigneeId, null, null, null);
+        UpdateIssueRequest request = new UpdateIssueRequest(null, null, null, null, assigneeId == null ? 0L : assigneeId, null, null, null, null);
         return Result.ok(issueService.update(projectId, issueId, request, operator.userId()));
     }
 

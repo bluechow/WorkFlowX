@@ -63,6 +63,7 @@ function drawerIssue(row: WorkItemVO) {
     reporterId: row.reporterId,
     assigneeId: row.assigneeId,
     dueDate: row.dueDate,
+    milestoneId: null,
     createdAt: '',
     updatedAt: row.updatedAt,
     labels: [],

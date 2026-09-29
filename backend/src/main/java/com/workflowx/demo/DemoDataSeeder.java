@@ -84,6 +84,7 @@ public class DemoDataSeeder {
         seedProjects();
         seedIssues();
         seedWorkItemEnhancements();
+        seedMilestones();
         seedComments();
         seedNotifications();
         seedAuditLogs();
@@ -370,6 +371,31 @@ public class DemoDataSeeder {
                         issues.get(0), issues.get(1), "BLOCKS", demoPmId, daysAgo(12));
                 jdbc.update("INSERT INTO issue_links (source_issue_id, target_issue_id, link_type, created_by, created_at) VALUES (?,?,?,?,?)",
                         issues.get(2), issues.get(3), "RELATES", demoPmId, daysAgo(10));
+            }
+        }
+    }
+
+    // ==================== 里程碑（V19）====================
+
+    private void seedMilestones() {
+        String[][] defs = {
+                {"V1.0 上线", "-20", "DONE", "首个正式版本：核心流程打通"},
+                {"V1.1 迭代", "8", "OPEN", "体验优化与性能治理"},
+                {"V2.0 规划", "45", "OPEN", "下一阶段能力规划（需求收敛中）"},
+        };
+        for (int p = 0; p < projectIds.size(); p++) {
+            long[] msIds = new long[defs.length];
+            for (int m = 0; m < defs.length; m++) {
+                msIds[m] = insert("INSERT INTO milestones (project_id, name, description, due_date, status, created_by, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+                        projectIds.get(p), defs[m][0] + "（" + projectKeys.get(p) + "）", defs[m][3],
+                        Timestamp.valueOf(LocalDateTime.now().plusDays(Integer.parseInt(defs[m][1])).withHour(18).withMinute(0)),
+                        defs[m][2], demoPmId, daysAgo(40 - m * 5), daysAgo(40 - m * 5));
+            }
+            // 归属：每项目前 6 条工作项 → V1.0；中间 5 条 → V1.1；后面 2 条 → V2.0
+            List<Long> issues = issueIdsByProject.get(p);
+            for (int i = 0; i < issues.size(); i++) {
+                long ms = i < 6 ? msIds[0] : (i < 11 ? msIds[1] : msIds[2]);
+                jdbc.update("UPDATE issues SET milestone_id = ? WHERE id = ?", ms, issues.get(i));
             }
         }
     }

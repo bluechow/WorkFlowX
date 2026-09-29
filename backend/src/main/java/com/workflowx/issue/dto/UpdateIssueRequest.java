@@ -29,5 +29,8 @@ public record UpdateIssueRequest(
         Boolean clearDueDate,
 
         /** 标签 id 集合（null=不变；非空数组=全量替换，含空数组清空；V17） */
-        java.util.List<Long> labelIds) {
+        java.util.List<Long> labelIds,
+
+        /** 归属里程碑（null=不变；0=清除；正数=设置须属本项目；V19） */
+        Long milestoneId) {
 }

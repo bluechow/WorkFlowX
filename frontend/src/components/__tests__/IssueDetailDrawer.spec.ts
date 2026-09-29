@@ -40,7 +40,7 @@ const mocked = {
 const ISSUE: import('@/types/api').IssueVO = {
   id: 1, projectId: 7, issueNo: 3, title: '学生选课并发提交时接口返回 500',
   description: '复现步骤：并发选课', type: 'BUG', priority: 'HIGH', severity: 'S2',
-  status: 'OPEN', reporterId: 2, assigneeId: 4, dueDate: null, labels: [], createdAt: '2026-09-01T10:00:00', updatedAt: '',
+  status: 'OPEN', reporterId: 2, assigneeId: 4, dueDate: null, milestoneId: null, labels: [], createdAt: '2026-09-01T10:00:00', updatedAt: '',
 }
 
 const mountIt = () =>

@@ -82,6 +82,13 @@ class DemoDataSeederTest {
                 .isEqualTo(10);
         assertThat(count("SELECT testcase_seq FROM projects WHERE `key` = 'SHOP'")).isEqualTo(12);
 
+        // V19：里程碑 3/项目×4=12（DONE 1/项目），归属全覆盖
+        assertThat(count("SELECT COUNT(*) FROM milestones m JOIN projects p ON m.project_id = p.id WHERE p.`key` IN ('CAMPUS','SHOP','MBANK','DEVOPS')"))
+                .isEqualTo(12);
+        assertThat(count("SELECT COUNT(*) FROM milestones WHERE status = 'DONE'")).isEqualTo(4);
+        assertThat(count("SELECT COUNT(*) FROM issues i JOIN projects p ON i.project_id = p.id WHERE p.`key` IN ('CAMPUS','SHOP','MBANK','DEVOPS') AND i.milestone_id IS NOT NULL"))
+                .isEqualTo(48);
+
         // V18：活动流（每项目上限 26 条 → 4 项目共 ~80+，倒序含 CREATE/ASSIGN/TRANSITION/COMMENT）
         assertThat(count("SELECT COUNT(*) FROM activities a JOIN projects p ON a.project_id = p.id WHERE p.`key` IN ('CAMPUS','SHOP','MBANK','DEVOPS')"))
                 .isGreaterThanOrEqualTo(80);

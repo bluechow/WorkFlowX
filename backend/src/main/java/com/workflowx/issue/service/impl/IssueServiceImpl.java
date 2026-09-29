@@ -42,6 +42,7 @@ public class IssueServiceImpl implements IssueService {
     private final com.workflowx.issue.mapper.LabelMapper labelMapper;
     private final com.workflowx.issue.mapper.IssueLabelMapper issueLabelMapper;
     private final com.workflowx.issue.mapper.IssueLinkMapper issueLinkMapper;
+    private final com.workflowx.milestone.mapper.MilestoneMapper milestoneMapper;
     private final com.workflowx.activity.service.ActivityService activityService;
 
     @Override
@@ -237,6 +238,22 @@ public class IssueServiceImpl implements IssueService {
         // V17 标签: null=不变；非空数组（含空）=全量替换
         if (request.labelIds() != null) {
             replaceLabels(projectId, issueId, request.labelIds());
+        }
+        // V19 里程碑: null=不变；0=清除；正数=校验归属本项目后设置
+        if (request.milestoneId() != null) {
+            if (request.milestoneId() == 0) {
+                issue.setMilestoneId(null);
+                issueMapper.update(null,
+                        new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Issue>()
+                                .eq(Issue::getId, issueId)
+                                .set(Issue::getMilestoneId, null));
+            } else {
+                var ms = milestoneMapper.selectById(request.milestoneId());
+                if (ms == null || !ms.getProjectId().equals(projectId)) {
+                    throw new com.workflowx.common.exception.ResourceNotFoundException("milestone", request.milestoneId());
+                }
+                issue.setMilestoneId(request.milestoneId());
+            }
         }
         if (clearAssignee) {
             // MP updateById 默认忽略 null 字段——显式 set null 才能写库

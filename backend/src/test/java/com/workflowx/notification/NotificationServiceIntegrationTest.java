@@ -228,10 +228,10 @@ class NotificationServiceIntegrationTest {
         assertEquals(0L, notificationService.listMy(ownerId, null, 1, 10).total());
         // 变更分派给 owner（owner 是操作者 → 不通知）
         issueService.update(projectId, issue.id(),
-                new UpdateIssueRequest(null, null, null, null, 0L, null, null, null), ownerId);
+                new UpdateIssueRequest(null, null, null, null, 0L, null, null, null, null), ownerId);
         // 重新分派 assignee（先取消=0，再设回 assignee → assignee 收到第二条）
         issueService.update(projectId, issue.id(),
-                new UpdateIssueRequest(null, null, null, null, assignee, null, null, null), ownerId);
+                new UpdateIssueRequest(null, null, null, null, assignee, null, null, null, null), ownerId);
         assertEquals(2L, notificationService.listMy(assignee, null, 1, 10).total(),
                 "创建分派 + 重新分派各一条");
     }

@@ -47,8 +47,8 @@ const mocked = {
 }
 
 const ISSUES: import('@/types/api').IssueVO[] = [
-  { id: 1, projectId: 7, issueNo: 1, title: '登录崩溃', description: 'd', type: 'BUG', priority: 'URGENT', severity: 'S1', status: 'OPEN', reporterId: 1, assigneeId: null, createdAt: '', updatedAt: '', dueDate: null, labels: [] },
-  { id: 2, projectId: 7, issueNo: 2, title: '写文档', description: null, type: 'TASK', priority: 'LOW', severity: null, status: 'RESOLVED', reporterId: 1, assigneeId: 3, createdAt: '', updatedAt: '', dueDate: null, labels: [] },
+  { id: 1, projectId: 7, issueNo: 1, title: '登录崩溃', description: 'd', type: 'BUG', priority: 'URGENT', severity: 'S1', status: 'OPEN', reporterId: 1, assigneeId: null, createdAt: '', updatedAt: '', dueDate: null, milestoneId: null, labels: [] },
+  { id: 2, projectId: 7, issueNo: 2, title: '写文档', description: null, type: 'TASK', priority: 'LOW', severity: null, status: 'RESOLVED', reporterId: 1, assigneeId: 3, createdAt: '', updatedAt: '', dueDate: null, milestoneId: null, labels: [] },
 ]
 
 const mountView = () =>

@@ -49,6 +49,8 @@ export interface UpdateIssuePayload {
   dueDate?: string | null
   clearDueDate?: boolean
   labelIds?: number[]
+  /** null=不变；0=清除；正数=设置 */
+  milestoneId?: number
 }
 
 export async function listIssues(

@@ -206,7 +206,7 @@ class IssueServiceIntegrationTest {
         Long projectId = projectIdFor("UPD");
         IssueVO created = issueService.create(projectId, createRequest("P6-原标题"), ownerId);
         IssueVO updated = issueService.update(projectId, created.id(),
-                new UpdateIssueRequest("P6-新标题", "新描述", IssuePriority.URGENT, IssueSeverity.S1, null, null, null, null), ownerId);
+                new UpdateIssueRequest("P6-新标题", "新描述", IssuePriority.URGENT, IssueSeverity.S1, null, null, null, null, null), ownerId);
         assertEquals("P6-新标题", updated.title());
         assertEquals(IssuePriority.URGENT, updated.priority());
         assertEquals(created.issueNo(), updated.issueNo(), "issue_no 不可变");
@@ -228,7 +228,7 @@ class IssueServiceIntegrationTest {
         // member 移出项目后重新分派 → 400
         projectMemberService.removeMember(projectId, member, ownerId);
         BusinessException ex = assertThrows(BusinessException.class, () -> issueService.update(
-                projectId, issue.id(), new UpdateIssueRequest(null, null, null, null, member, null, null, null), ownerId));
+                projectId, issue.id(), new UpdateIssueRequest(null, null, null, null, member, null, null, null, null), ownerId));
         assertEquals(400, ex.getStatus(), "assignee 变更须重新校验项目成员身份");
     }
 
@@ -239,7 +239,7 @@ class IssueServiceIntegrationTest {
         Long outsider = createTestUser("updn");
         IssueVO created = issueService.create(projectId, createRequest("P6-越权"), ownerId);
         assertThrows(ForbiddenException.class, () -> issueService.update(
-                projectId, created.id(), new UpdateIssueRequest("x", null, null, null, null, null, null, null), outsider));
+                projectId, created.id(), new UpdateIssueRequest("x", null, null, null, null, null, null, null, null), outsider));
     }
 
     @Test
@@ -260,7 +260,7 @@ class IssueServiceIntegrationTest {
         assertThrows(ResourceNotFoundException.class,
                 () -> issueService.getById(projectIdB, created.id()));
         assertThrows(ResourceNotFoundException.class, () -> issueService.update(
-                projectIdB, created.id(), new UpdateIssueRequest("x", null, null, null, null, null, null, null), ownerId));
+                projectIdB, created.id(), new UpdateIssueRequest("x", null, null, null, null, null, null, null, null), ownerId));
     }
 
     // ===== 状态（P6-05） =====

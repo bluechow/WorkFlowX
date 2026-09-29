@@ -45,6 +45,9 @@ public class Issue {
     /** 截止日期（可空；V17 工作项体系增强） */
     private LocalDateTime dueDate;
 
+    /** 归属里程碑（可空；V19，里程碑删除退回 NULL） */
+    private Long milestoneId;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

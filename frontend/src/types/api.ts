@@ -138,6 +138,7 @@ export interface IssueVO {
   reporterId: number
   assigneeId: number | null
   dueDate: string | null
+  milestoneId: number | null
   createdAt: string
   updatedAt: string
   labels: LabelVO[]

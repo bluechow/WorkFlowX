@@ -49,7 +49,7 @@ const mocked = {
 const OPEN_ISSUE: IssueVO = {
   id: 1, projectId: 7, issueNo: 1, title: '目标 Issue', description: null,
   type: 'BUG', priority: 'HIGH', severity: 'S1', status: 'OPEN',
-  reporterId: 1, assigneeId: null, dueDate: null, labels: [], createdAt: '', updatedAt: '',
+  reporterId: 1, assigneeId: null, dueDate: null, milestoneId: null, labels: [], createdAt: '', updatedAt: '',
 }
 
 const mountView = () =>
