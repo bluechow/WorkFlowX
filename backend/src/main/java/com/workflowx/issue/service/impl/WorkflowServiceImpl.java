@@ -38,6 +38,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     private final ProjectMemberMapper projectMemberMapper;
     private final com.workflowx.project.mapper.ProjectMapper projectMapper;
     private final com.workflowx.notification.service.NotificationService notificationService;
+    private final com.workflowx.activity.service.ActivityService activityService;
     private final com.workflowx.audit.service.AuditService auditService;
 
     @Override
@@ -72,6 +73,8 @@ public class WorkflowServiceImpl implements WorkflowService {
         }
         auditService.record("ISSUE", "TRANSITION", "issue:" + issueId,
                 "状态流转 " + fromStatus + " -> " + toStatus, true, operatorId);
+        activityService.record(issue.getProjectId(), issueId, operatorId, com.workflowx.activity.entity.Activity.Action.TRANSITION,
+                "issue:" + issueId, "将 #" + issue.getIssueNo() + " 流转为 " + toStatus.name());
         // P9-07: 流转成功 → 通知 assignee + reporter（排除操作者本人，Set 去重；共事务）
         java.util.Set<Long> recipients = new java.util.LinkedHashSet<>();
         if (issue.getAssigneeId() != null) {

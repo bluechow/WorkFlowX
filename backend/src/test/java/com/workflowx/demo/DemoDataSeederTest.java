@@ -82,6 +82,12 @@ class DemoDataSeederTest {
                 .isEqualTo(10);
         assertThat(count("SELECT testcase_seq FROM projects WHERE `key` = 'SHOP'")).isEqualTo(12);
 
+        // V18：活动流（每项目上限 26 条 → 4 项目共 ~80+，倒序含 CREATE/ASSIGN/TRANSITION/COMMENT）
+        assertThat(count("SELECT COUNT(*) FROM activities a JOIN projects p ON a.project_id = p.id WHERE p.`key` IN ('CAMPUS','SHOP','MBANK','DEVOPS')"))
+                .isGreaterThanOrEqualTo(80);
+        assertThat(count("SELECT COUNT(*) FROM activities WHERE action = 'CREATE' AND summary LIKE '创建了 %'"))
+                .isEqualTo(48);
+
         // V17：标签 4/项目×4、issue_labels 绑定、截止日期（含逾期）、关联 2/项目
         assertThat(count("SELECT COUNT(*) FROM labels l JOIN projects p ON l.project_id = p.id WHERE p.`key` IN ('CAMPUS','SHOP','MBANK','DEVOPS')"))
                 .isEqualTo(16);

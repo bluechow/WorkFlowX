@@ -63,6 +63,11 @@ const router = createRouter({
           component: () => import('@/views/system/ProjectBoardView.vue'),
         },
         {
+          path: 'activity',
+          name: 'project-activity',
+          component: () => import('@/views/project/ProjectActivityView.vue'),
+        },
+        {
           path: 'testcases',
           name: 'project-testcases',
           component: () => import('@/views/system/TestCasesView.vue'),

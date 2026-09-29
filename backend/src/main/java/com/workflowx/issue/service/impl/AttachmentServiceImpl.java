@@ -43,6 +43,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     private final StorageService storageService;
     private final AttachmentFilePolicy filePolicy;
     private final com.workflowx.audit.service.AuditService auditService;
+    private final com.workflowx.activity.service.ActivityService activityService;
 
     @Override
     public AttachmentVO upload(Long projectId, Long issueId, MultipartFile file, Long operatorId) {
@@ -76,7 +77,10 @@ public class AttachmentServiceImpl implements AttachmentService {
         }
         auditService.record("ATTACHMENT", "UPLOAD", "issue:" + issueId,
                 "上传附件 " + validated.safeName() + "（" + validated.size() + "B）", true, operatorId);
-        return AttachmentVO.from(attachmentMapper.selectById(attachment.getId()));
+        
+        activityService.record(projectId, issueId, operatorId, com.workflowx.activity.entity.Activity.Action.ATTACHMENT,
+                "issue:" + issueId, "上传了附件 " + validated.safeName());
+return AttachmentVO.from(attachmentMapper.selectById(attachment.getId()));
     }
 
     @Override

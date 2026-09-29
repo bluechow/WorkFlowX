@@ -89,6 +89,7 @@ public class DemoDataSeeder {
         seedAuditLogs();
         seedTestCasesAndPlans();
         seedAttachments();
+        seedActivities();
 
         log.info("[demo-seed] 演示数据生成完成，耗时 {} ms", System.currentTimeMillis() - start);
     }
@@ -579,6 +580,45 @@ public class DemoDataSeeder {
                     issueNo == null ? null : campusIssues.get((int) (issueNo - 1)),
                     daysAgo(10));
         }
+    }
+
+    // ==================== 活动流（V18 演示 fixture）====================
+
+    /** 为每个项目生成近 30 天的活动流：CREATE 全量 + 附加事件限量（时间倒推分布） */
+    private void seedActivities() {
+        for (int p = 0; p < projectIds.size(); p++) {
+            List<Long> issues = issueIdsByProject.get(p);
+            int extras = 0;
+            for (int i = 0; i < issues.size(); i++) {
+                long issueId = issues.get(i);
+                String key = projectKeys.get(p);
+                long no = i + 1;
+                String title = ISSUES[projectIssueOffset(p) + i][5];
+                String[] row = ISSUES[projectIssueOffset(p) + i];
+                // 创建：每条工作项必有
+                insertActivity(p, issueId, no, "CREATE", "创建了 " + key + "-" + no + " " + title, 26 - i);
+                // 以下附加事件限量 12/项目，避免活动页被单项目刷屏
+                boolean open = "OPEN".equals(row[3]);
+                if (!(open && i % 4 == 3) && extras < 12) {
+                    insertActivity(p, issueId, no, "ASSIGN", "将 " + key + "-" + no + " 分派给 #" + (80 + i % 6), 25 - i);
+                    extras++;
+                }
+                if (!"OPEN".equals(row[3]) && extras < 12) {
+                    insertActivity(p, issueId, no, "TRANSITION", "将 #" + no + " 流转为 " + row[3], 24 - i);
+                    extras++;
+                }
+                if (i % 3 == 0 && extras < 12) {
+                    insertActivity(p, issueId, no, "COMMENT", "添加了评论", 23 - i);
+                    extras++;
+                }
+            }
+        }
+    }
+
+    private void insertActivity(int p, long issueId, long no, String action, String summary, int daysAgo) {
+        jdbc.update("INSERT INTO activities (project_id, issue_id, actor_id, action, target, summary, created_at) VALUES (?,?,?,?,?,?,?)",
+                projectIds.get(p), issueId, memberIds.get(Math.abs(summary.hashCode() + (int) no) % memberIds.size()),
+                action, "issue:" + issueId, summary, daysAgo(daysAgo));
     }
 
     // ==================== 附件（MinIO 直传 + 元数据） ====================

@@ -37,6 +37,7 @@ public class CommentServiceImpl implements CommentService {
     private final ProjectMemberMapper projectMemberMapper;
     private final com.workflowx.notification.service.NotificationService notificationService;
     private final com.workflowx.audit.service.AuditService auditService;
+    private final com.workflowx.activity.service.ActivityService activityService;
 
     @Override
     public CommentVO create(Long projectId, Long issueId, CreateCommentRequest request, Long operatorId) {
@@ -63,6 +64,8 @@ public class CommentServiceImpl implements CommentService {
         }
         auditService.record("COMMENT", "CREATE", "issue:" + issueId,
                 "评论 Issue " + issue.getIssueNo(), true, operatorId);
+        activityService.record(projectId, issueId, operatorId, com.workflowx.activity.entity.Activity.Action.COMMENT,
+                "issue:" + issueId, "添加了评论");
         return CommentVO.from(commentMapper.selectById(comment.getId()));
     }
 

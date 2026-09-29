@@ -42,6 +42,7 @@ public class IssueServiceImpl implements IssueService {
     private final com.workflowx.issue.mapper.LabelMapper labelMapper;
     private final com.workflowx.issue.mapper.IssueLabelMapper issueLabelMapper;
     private final com.workflowx.issue.mapper.IssueLinkMapper issueLinkMapper;
+    private final com.workflowx.activity.service.ActivityService activityService;
 
     @Override
     @Transactional
@@ -82,6 +83,8 @@ public class IssueServiceImpl implements IssueService {
         auditService.record("ISSUE", "CREATE", "issue:" + issue.getId(),
                 "创建 Issue " + project.getKey() + "-" + issue.getIssueNo() + " " + issue.getTitle(),
                 true, operatorId);
+        activityService.record(projectId, issue.getId(), operatorId, com.workflowx.activity.entity.Activity.Action.CREATE,
+                "issue:" + issue.getId(), "创建了 " + project.getKey() + "-" + issue.getIssueNo() + " " + issue.getTitle());
         // P9-07: 创建即分派 → 通知 assignee（排除操作者本人；共事务，主业务回滚通知同回滚）
         if (issue.getAssigneeId() != null && !issue.getAssigneeId().equals(operatorId)) {
             notificationService.notifyIssueAssigned(project.getKey(), issue.getIssueNo(),
@@ -246,11 +249,15 @@ public class IssueServiceImpl implements IssueService {
         }
         // P9-07: 变更分派 → 通知新 assignee（取消分派不通知；与旧值相同不重复通知）
         Long newAssigneeId = issue.getAssigneeId();
-        if (newAssigneeId != null && !newAssigneeId.equals(previousAssigneeId)
-                && !newAssigneeId.equals(operatorId)) {
+        if (newAssigneeId != null && !newAssigneeId.equals(previousAssigneeId)) {
             Project project = projectMapper.selectById(issue.getProjectId());
-            notificationService.notifyIssueAssigned(project.getKey(), issue.getIssueNo(),
-                    issue.getTitle(), issueId, newAssigneeId, operatorId);
+            // 通知排除操作者本人；活动流记录一切分派事实（含自办）
+            if (!newAssigneeId.equals(operatorId)) {
+                notificationService.notifyIssueAssigned(project.getKey(), issue.getIssueNo(),
+                        issue.getTitle(), issueId, newAssigneeId, operatorId);
+            }
+            activityService.record(projectId, issueId, operatorId, com.workflowx.activity.entity.Activity.Action.ASSIGN,
+                    "issue:" + issueId, "将 " + project.getKey() + "-" + issue.getIssueNo() + " 分派给 #" + newAssigneeId);
         }
         Issue fresh = requireIssue(projectId, issueId);
         return IssueVO.from(fresh,
@@ -399,6 +406,9 @@ public class IssueServiceImpl implements IssueService {
         auditService.record("ISSUE", "LINK",
                 "issue:" + source.getId(), "关联 " + source.getIssueNo() + " → " + target.getIssueNo()
                         + "（" + type.name() + "）", true, operatorId);
+        activityService.record(projectId, issueId, operatorId, com.workflowx.activity.entity.Activity.Action.LINK,
+                "issue:" + issueId, "关联了 #" + target.getIssueNo() + " " + target.getTitle()
+                        + "（" + (type == com.workflowx.issue.entity.IssueLink.LinkType.BLOCKS ? "阻塞" : "相关") + "）");
         return listLinks(projectId, issueId);
     }
 
@@ -414,6 +424,10 @@ public class IssueServiceImpl implements IssueService {
         // 任一端的工作项成员均可解除（协作语义）；两端同项目已由创建约束保证
         issueLinkMapper.deleteById(linkId);
         auditService.record("ISSUE", "UNLINK", "issue:" + issueId, "解除关联 #" + linkId, true, operatorId);
+        activityService.record(projectId, issueId, operatorId, com.workflowx.activity.entity.Activity.Action.LINK,
+                "issue:" + issueId, "解除了与 #" + (linkRow.getSourceIssueId().equals(issueId)
+                        ? requireIssue(projectId, linkRow.getTargetIssueId()).getIssueNo()
+                        : requireIssue(projectId, linkRow.getSourceIssueId()).getIssueNo()) + " 的关联");
     }
 
     private void appendLinkViews(java.util.List<com.workflowx.issue.vo.IssueLinkVO> sink,
