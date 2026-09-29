@@ -99,7 +99,7 @@ describe('notification store（P9）', () => {
     })
     await store.loadMore()
     expect(store.notifications).toHaveLength(2)
-    expect(mocked.listNotifications).toHaveBeenLastCalledWith(undefined, 2, 10)
+    expect(mocked.listNotifications).toHaveBeenLastCalledWith(undefined, 2, 10, undefined)
   })
 
   it('reset 清理全部状态（登出/切号防残留）', async () => {

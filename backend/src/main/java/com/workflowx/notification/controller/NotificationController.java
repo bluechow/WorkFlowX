@@ -38,7 +38,7 @@ public class NotificationController {
     @Operation(summary = "我的通知列表（read 筛选 + 分页，created_at DESC）")
     public Result<PageVO<NotificationVO>> list(@Valid NotificationPageQuery query,
                                                @AuthenticationPrincipal JwtPayload operator) {
-        return Result.ok(notificationService.listMy(operator.userId(), query.read(),
+        return Result.ok(notificationService.listMy(operator.userId(), query.read(), query.type(),
                 query.pageNum(), query.pageSize()));
     }
 

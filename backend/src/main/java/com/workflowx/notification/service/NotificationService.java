@@ -22,6 +22,13 @@ public interface NotificationService {
     /** 我的通知分页（稳定排序 created_at DESC, id DESC）；isRead null=全部。 */
     PageVO<NotificationVO> listMy(Long recipientId, Boolean isRead, long page, long size);
 
+    /** 类型筛选（FP-7「@我的」；type 可空=全部） */
+    PageVO<NotificationVO> listMy(Long recipientId, Boolean isRead, String type, long page, long size);
+
+    /** 评论 @提及通知（FP-7）：逐一发送（排除提及者本人） */
+    void notifyIssueMentioned(String projectKey, Long issueNo, String issueTitle, Long issueId,
+                              java.util.List<Long> mentionedUserIds, Long operatorId);
+
     /** 未读数量（与数据库实际状态一致）。 */
     long unreadCount(Long recipientId);
 

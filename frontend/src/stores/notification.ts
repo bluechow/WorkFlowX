@@ -20,6 +20,8 @@ export const useNotificationStore = defineStore('notification', {
     page: 1,
     size: 10,
     readFilter: undefined as undefined | boolean,
+    /** 类型筛选（FP-7「@我的」；undefined=全部） */
+    typeFilter: undefined as undefined | string,
     listStatus: 'idle' as 'idle' | 'loading' | 'success' | 'failed',
     listError: '' ,
   }),
@@ -40,7 +42,7 @@ export const useNotificationStore = defineStore('notification', {
       this.listStatus = 'loading'
       this.listError = ''
       try {
-        const data = await listNotifications(this.readFilter, this.page, this.size)
+        const data = await listNotifications(this.readFilter, this.page, this.size, this.typeFilter)
         this.notifications = reset ? data.list : [...this.notifications, ...data.list]
         this.total = data.total
         this.listStatus = 'success'

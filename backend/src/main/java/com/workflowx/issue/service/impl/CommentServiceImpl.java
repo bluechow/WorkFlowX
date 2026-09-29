@@ -36,6 +36,7 @@ public class CommentServiceImpl implements CommentService {
     private final ProjectMapper projectMapper;
     private final ProjectMemberMapper projectMemberMapper;
     private final com.workflowx.notification.service.NotificationService notificationService;
+    private final com.workflowx.user.mapper.UserMapper userMapper;
     private final com.workflowx.audit.service.AuditService auditService;
     private final com.workflowx.activity.service.ActivityService activityService;
 
@@ -55,12 +56,20 @@ public class CommentServiceImpl implements CommentService {
         }
         recipients.add(issue.getReporterId());
         recipients.remove(operatorId);
+        String projectKey = projectMapper.selectById(projectId).getKey();
         if (!recipients.isEmpty()) {
-            String projectKey = projectMapper.selectById(projectId).getKey();
             for (Long recipientId : recipients) {
                 notificationService.notifyIssueCommented(projectKey, issue.getIssueNo(),
                         issue.getTitle(), issueId, recipientId, operatorId);
             }
+        }
+        // FP-7: @用户名/@昵称 → ISSUE_MENTIONED（与评论通知去重；限定项目成员——不越权提及非成员）
+        java.util.List<Long> mentioned = resolveMentions(request.content(), projectId);
+        mentioned.removeAll(recipients);
+        mentioned.remove(operatorId);
+        if (!mentioned.isEmpty()) {
+            notificationService.notifyIssueMentioned(projectKey, issue.getIssueNo(),
+                    issue.getTitle(), issueId, mentioned, operatorId);
         }
         auditService.record("COMMENT", "CREATE", "issue:" + issueId,
                 "评论 Issue " + issue.getIssueNo(), true, operatorId);
@@ -142,5 +151,27 @@ public class CommentServiceImpl implements CommentService {
         if (projectMemberMapper.findMember(projectId, operatorId) == null) {
             throw new ForbiddenException("仅项目成员可访问该项目的评论");
         }
+    }
+
+    /** 解析评论中的 @提及（@用户名 或 @昵称，忽略大小写），限定项目成员范围 */
+    private java.util.List<Long> resolveMentions(String content, Long projectId) {
+        java.util.List<Long> hits = new java.util.ArrayList<>();
+        if (content == null || !content.contains("@")) {
+            return hits;
+        }
+        String lower = content.toLowerCase();
+        for (var membership : projectMemberMapper.findMembersByProjectId(projectId)) {
+            var user = userMapper.selectById(membership.getUserId());
+            if (user == null) {
+                continue;
+            }
+            boolean byUsername = lower.contains("@" + user.getUsername().toLowerCase());
+            boolean byNickname = user.getNickname() != null
+                    && lower.contains("@" + user.getNickname().toLowerCase());
+            if (byUsername || byNickname) {
+                hits.add(user.getId());
+            }
+        }
+        return hits;
     }
 }

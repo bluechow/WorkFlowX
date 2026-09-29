@@ -13,5 +13,8 @@ public enum NotificationType {
     ISSUE_STATUS_CHANGED,
 
     /** 用户关注的 Issue 有新评论 */
-    ISSUE_COMMENTED
+    ISSUE_COMMENTED,
+
+    /** 评论中 @提及（FP-7） */
+    ISSUE_MENTIONED
 }

@@ -10,6 +10,9 @@ import jakarta.validation.constraints.Min;
 public record NotificationPageQuery(
         Boolean read,
 
+        /** 类型筛选（FP-7「@我的」= ISSUE_MENTIONED；可空=全部） */
+        String type,
+
         @Min(value = 1, message = "page 最小为 1") Integer page,
 
         @Min(value = 1, message = "size 最小为 1")

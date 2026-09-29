@@ -40,6 +40,11 @@ const router = createRouter({
       name: 'work-items',
       component: () => import('@/views/WorkItemsView.vue'),
     },
+    {
+      path: '/analytics',
+      name: 'analytics',
+      component: () => import('@/views/AnalyticsView.vue'),
+    },
 
     // ===== 项目空间（页签壳 + 子页） =====
     {

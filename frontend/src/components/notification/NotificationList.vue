@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useNotificationStore } from '@/stores/notification'
@@ -16,6 +16,15 @@ const TYPE_LABEL: Record<string, string> = {
   ISSUE_ASSIGNED: '分派',
   ISSUE_STATUS_CHANGED: '状态',
   ISSUE_COMMENTED: '评论',
+  ISSUE_MENTIONED: '@我',
+}
+
+/** FP-7：「@我的」筛选开关 */
+const mentionOnly = ref(false)
+function toggleMentionOnly(v: boolean) {
+  mentionOnly.value = v
+  store.typeFilter = v ? 'ISSUE_MENTIONED' : undefined
+  void store.fetchList(true)
 }
 
 async function onNotificationClick(notification: NotificationVO) {
@@ -49,6 +58,12 @@ onMounted(() => {
   <div class="notification-list">
     <div class="notification-list__head">
       <span class="notification-list__title">通知中心</span>
+      <el-switch
+        :model-value="mentionOnly"
+        size="small"
+        active-text="@我的"
+        @change="(v: boolean | string | number) => toggleMentionOnly(Boolean(v))"
+      />
       <el-button link type="primary" size="small" data-test="mark-all" @click="onMarkAllRead">
         全部已读
       </el-button>

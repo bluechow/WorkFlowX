@@ -23,9 +23,10 @@ export async function listNotifications(
   read?: boolean,
   page = 1,
   size = 20,
+  type?: string,
 ): Promise<PageVO<NotificationVO>> {
   const resp = await http.get<Result<PageVO<NotificationVO>>>('/notifications', {
-    params: { read, page, size },
+    params: { read, page, size, type },
   })
   return resp.data.data as PageVO<NotificationVO>
 }

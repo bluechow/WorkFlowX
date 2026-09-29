@@ -54,28 +54,22 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public PageVO<NotificationVO> listMy(Long recipientId, Boolean isRead, long page, long size) {
+        return listMy(recipientId, isRead, null, page, size);
+    }
+
+    @Override
+    public PageVO<NotificationVO> listMy(Long recipientId, Boolean isRead, String type, long page, long size) {
         LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<Notification>()
                 .eq(Notification::getRecipientId, recipientId);
         if (isRead != null) {
             wrapper.eq(Notification::getIsRead, isRead);
         }
-        wrapper.orderByDesc(Notification::getCreatedAt).orderByDesc(Notification::getId);
-        IPage<Notification> result = notificationMapper.selectPage(new Page<>(page, size), wrapper);
-        // 批量解析 related Issue 的 projectId（单次 IN 查询，避免逐条 N+1）；Issue 已删 → projectId=null
-        List<Long> issueIds = result.getRecords().stream()
-                .filter(n -> NotificationServiceImpl.RELATED_ISSUE.equals(n.getRelatedType()))
-                .map(Notification::getRelatedId)
-                .filter(java.util.Objects::nonNull)
-                .distinct()
-                .toList();
-        Map<Long, Long> projectIdByIssue = issueIds.isEmpty() ? Map.of()
-                : issueMapper.selectBatchIds(issueIds).stream()
-                        .collect(java.util.stream.Collectors.toMap(
-                                com.workflowx.issue.entity.Issue::getId,
-                                com.workflowx.issue.entity.Issue::getProjectId));
-        return PageVO.of(result.convert(n -> NotificationVO.from(n,
-                NotificationServiceImpl.RELATED_ISSUE.equals(n.getRelatedType())
-                        ? projectIdByIssue.get(n.getRelatedId()) : null)));
+        if (type != null && !type.isBlank()) {
+            wrapper.eq(Notification::getType, com.workflowx.notification.entity.NotificationType.valueOf(type));
+        }
+        wrapper.orderByDesc(Notification::getId);
+        Page<Notification> result = notificationMapper.selectPage(new Page<>(page, size), wrapper);
+        return PageVO.of(result.convert(NotificationVO::from));
     }
 
     @Override
@@ -118,6 +112,19 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public void notifyIssueMentioned(String projectKey, Long issueNo, String issueTitle, Long issueId,
+                                     java.util.List<Long> mentionedUserIds, Long operatorId) {
+        for (Long recipientId : mentionedUserIds) {
+            if (recipientId.equals(operatorId)) {
+                continue; // 自己 @ 自己不通知
+            }
+            create(com.workflowx.notification.entity.NotificationType.ISSUE_MENTIONED, recipientId,
+                    "有人在评论中提到了你",
+                    String.format("%s-%d %s（由 #%d @你）", projectKey, issueNo, issueTitle, operatorId),
+                    "ISSUE", issueId);
+        }
+    }
+
     public void notifyIssueCommented(String projectKey, Long issueNo, String issueTitle, Long issueId,
                                      Long recipientId, Long operatorId) {
         create(NotificationType.ISSUE_COMMENTED, recipientId, "Issue 有新评论",
