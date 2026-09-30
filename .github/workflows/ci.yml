@@ -113,15 +113,6 @@ jobs:
             curl -sf http://localhost:9000/minio/health/live && break; sleep 2
           done
           curl -sf http://localhost:9000/minio/health/live
-      - name: MinIO bucket 初始化
-        run: |
-          docker run --rm --network host \
-            -e MC_HOST_local="http://minioadmin:ci_minio_password@localhost:9000" \
-            --entrypoint sh minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 \
-            -c "mc mb --ignore-existing local/workflowx" || {
-            echo "mc digest 拉取失败时回退 latest（mc 未撤回）"; docker run --rm --network host \
-            -e MC_HOST_local="http://minioadmin:ci_minio_password@localhost:9000" \
-            --entrypoint sh minio/mc:latest -c "mc mb --ignore-existing local/workflowx"; }
       - name: Maven test（Flyway 自动迁移 + dev seed）
         working-directory: backend
         run: mvn -B test
@@ -196,13 +187,6 @@ jobs:
           python-version: '3.11'
       - name: 安装 Python 依赖
         run: pip install -r tests/requirements.txt
-
-      # MinIO bucket 初始化（复用 Phase 16 minio-init 方式）
-      - name: MinIO bucket 初始化
-        run: |
-          docker run --rm --network host \
-            -e MC_HOST_local="http://minioadmin:ci_minio_password@localhost:9000" \
-            --entrypoint sh minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 -c "mc mb --ignore-existing local/workflowx"
 
       # 后端构建 + 运行（dev profile: Flyway V1~V14 + dev seed admin/user1）
       - name: Maven package（跳过测试——测试由 backend job 与本 job e2e 承担）
