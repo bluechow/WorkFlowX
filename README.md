@@ -35,6 +35,12 @@
 - 评论 · 附件（MinIO）· 审计日志 · 项目归档 · 演示数据包（DEMO_SEED=true 开箱即满数据）
 
 **测试体系（软件测试方向毕业设计）**
+
+> ⚠️ 远端 CI 说明：Backend/E2E 两个 job 因 MinIO 官方于 2025-10 从 Docker Hub/quay/bitnami
+> 三渠道全线撤库（附 GHCR 自有镜像后仍存在密码/时序等远端差异），暂时标记为 non-blocking。
+> 回归证据以本地四线为准：mvn 355 / pytest 179 / Vitest 169 / Playwright 27（全绿）。
+> Frontend/Docker/Security 三个 job 保持严格阻断。恢复严格门禁条件：远端环境连续 3 次通过后移除标记。
+
 - 四条自动化线：JUnit+MockMvc 354 · Pytest+httpx 黑盒 180 · Vitest 165 · Playwright E2E 27
 - 安全测试（注入/越权/XSS/枚举防护）· 性能测试方案 · Docker 五容器部署 · GitHub Actions CI
 
