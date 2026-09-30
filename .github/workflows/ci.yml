@@ -38,6 +38,7 @@ jobs:
         working-directory: frontend
         run: npm ci
       - name: npm audit（高危漏洞即失败；P1 加固）
+        working-directory: frontend
         run: npm audit --audit-level=high
       - name: lint
         working-directory: frontend
@@ -116,7 +117,7 @@ jobs:
           --health-cmd="redis-cli ping"
           --health-interval=10s --health-timeout=5s --health-retries=12
       minio:
-        image: minio/minio:latest
+        image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
         env:
           MINIO_ROOT_USER: minioadmin
           MINIO_ROOT_PASSWORD: ci_minio_password
@@ -148,7 +149,7 @@ jobs:
         run: |
           docker run --rm --network host \
             -e MC_HOST_local="http://minioadmin:ci_minio_password@localhost:9000" \
-            minio/mc:latest sh -c "mc mb --ignore-existing local/workflowx"
+            minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 sh -c "mc mb --ignore-existing local/workflowx"
 
       # 后端构建 + 运行（dev profile: Flyway V1~V14 + dev seed admin/user1）
       - name: Maven package（跳过测试——测试由 backend job 与本 job e2e 承担）

@@ -38,8 +38,9 @@ V17~V19 迁移、四线回归 mvn 354 / pytest 180 / Vitest 165+ / E2E 27）。
 **封版承诺（生效中）**：除严重 Bug / 安全漏洞 / 数据一致性 / 核心业务错误外，
 不再修改业务功能、不再提出新业务功能建议。外部审查修复（P0~P3）按 fix 提交。
 
-以下为历史阶段记录（Phase 0~19 详单，保留备考）：
+历史阶段详单已归档至「§2.1 历史阶段归档（Phase 0~19，状态仅供备考）」。
 
+### 2.1 历史阶段归档（Phase 0~19，状态仅供备考）
 
 - **P3-01 ✅ DONE**：RBAC 设计基线（docs/architecture/rbac.md + ADR-012）+ V3 系统权限种子迁移（14 项 + ADMIN 全量绑定）；五表零结构变更，Phase 2 机制不动
 - **P3-02 ✅ DONE**：rbac 模块领域能力（Entity/4 Mapper/DTO/VO/RbacConstants/三 Service：角色 CRUD+权限绑定、权限 CRUD+用户权限实时解析、用户角色幂等绑定）；新增测试 28 个，mvn 172/172，Phase 2 回归全绿（pytest 28/npm 45/运行时冒烟）
@@ -92,25 +93,33 @@ V17~V19 迁移、四线回归 mvn 354 / pytest 180 / Vitest 165+ / E2E 27）。
 
 ---
 
-## 3. 业务模块状态
+## 3. 业务模块状态（v2.0.0 Final Edition 唯一现行表）
+
+> 历史阶段记录见 §7 归档（Phase 0~19 详单保留备考，状态以本表为准）。
 
 | 模块 | 说明 | 状态 |
 |---|---|---|
-| auth | 认证（登录 / 登出 / JWT / Redis 会话） | ✅ Phase 2 完成 |
-| user | 用户管理（CRUD / 状态 / 禁用踢线） | ✅ Phase 2 完成 |
-| rbac | 角色-权限-用户绑定领域 + REST API + 权限接线 | ✅ P3-01~04 完成（13 端点 + 实时权限 authorities + 前端管理三页） |
-| organization | 组织管理 | ⬜ 未开始（Phase 4，包占位已建） |
-| rbac | 角色权限（User-Role-Permission） | 🔵 身份域 5 表已建（V1），功能属 Phase 3 |
-| project | 项目管理 | ⬜ 未开始（Phase 5，包占位已建） |
-| issue | Issue 管理（编号/类型/分派/状态基础） | ✅ Phase 6 完成 |
-| workflow | Issue 状态机（ADR-017 矩阵/issue:transition/条件 UPDATE 并发） | ✅ Phase 7 完成 |
-| comment | Issue 评论（author 绑定/ownership 三层/无软删除） | ✅ Phase 8 完成 |
-| attachment | 附件元数据 + MinIO 存储（白名单/objectKey 服务端生成/一致性补偿） | ✅ Phase 8 完成 |
-| notification | 站内通知（3 类型触发/self 隔离/共事务/前端通知中心） | ✅ Phase 9 完成 |
-| audit | 审计日志（16 接线点/双事务语义/敏感红线/仅 ADMIN） | ✅ Phase 10 完成 |
-| dashboard | 数据统计（真实聚合/角色数据范围/ECharts 可视化） | ✅ Phase 10 完成 |
-| system | 系统管理 | ✅ 基础能力已落地（健康检查 GET /api/v1/health） |
-| common | 统一响应 / 异常 / traceId / OpenAPI 配置 | ✅ 骨架已落地 |
+| auth | 认证（登录/登出/JWT/Redis 单会话/失败锁定/改密与踢下线作废会话） | ✅ 稳定 |
+| user | 用户管理（CRUD/状态/禁用踢线） | ✅ 稳定 |
+| rbac | 角色-权限-用户绑定（59 系统权限/实时 authorities/前端管理三页） | ✅ 稳定 |
+| organization | 组织与部门（树/成员/OWNER 数据级） | ✅ 稳定（历史 Phase 4 完成） |
+| project | 项目与成员（key 唯一/归档/先入组织再入项目规则链） | ✅ 稳定（历史 Phase 5 完成） |
+| issue | 工作项（编号/分派/状态机 + v2.0 标签/关联/截止日期/全局四视图） | ✅ 稳定 |
+| workflow | 状态机（ADR-017 矩阵/条件 UPDATE 并发） | ✅ 稳定 |
+| comment | 评论（ownership 三层/@提及解析→ISSUE_MENTIONED） | ✅ 稳定（v2.0 增 @提及） |
+| attachment | 附件（MinIO/白名单/objectKey 服务端生成） | ✅ 稳定 |
+| notification | 通知（4 类型含 @提及/self 隔离/type 筛选「@我的」） | ✅ 稳定 |
+| audit | 审计日志（高价值操作/双事务/敏感红线） | ✅ 稳定 |
+| dashboard | 统计（总览+趋势+分布 / v2.0 增成员负载与 Bug 专项分析） | ✅ 稳定 |
+| activity | 项目活动流（7 类真实事件埋点，V18） | ✅ v2.0 新增 |
+| milestone | 里程碑轻量计划（V19，项目空间「计划」页签） | ✅ v2.0 新增 |
+| search | 全局搜索（项目/工作项/用户，权限收敛+关键词上限） | ✅ v2.0 新增 |
+| me | self 聚合（待办/工作项四视图/我的项目/我的动态/工作台计数） | ✅ v2.0 新增 |
+| testcase | 测试用例库（目录树/Excel 导入导出/导入资源上限） | ✅ 稳定（v1.1 引入） |
+| testplan | 测试计划与执行（分页聚合/批量上限/报告页） | ✅ 稳定（v1.1~v1.2 引入） |
+| demo | 演示数据包（幂等双标记/事务原子/固定种子） | ✅ 稳定（v1.2 引入） |
+| system | 健康检查 | ✅ 稳定 |
+| common | 统一响应/异常/traceId/OpenAPI | ✅ 稳定 |
 
 ---
 
@@ -172,6 +181,10 @@ WorkFlowX/
 
 | 日期 | 变更 | 关联 |
 |---|---|---|
+| 2026-09-30 | v2.0.1 发布准备：CI 修复（npm audit working-directory + E2E MinIO/mc digest 固定）；模块状态表重写为 v2.0.0 唯一现行表（organization/project 等 8 处"未开始"勘误） | 发布闭环 |
+| 2026-09-30 | 外部只读审查修复（P0~P3）：lint 归零/部署默认 prod+demo 编排/dependabot+audit/Excel 导入上限/TestPlan 聚合/搜索关键词上限/文档同步/生产门禁清单；镜像 digest 固定修正 | 9321fdf/e029e95 |
+| 2026-09-30 | 三项产品观感修复（工作台项目行重叠/侧边栏折叠分组/品牌图标与标题） | 4182d12 |
+| 2026-09-29 | **v2.0.0 Final Edition 封版**（FP-0~FP-8 全交付，Blueprint §9 归档；四线 354/180/165/27） | tag v2.0.0 |
 | 2026-09-25 | Phase 20（V1.1 起步）完成：测试用例库（V15+ADR-022+目录树+用例 CRUD+54 权限+前端用例库页）；四线 324/123/142/25 两轮全绿；Gate PASS（phase20-gate.md） | Phase 20 收口 |
 | 2026-09-25 | Phase 19 完成：Final Delivery（V1.0.0 封版，v1.0.0 tag；交付文档七份：architecture/test-matrix/graduation-notes/resume-summary/demo-scenario/future-roadmap/deployment 更新；workflowx-release 全新部署验证+smoke 15/15）；phase19-gate.md | Phase 19 收口/V1.0.0 |
 | 2026-09-25 | Phase 18 完成：Final QA（Feature Matrix+四线两轮 311/115/136/25+Docker fresh deployment 复验+文档一致性修复 README/how-to-run-tests）；docs/final-qa.md + phase18-gate.md | Phase 18 收口 |
