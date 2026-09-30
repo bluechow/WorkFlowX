@@ -94,14 +94,14 @@ jobs:
           }
           pull_retry mysql:8.0
           pull_retry redis:7.2
-          pull_retry quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+          pull_retry bitnami/minio:latest
           docker run -d --name ci-mysql -p 3307:3306 \
             -e MYSQL_ROOT_PASSWORD=ci_root_password -e MYSQL_DATABASE=workflowx -e TZ=Asia/Shanghai \
             mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
           docker run -d --name ci-redis -p 6379:6379 redis:7.2
           docker run -d --name ci-minio -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=ci_minio_password \
-            quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
+            bitnami/minio:latest
           # 等待就绪（明确失败条件）
           for i in $(seq 1 30); do
             docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pci_root_password --silent 2>/dev/null && break
@@ -154,14 +154,14 @@ jobs:
           }
           pull_retry mysql:8.0
           pull_retry redis:7.2
-          pull_retry quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+          pull_retry bitnami/minio:latest
           docker run -d --name ci-mysql -p 3307:3306 \
             -e MYSQL_ROOT_PASSWORD=ci_root_password -e MYSQL_DATABASE=workflowx -e TZ=Asia/Shanghai \
             mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
           docker run -d --name ci-redis -p 6379:6379 redis:7.2
           docker run -d --name ci-minio -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=ci_minio_password \
-            quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
+            bitnami/minio:latest
           for i in $(seq 1 30); do
             docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pci_root_password --silent 2>/dev/null && break
             sleep 2
