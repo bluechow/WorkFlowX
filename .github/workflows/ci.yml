@@ -96,18 +96,18 @@ jobs:
           pull_retry redis:7.2
           pull_retry ghcr.io/bluechow/minio:latest
           docker run -d --name ci-mysql -p 3307:3306 \
-            -e MYSQL_ROOT_PASSWORD=ci_root_password -e MYSQL_DATABASE=workflowx -e TZ=Asia/Shanghai \
+            -e MYSQL_ROOT_PASSWORD=workflowx_dev_root -e MYSQL_DATABASE=workflowx -e TZ=Asia/Shanghai \
             mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
           docker run -d --name ci-redis -p 6379:6379 redis:7.2
           docker run -d --name ci-minio -p 9000:9000 \
-            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=ci_minio_password \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=workflowx_dev_minio \
             ghcr.io/bluechow/minio:latest server /data
           # 等待就绪（明确失败条件）
           for i in $(seq 1 30); do
-            docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pci_root_password --silent 2>/dev/null && break
+            docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pworkflowx_dev_root --silent 2>/dev/null && break
             sleep 2
           done
-          docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pci_root_password --silent
+          docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pworkflowx_dev_root --silent
           docker exec ci-redis redis-cli ping
           for i in $(seq 1 20); do
             curl -sf http://localhost:9000/minio/health/live && break; sleep 2
@@ -156,17 +156,17 @@ jobs:
           pull_retry redis:7.2
           pull_retry ghcr.io/bluechow/minio:latest
           docker run -d --name ci-mysql -p 3307:3306 \
-            -e MYSQL_ROOT_PASSWORD=ci_root_password -e MYSQL_DATABASE=workflowx -e TZ=Asia/Shanghai \
+            -e MYSQL_ROOT_PASSWORD=workflowx_dev_root -e MYSQL_DATABASE=workflowx -e TZ=Asia/Shanghai \
             mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
           docker run -d --name ci-redis -p 6379:6379 redis:7.2
           docker run -d --name ci-minio -p 9000:9000 \
-            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=ci_minio_password \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=workflowx_dev_minio \
             ghcr.io/bluechow/minio:latest server /data
           for i in $(seq 1 30); do
-            docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pci_root_password --silent 2>/dev/null && break
+            docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pworkflowx_dev_root --silent 2>/dev/null && break
             sleep 2
           done
-          docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pci_root_password --silent
+          docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pworkflowx_dev_root --silent
           docker exec ci-redis redis-cli ping
           for i in $(seq 1 20); do
             curl -sf http://localhost:9000/minio/health/live && break; sleep 2
