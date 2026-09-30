@@ -1,25 +1,46 @@
-# 依赖漏洞扫描/升级（Final Edition P1 加固）：
-# 每周检查 maven/npm/docker/actions 四个生态的依赖更新与安全通告，
-# 自动开 PR（含安全修复优先标记）。配合 CI 的 npm audit 形成"检测→升级 PR"闭环。
+# 依赖漏洞扫描/升级（Final Edition P1 加固；v2.0.1 调整）：
+# 每周检查 maven/npm/docker/actions 四生态，自动开升级 PR。
+# 封版期策略：只允许 minor/patch 级 PR——major 版本（Spring Boot 4/minio 9/
+# springdoc 3/TypeScript 7/actions v7 等）一律不开 PR，待重开功能版本时逐项评估。
 version: 2
 updates:
   - package-ecosystem: maven
     directory: /backend
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
   - package-ecosystem: npm
     directory: /frontend
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
   - package-ecosystem: docker
     directory: /deploy
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
