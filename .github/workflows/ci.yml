@@ -57,37 +57,8 @@ jobs:
   backend:
     name: Backend (Maven test)
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: ci_root_password
-          MYSQL_DATABASE: workflowx
-          TZ: Asia/Shanghai
-        ports:
-          - 3307:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci_root_password --silent"
-          --health-interval=10s --health-timeout=5s --health-retries=12 --health-start-period=30s
-      # v2.0.1 修复：后端测试依赖 Redis（登录会话/单会话铁律）与 MinIO（附件/演示数据），
-      # 此前缺失导致远端 CI 必红（本机因常驻服务未暴露）
-      redis:
-        image: redis:7.2
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=10s --health-timeout=5s --health-retries=12
-      minio:
-        image: minio/minio:RELEASE.2025-09-07T16-13-09Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: ci_minio_password
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd="mc ready local"
-          --health-interval=10s --health-timeout=5s --health-retries=12 --health-start-period=15s
+    # v2.0.1：服务容器改为步骤内启动（原 services: 匿名拉取，Docker Hub 限流/撤回时
+    # 错误不透明且不可登录）。此处仅声明端口供 runner 预留语义，实际启动见步骤。
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -95,21 +66,62 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
-      - name: 等待 MySQL 就绪（明确失败条件，非固定 sleep）
+      # 可选 Docker Hub 登录（配置 DOCKERHUB_USERNAME/DOCKERHUB_TOKEN secrets 后自动启用，
+      # 匿名限流 429 时必需；未配置则跳过）
+      - name: 登录 Docker Hub（可选）
+        if: env.DH_USER != ''
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+      - name: 启动基础服务（MySQL/Redis/MinIO，重试 + 自诊断）
         run: |
+          set -e
+          pull_retry() {  # 用法: pull_retry <image>
+            local img="$1"
+            for i in 1 2 3; do
+              if docker pull "$img"; then return 0; fi
+              echo "::warning::pull $img 失败（第 $i 次），重试前自诊断↓"
+              # 自诊断：匿名 token + manifest 请求，把 registry 原始状态打进日志
+              TOK=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${img#*/}:pull" | grep -o '"token":"[^"]*"' | head -1 || true)
+              echo "registry-token: ${TOK:0:20}..." || true
+              curl -s -o /dev/null -w "manifest HTTP %{http_code}" "https://registry-1.docker.io/v2/${img#*/}/manifests/${img##*:}" || true
+              sleep $((i*5))
+            done
+            echo "::error::镜像 $img 三次拉取失败"; return 1
+          }
+          pull_retry mysql:8.0
+          pull_retry redis:7.2
+          pull_retry minio/minio:RELEASE.2025-09-07T16-13-09Z
+          docker run -d --name ci-mysql -p 3307:3306 \
+            -e MYSQL_ROOT_PASSWORD=ci_root_password -e MYSQL_DATABASE=workflowx -e TZ=Asia/Shanghai \
+            mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
+          docker run -d --name ci-redis -p 6379:6379 redis:7.2
+          docker run -d --name ci-minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=ci_minio_password \
+            minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
+          # 等待就绪（明确失败条件）
           for i in $(seq 1 30); do
-            if mysqladmin ping -h 127.0.0.1 -P 3307 -uroot -pci_root_password --silent 2>/dev/null; then
-              echo "MySQL ready (attempt $i)"; exit 0
-            fi
+            docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pci_root_password --silent 2>/dev/null && break
             sleep 2
           done
-          echo "MySQL not ready after 60s"; exit 1
+          docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pci_root_password --silent
+          docker exec ci-redis redis-cli ping
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:9000/minio/health/live && break; sleep 2
+          done
+          curl -sf http://localhost:9000/minio/health/live
       - name: MinIO bucket 初始化
         run: |
           docker run --rm --network host \
             -e MC_HOST_local="http://minioadmin:ci_minio_password@localhost:9000" \
-            minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 \
-            sh -c "mc mb --ignore-existing local/workflowx"
+            --entrypoint sh minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 \
+            -c "mc mb --ignore-existing local/workflowx" || {
+            echo "mc digest 拉取失败时回退 latest（mc 未撤回）"; docker run --rm --network host \
+            -e MC_HOST_local="http://minioadmin:ci_minio_password@localhost:9000" \
+            --entrypoint sh minio/mc:latest -c "mc mb --ignore-existing local/workflowx"; }
       - name: Maven test（Flyway 自动迁移 + dev seed）
         working-directory: backend
         run: mvn -B test
@@ -125,37 +137,50 @@ jobs:
   api-ui-e2e:
     name: API & UI E2E (pytest / Playwright)
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: ci_root_password
-          MYSQL_DATABASE: workflowx
-          TZ: Asia/Shanghai
-        ports:
-          - 3307:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci_root_password --silent"
-          --health-interval=10s --health-timeout=5s --health-retries=12 --health-start-period=30s
-      redis:
-        image: redis:7.2
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=10s --health-timeout=5s --health-retries=12
-      minio:
-        image: minio/minio:RELEASE.2025-09-07T16-13-09Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: ci_minio_password
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd="mc ready local"
-          --health-interval=10s --health-timeout=5s --health-retries=12 --health-start-period=15s
+    # v2.0.1：服务容器改为步骤内启动（与 backend job 同策略：可登录/重试/自诊断）
     steps:
       - uses: actions/checkout@v4
+      - name: 登录 Docker Hub（可选）
+        if: env.DH_USER != ''
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+      - name: 启动基础服务（MySQL/Redis/MinIO，重试 + 自诊断）
+        run: |
+          set -e
+          pull_retry() {
+            local img="$1"
+            for i in 1 2 3; do
+              if docker pull "$img"; then return 0; fi
+              echo "::warning::pull $img 失败（第 $i 次），重试前自诊断↓"
+              curl -s -o /dev/null -w "manifest HTTP %{http_code}" "https://registry-1.docker.io/v2/${img#*/}/manifests/${img##*:}" || true
+              sleep $((i*5))
+            done
+            echo "::error::镜像 $img 三次拉取失败"; return 1
+          }
+          pull_retry mysql:8.0
+          pull_retry redis:7.2
+          pull_retry minio/minio:RELEASE.2025-09-07T16-13-09Z
+          docker run -d --name ci-mysql -p 3307:3306 \
+            -e MYSQL_ROOT_PASSWORD=ci_root_password -e MYSQL_DATABASE=workflowx -e TZ=Asia/Shanghai \
+            mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
+          docker run -d --name ci-redis -p 6379:6379 redis:7.2
+          docker run -d --name ci-minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=ci_minio_password \
+            minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
+          for i in $(seq 1 30); do
+            docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pci_root_password --silent 2>/dev/null && break
+            sleep 2
+          done
+          docker exec ci-mysql mysqladmin ping -h127.0.0.1 -uroot -pci_root_password --silent
+          docker exec ci-redis redis-cli ping
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:9000/minio/health/live && break; sleep 2
+          done
+          curl -sf http://localhost:9000/minio/health/live
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -177,7 +202,7 @@ jobs:
         run: |
           docker run --rm --network host \
             -e MC_HOST_local="http://minioadmin:ci_minio_password@localhost:9000" \
-            minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 sh -c "mc mb --ignore-existing local/workflowx"
+            --entrypoint sh minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 -c "mc mb --ignore-existing local/workflowx"
 
       # 后端构建 + 运行（dev profile: Flyway V1~V14 + dev seed admin/user1）
       - name: Maven package（跳过测试——测试由 backend job 与本 job e2e 承担）
