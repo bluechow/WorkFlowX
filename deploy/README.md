@@ -19,3 +19,22 @@
 3. 服务端常驻：将 compose 栈迁至不被回收的环境（裸机/云主机）。
 
 数据安全：MySQL/Redis/MinIO 均使用命名卷，回收重启不丢失数据。
+
+## 生产上线门禁（Final Edition P3 声明）
+
+当前编排定位为**开发/演示级**。真实生产上线前必须补齐以下项（不与演示部署混用）：
+
+| 门禁项 | 说明 |
+|---|---|
+| TLS 终结 | 前置反向代理（Nginx/LB）做 HTTPS，容器间流量不出内网 |
+| Redis 认证 | `requirepass`/ACL，最小权限账号（当前开发栈无认证） |
+| HTTP 安全头 | CSP / HSTS / X-Frame-Options 等在代理层配置 |
+| 监控告警 | Actuator + Prometheus + AlertManager（JVM/DB/容器指标） |
+| 日志集中化 | 容器 stdout → 集中采集（Loki/ELK），含 traceId 贯通 |
+| 密钥管理 | JWT_SECRET/DB 密码入密钥管理服务，禁止 .env 明文入库 |
+| 镜像不可变 | 按 digest 固定基础镜像；Actions 固定到版本并经 dependabot 升级 |
+| 数据备份演练 | 按文档流程做一次真实恢复演练（而非仅备份） |
+
+依赖供应链（P1 已落地部分）：CI `npm audit --audit-level=high`；dependabot 周检
+maven/npm/docker/actions 四生态；MinIO/mc 已固定版本 tag。SBOM 与镜像扫描（Trivy 等）
+列为后续项，在引入生产流量前接入。

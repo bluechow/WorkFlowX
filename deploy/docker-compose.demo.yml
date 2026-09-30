@@ -1,0 +1,9 @@
+# 演示/开发编排（Final Edition P1 加固）：
+# 覆盖生产默认——dev profile（开发日志/Swagger）+ 演示数据。
+# 用法：docker compose -f docker-compose.yml -f docker-compose.demo.yml -p workflowx-demo up -d
+# 外部部署请勿叠加本文件（默认 docker-compose.yml 即 prod，见 .env.example）。
+services:
+  backend:
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DEMO_SEED: ${DEMO_SEED:-true}

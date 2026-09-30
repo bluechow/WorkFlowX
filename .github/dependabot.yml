@@ -1,0 +1,25 @@
+# 依赖漏洞扫描/升级（Final Edition P1 加固）：
+# 每周检查 maven/npm/docker/actions 四个生态的依赖更新与安全通告，
+# 自动开 PR（含安全修复优先标记）。配合 CI 的 npm audit 形成"检测→升级 PR"闭环。
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /backend
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /deploy
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

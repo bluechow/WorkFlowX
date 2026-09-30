@@ -55,13 +55,19 @@ public class SearchController {
     public record SearchResultVO(List<ProjectHit> projects, List<IssueHit> issues, List<UserHit> users) {
     }
 
-    @Operation(summary = "全局搜索：项目/工作项/用户（按权限范围收敛）")
+    /** 关键词长度上限（防超长 LIKE 拖库；客户端防抖不保护直接 API 调用） */
+    private static final int MAX_KEYWORD = 64;
+
+    @Operation(summary = "全局搜索：项目/工作项/用户（按权限范围收敛；关键词≤64 字符）")
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public Result<SearchResultVO> search(@RequestParam(required = false) String keyword,
                                          org.springframework.security.core.Authentication authentication) {
         if (keyword == null || keyword.isBlank()) {
             return Result.ok(new SearchResultVO(List.of(), List.of(), List.of()));
+        }
+        if (keyword.length() > MAX_KEYWORD) {
+            throw new com.workflowx.common.exception.BusinessException(422, "关键词最长 64 字符");
         }
         String kw = keyword.trim();
         // 权限范围与 @PreAuthorize 同源（Filter 实时装配的 authorities）

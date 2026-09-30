@@ -58,11 +58,13 @@ public class DemoDataSeeder {
         this.storageService = storageService;
     }
 
-    /** 幂等标记：demo_admin 是否已存在 */
+    /** 幂等标记：demo_admin 用户与锚点组织同时存在（双标记——防外力删组织后的半残态误判跳过） */
     public boolean isSeeded() {
-        Integer count = jdbc.queryForObject(
+        Integer users = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM users WHERE username = 'demo_admin'", Integer.class);
-        return count != null && count > 0;
+        Integer orgs = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM organizations WHERE code = 'STARLIGHT'", Integer.class);
+        return users != null && users > 0 && orgs != null && orgs > 0;
     }
 
     /** synchronized + 事务：并发只生成一份；任一步失败整体回滚，不留半截数据 */

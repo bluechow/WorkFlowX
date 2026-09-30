@@ -52,7 +52,7 @@ services:
       retries: 12
 
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     container_name: workflowx-deploy-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -70,7 +70,7 @@ services:
       start_period: 15s
 
   minio-init:
-    image: minio/mc:latest
+    image: minio/mc:RELEASE.2025-04-22T23-49-32Z
     container_name: workflowx-deploy-minio-init
     restart: "no"
     depends_on:
@@ -103,7 +103,8 @@ services:
       minio-init:
         condition: service_completed_successfully
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      # P1 加固：默认 prod（Swagger 关闭/严格配置；JWT_SECRET 必须显式提供，见 .env.example）
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       DEMO_SEED: ${DEMO_SEED:-false}
       # 数据库（dev/prod profile 均读这些变量；容器网络用 service name）
       MYSQL_HOST: mysql

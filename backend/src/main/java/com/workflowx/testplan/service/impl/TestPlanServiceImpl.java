@@ -44,6 +44,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TestPlanServiceImpl implements TestPlanService {
 
+    /** 单次批量添加用例上限（P2a 加固） */
+    private static final int MAX_ADD_ITEMS = 200;
+
     private final TestPlanMapper testPlanMapper;
     private final TestPlanItemMapper testPlanItemMapper;
     private final com.workflowx.testcase.mapper.TestCaseMapper testCaseMapper;
@@ -73,10 +76,32 @@ public class TestPlanServiceImpl implements TestPlanService {
                         .eq(TestPlan::getProjectId, projectId)
                         .orderByDesc(TestPlan::getCreatedAt)
                         .orderByDesc(TestPlan::getId));
+        // P2a：分页 N+1 → 一次分组聚合（本页计划的分结果计数）
+        List<Long> planIds = result.getRecords().stream().map(TestPlan::getId).toList();
+        Map<String, Long> statsByPlan = planIds.isEmpty() ? Map.of()
+                : testPlanItemMapper.selectList(new LambdaQueryWrapper<TestPlanItem>()
+                                .in(TestPlanItem::getPlanId, planIds)
+                                .select(TestPlanItem::getPlanId, TestPlanItem::getResult))
+                        .stream()
+                        .collect(Collectors.groupingBy(i -> i.getPlanId() + ":" + i.getResult().name(),
+                                Collectors.counting()));
         List<TestPlanVO> plans = result.getRecords().stream()
-                .map(p -> toVO(p, countByResult(p.getId(), null)))
+                .map(p -> {
+                    long[] stats = planStats(statsByPlan, p.getId());
+                    return toVO(p, stats[0] + stats[1] + stats[2] + stats[3], stats);
+                })
                 .toList();
         return new PageVO<>(plans, result.getTotal(), result.getCurrent(), result.getSize());
+    }
+
+    /** 由分组计数字典构造单计划的分结果计数（缺省 0） */
+    private long[] planStats(Map<String, Long> statsByPlan, Long planId) {
+        return new long[]{
+                statsByPlan.getOrDefault(planId + ":PASS", 0L),
+                statsByPlan.getOrDefault(planId + ":FAIL", 0L),
+                statsByPlan.getOrDefault(planId + ":BLOCKED", 0L),
+                statsByPlan.getOrDefault(planId + ":PENDING", 0L),
+        };
     }
 
     @Override
@@ -127,16 +152,27 @@ public class TestPlanServiceImpl implements TestPlanService {
         if (plan.getStatus() == TestPlan.TestPlanStatus.COMPLETED) {
             throw new BusinessException(400, "计划已完成，不能再添加用例");
         }
+        // P2a：单次批量上限（防超大请求）
+        if (request.caseIds().size() > MAX_ADD_ITEMS) {
+            throw new BusinessException(413, "单次最多添加 " + MAX_ADD_ITEMS + " 条用例，请分批操作");
+        }
+        List<Long> caseIds = request.caseIds().stream().distinct().toList();
+        // P2a：逐条查询 → 批量查询（一次取回全部用例做归属校验）
+        var caseById = caseIds.isEmpty() ? Map.<Long, TestCase>of()
+                : testCaseMapper.selectBatchIds(caseIds).stream()
+                        .collect(Collectors.toMap(TestCase::getId, c -> c));
+        // P2a：逐条 exists → 一次取回已存在的绑定集合
+        var existingCaseIds = testPlanItemMapper.selectList(new LambdaQueryWrapper<TestPlanItem>()
+                        .eq(TestPlanItem::getPlanId, planId)
+                        .in(TestPlanItem::getCaseId, caseIds))
+                .stream().map(TestPlanItem::getCaseId).collect(Collectors.toSet());
         int added = 0;
-        for (Long caseId : request.caseIds().stream().distinct().toList()) {
-            TestCase testCase = testCaseMapper.selectById(caseId);
+        for (Long caseId : caseIds) {
+            TestCase testCase = caseById.get(caseId);
             if (testCase == null || !testCase.getProjectId().equals(projectId)) {
                 throw new BusinessException(400, "用例不存在或不属于当前项目: " + caseId);
             }
-            Long exists = testPlanItemMapper.selectCount(new LambdaQueryWrapper<TestPlanItem>()
-                    .eq(TestPlanItem::getPlanId, planId)
-                    .eq(TestPlanItem::getCaseId, caseId));
-            if (exists > 0) {
+            if (existingCaseIds.contains(caseId)) {
                 continue;
             }
             TestPlanItem item = new TestPlanItem();
@@ -204,13 +240,19 @@ public class TestPlanServiceImpl implements TestPlanService {
     // ===== 内部 =====
 
     private TestPlanVO toVO(TestPlan plan, long total) {
-        return new TestPlanVO(plan.getId(), plan.getProjectId(), plan.getName(), plan.getStatus(),
-                plan.getCreatedBy(), plan.getCreatedAt(),
-                total,
+        // 兼容路径（单计划详情等低频调用）
+        return toVO(plan, total, new long[]{
                 countByResult(plan.getId(), TestPlanItem.ItemResult.PASS),
                 countByResult(plan.getId(), TestPlanItem.ItemResult.FAIL),
                 countByResult(plan.getId(), TestPlanItem.ItemResult.BLOCKED),
-                countByResult(plan.getId(), TestPlanItem.ItemResult.PENDING));
+                countByResult(plan.getId(), TestPlanItem.ItemResult.PENDING)});
+    }
+
+    /** P2a：分页聚合路径——stats = [PASS, FAIL, BLOCKED, PENDING]（一次分组查询的结果） */
+    private TestPlanVO toVO(TestPlan plan, long total, long[] stats) {
+        return new TestPlanVO(plan.getId(), plan.getProjectId(), plan.getName(), plan.getStatus(),
+                plan.getCreatedBy(), plan.getCreatedAt(),
+                total, stats[0], stats[1], stats[2], stats[3]);
     }
 
     private long countByResult(Long planId, TestPlanItem.ItemResult result) {

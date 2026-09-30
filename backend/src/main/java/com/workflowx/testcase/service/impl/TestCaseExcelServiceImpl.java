@@ -49,6 +49,10 @@ public class TestCaseExcelServiceImpl implements TestCaseExcelService {
             "用例编号", "用例标题", "目录", "类型", "优先级", "状态", "前置条件", "测试步骤", "预期结果",
     };
 
+    /** 导入资源上限（P1 加固）：行数与单元格字符数——防大文件/巨行拖垮服务 */
+    private static final int MAX_ROWS = 1000;
+    private static final int MAX_CELL_CHARS = 5000;
+
     private final TestCaseMapper testCaseMapper;
     private final TestCaseDirectoryService directoryService;
     private final com.workflowx.testcase.service.TestCaseService testCaseService;
@@ -113,6 +117,10 @@ public class TestCaseExcelServiceImpl implements TestCaseExcelService {
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
+            // P1 加固：行数上限（超出直接 413，拒绝整文件而非截断——调用方明确知道超限）
+            if (sheet.getLastRowNum() > MAX_ROWS) {
+                throw new BusinessException(413, "导入文件超过最大行数 " + MAX_ROWS + "，请分批导入");
+            }
             for (int r = 1; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
                 if (isEmptyRow(row)) {
@@ -237,11 +245,19 @@ public class TestCaseExcelServiceImpl implements TestCaseExcelService {
         if (cell == null) {
             return "";
         }
+        String value;
         if (cell.getCellType() == CellType.NUMERIC) {
             double num = cell.getNumericCellValue();
-            return num == Math.floor(num) ? String.valueOf((long) num) : String.valueOf(num);
+            value = num == Math.floor(num) ? String.valueOf((long) num) : String.valueOf(num);
+        } else {
+            value = cell.toString();
         }
-        return cell.toString().trim();
+        // P1 加固：单元格字符上限（内容列本有 65535 上限，提前拦截巨行解析开销）
+        if (value != null && value.length() > MAX_CELL_CHARS) {
+            throw new BusinessException(413, "第 " + (row.getRowNum() + 1) + " 行第 " + (col + 1)
+                    + " 列超过 " + MAX_CELL_CHARS + " 字符，请拆分内容");
+        }
+        return value == null ? "" : value.trim();
     }
 
     private String nvl(String s) {

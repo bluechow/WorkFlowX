@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { globalSearch, type IssueHit, type ProjectHit, type UserHit } from '@/api/search'
 import { ISSUE_STATUS_LABELS, labelOf } from '@/utils/labels'
@@ -14,6 +14,18 @@ const issues = ref<IssueHit[]>([])
 const users = ref<UserHit[]>([])
 
 let timer: ReturnType<typeof setTimeout> | null = null
+
+/** P0 修复：原生 @click 无 .outside 修饰符——用 document 监听 + contains 判断关闭面板 */
+const rootEl = ref<HTMLElement | null>(null)
+
+function onDocClick(e: MouseEvent) {
+  if (visible.value && rootEl.value && !rootEl.value.contains(e.target as Node)) {
+    visible.value = false
+  }
+}
+
+onMounted(() => document.addEventListener('click', onDocClick))
+onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 
 function onInput() {
   if (timer) clearTimeout(timer)
@@ -54,7 +66,7 @@ function goIssue(i: IssueHit) {
 </script>
 
 <template>
-  <div class="gs" @click.outside="visible = false">
+  <div ref="rootEl" class="gs">
     <el-input
       v-model="keyword"
       placeholder="搜索项目 / 工作项 / 用户"
