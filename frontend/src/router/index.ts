@@ -83,6 +83,11 @@ const router = createRouter({
           component: () => import('@/views/project/ProjectPlanView.vue'),
         },
         {
+          path: 'quality',
+          name: 'project-quality',
+          component: () => import('@/views/project/ProjectQualityView.vue'),
+        },
+        {
           path: 'testcases',
           name: 'project-testcases',
           component: () => import('@/views/system/TestCasesView.vue'),

@@ -24,6 +24,7 @@ const tabs = computed(() => {
     t.push({ name: '看板', to: `/projects/${projectId.value}/board`, match: /\/board$/ })
     t.push({ name: '动态', to: `/projects/${projectId.value}/activity`, match: /\/activity$/ })
     t.push({ name: '计划', to: `/projects/${projectId.value}/plan`, match: /\/plan$/ })
+    t.push({ name: '质量分析', to: `/projects/${projectId.value}/quality`, match: /\/quality$/ })
   }
   if (auth.hasPermission('testcase:list') || auth.hasPermission('testplan:list')) {
     t.push({ name: '测试', to: `/projects/${projectId.value}/testcases`, match: /\/test(cases|plans)/ })
